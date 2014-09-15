@@ -1,0 +1,34 @@
+{ "id": 0, "count": 0, "nested": null, "browser": "IE" }
+{ "id": 1, "count": 0, "nested": null, "browser": "IE" }
+{ "id": 2, "count": 0, "nested": null, "browser": "IE" }
+{ "id": 3, "count": 0, "nested": null, "browser": "CHROME" }
+{ "id": 4, "count": 0, "nested": null, "browser": "CHROME" }
+{ "id": 5, "count": 0, "nested": null, "browser": "CHROME" }
+{ "id": 6, "count": 0, "nested": null, "browser": "CHROME" }
+{ "id": 7, "count": 0, "nested": null, "browser": "FIREFOX" }
+{ "id": null, "count": 0, "nested": null, "browser": "CHROME" }
+
+{
+  "id": 9,
+  "count": 0,
+  "nested": { "id": 1, "names": ["foo"], "flags": {} },
+  "browser": "IE"
+}
+{
+  "id": 10,
+  "count": 777,
+  "nested": { "id": 2047, "names": [], "flags": {} },
+  "browser": "CHROME"
+}
+{
+  "id": 11,
+  "count": 0,
+  "nested": { "id": 1023, "names": ["bar","baz"], "flags": {} },
+  "browser": "FIREFOX"
+}
+{
+  "id": 12,
+  "count": 0,
+  "nested": { "id": 7, "names": [], "flags": {} },
+  "browser": "CHROME"
+}

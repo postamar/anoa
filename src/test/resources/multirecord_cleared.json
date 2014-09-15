@@ -1,0 +1,30 @@
+{ "id": 0, "nested": null, "browser": "IE" }
+{ "id": 1, "nested": null, "browser": "IE" }
+{ "id": 2, "nested": null, "browser": "IE" }
+{ "id": 3, "nested": null, "browser": "CHROME" }
+{ "id": 4, "nested": null, "browser": "CHROME" }
+{ "id": 5, "nested": null, "browser": "CHROME" }
+{ "id": 6, "nested": null, "browser": "CHROME" }
+{ "id": 7, "nested": null, "browser": "FIREFOX" }
+{ "id": null, "nested": null, "browser": "CHROME" }
+
+{
+  "id": 9,
+  "nested": { "names": ["foo"], "flags": {} },
+  "browser": "IE"
+}
+{
+  "id": 10,
+  "nested": { "names": [], "flags": {} },
+  "browser": "CHROME"
+}
+{
+  "id": 11,
+  "nested": { "names": ["bar","baz"], "flags": {} },
+  "browser": "FIREFOX"
+}
+{
+  "id": 12,
+  "nested": { "names": [],  "flags": {} },
+  "browser": "CHROME"
+}

@@ -1,0 +1,16 @@
+{
+  "type" : "record",
+  "name" : "Simple",
+  "namespace" : "com.adgear.generated.avro.flat",
+  "fields" : [ {
+    "name" : "foo",
+    "type" : "int"
+  }, {
+    "name" : "bar",
+    "type" : "string"
+  }, {
+    "name" : "baz",
+    "type" : "double",
+    "aliases" : [ "blab" ]
+  } ]
+}

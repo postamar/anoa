@@ -1,0 +1,6 @@
+{
+  "type" : "enum",
+  "name" : "BrowserType",
+  "namespace" : "com.adgear.generated.avro",
+  "symbols" : [ "CHROME", "FIREFOX", "IE" ]
+}

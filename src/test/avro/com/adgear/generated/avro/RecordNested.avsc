@@ -1,0 +1,54 @@
+{
+  "type" : "record",
+  "name" : "RecordNested",
+  "namespace" : "com.adgear.generated.avro",
+  "fields" : [ {
+    "name" : "id",
+    "type" : [ "null", "int" ],
+    "doc" : "[1]",
+    "default" : null
+  }, {
+    "name" : "count",
+    "type" : [ "null", "int" ],
+    "doc" : "[2]",
+    "default" : null
+  }, {
+    "name" : "nested",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Composite",
+      "namespace" : "com.adgear.generated.avro.flat",
+      "fields" : [ {
+        "name" : "id",
+        "type" : [ "null", "int" ],
+        "doc" : "[1]",
+        "default" : null
+      }, {
+        "name" : "names",
+        "type" : {
+          "type" : "array",
+          "items" : "string"
+        },
+        "doc" : "[2]"
+      }, {
+        "name" : "flags",
+        "type" : {
+          "type" : "map",
+          "values" : [ "boolean", "null" ]
+        },
+        "doc" : "[3]"
+      } ]
+    } ],
+    "doc" : "[3]",
+    "default" : null
+  }, {
+    "name" : "browser",
+    "type" : [ {
+      "type" : "enum",
+      "name" : "BrowserType",
+      "symbols" : [ "CHROME", "FIREFOX", "IE" ]
+    }, "null" ],
+    "doc" : "[4]",
+    "default" : "IE"
+  } ]
+}

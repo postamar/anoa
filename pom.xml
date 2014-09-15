@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   Copyright 2013 Marius Posta (mariusposta@gmail.com)
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <properties>
+    <project.version.avro>1.7.4</project.version.avro>
+    <project.version.thrift>0.9.1</project.version.thrift>
+    <project.version.jackson>2.1.4</project.version.jackson>
+    <project.version.msgpack>0.6.8</project.version.msgpack>
+  </properties>
+
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>9</version>
+  </parent>
+
+  <groupId>com.adgear</groupId>
+  <artifactId>anoa</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+
+  <name>Anoa</name>
+  <description>
+    A Java 1.7 library for robust record iteration, loosely centered on the Apache Avro system.
+  </description>
+
+  <inceptionYear>2013</inceptionYear>
+
+  <organization>
+    <name>AdGear Technologies Inc.</name>
+    <url>http://www.adgear.com</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>Apache 2</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>postamar</id>
+      <name>Marius Posta</name>
+      <email>mariusposta@gmail.com</email>
+      <url>https://github.com/postamar</url>
+      <organization>AdGear Technologies Inc.</organization>
+      <organizationUrl>http://www.adgear.com</organizationUrl>
+    </developer>
+  </developers>
+  <contributors>
+    <contributor>
+      <name>François Saint-Jacques</name>
+      <email>francois.saint-jacques@adgear.com</email>
+      <organization>AdGear Technologies Inc.</organization>
+      <organizationUrl>http://www.adgear.com</organizationUrl>
+    </contributor>
+    <contributor>
+      <name>David Haguenauer</name>
+      <email>david.haguenauer@adgear.com</email>
+      <organization>AdGear Technologies Inc.</organization>
+      <organizationUrl>http://www.adgear.com</organizationUrl>
+    </contributor>
+  </contributors>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+        <version>2.1</version>
+        <configuration>
+          <generateBackupPoms>false</generateBackupPoms>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro-maven-plugin</artifactId>
+        <version>1.7.4</version>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>schema</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.thrift.tools</groupId>
+        <artifactId>maven-thrift-plugin</artifactId>
+        <version>0.1.10</version>
+        <configuration>
+          <thriftTestSourceRoot>${project.basedir}/src/test/thrift</thriftTestSourceRoot>
+        </configuration>
+        <executions>
+          <execution>
+            <id>thrift-test-sources</id>
+            <phase>generate-test-sources</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>sql-maven-plugin</artifactId>
+        <version>1.5</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.3.172</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <driver>org.h2.Driver</driver>
+          <url>jdbc:h2:file:${project.basedir}/target/db/testdb</url>
+          <username>usertest</username>
+          <password>pwtest</password>
+          <autocommit>false</autocommit>
+          <skip>${maven.test.skip}</skip>
+          <srcFiles>
+            <srcFile>src/test/resources/create_test_db.sql</srcFile>
+          </srcFiles>
+        </configuration>
+        <executions>
+          <execution>
+            <id>create-db</id>
+            <phase>process-test-resources</phase>
+            <goals>
+              <goal>execute</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9.1</version>
+        <configuration>
+          <show>public</show>
+          <locale>en</locale>
+          <links>
+            <link>http://avro.apache.org/docs/${project.version.avro}/api/java</link>
+            <link>http://fasterxml.github.io/jackson-core/javadoc/2.1.0</link>
+            <link>http://fasterxml.github.io/jackson-databind/javadoc/2.1.0</link>
+            <link>http://people.apache.org/~thejas/thrift-0.9/javadoc</link>
+            <link>http://docs.guava-libraries.googlecode.com/git-history/release/javadoc</link>
+          </links>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro</artifactId>
+      <version>${project.version.avro}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro-thrift</artifactId>
+      <version>${project.version.avro}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${project.version.jackson}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>${project.version.jackson}</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.8</version>
+    </dependency>
+    <dependency>
+      <groupId>net.sf.supercsv</groupId>
+      <artifactId>super-csv</artifactId>
+      <version>2.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.msgpack</groupId>
+      <artifactId>msgpack</artifactId>
+      <version>${project.version.msgpack}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.thrift</groupId>
+      <artifactId>libthrift</artifactId>
+      <version>${project.version.thrift}</version>
+    </dependency>
+    <dependency>
+      <groupId>net.sf.josql</groupId>
+      <artifactId>josql</artifactId>
+      <version>2.2</version>
+    </dependency>
+    <!-- test dependencies -->
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>14.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <version>1.3.172</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.gentlyweb</groupId>
+      <artifactId>gentlyweb-utils</artifactId>
+      <version>1.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.11</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.carrotsearch</groupId>
+      <artifactId>junit-benchmarks</artifactId>
+      <version>0.4.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <version>1.0.13</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.0.13</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.12.6</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
+

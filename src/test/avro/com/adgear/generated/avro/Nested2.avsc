@@ -1,0 +1,51 @@
+{
+  "type" : "record",
+  "name" : "Nested2",
+  "namespace" : "com.adgear.generated.avro",
+  "fields" : [ {
+    "name" : "type",
+    "type" : [ {
+      "type" : "enum",
+      "name" : "BrowserType",
+      "symbols" : [ "CHROME", "FIREFOX", "IE" ]
+    }, "null" ],
+    "doc" : "[1]",
+    "default" : "IE"
+  }, {
+    "name" : "ugly",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : {
+        "type" : "array",
+        "items" : {
+          "type" : "record",
+          "name" : "Simple",
+          "namespace" : "com.adgear.generated.avro.flat",
+          "fields" : [ {
+            "name" : "foo",
+            "type" : "int",
+            "doc" : "[1]"
+          }, {
+            "name" : "bar",
+            "type" : "string",
+            "doc" : "[2]"
+          }, {
+            "name" : "baz",
+            "type" : "double",
+            "doc" : "[3]",
+            "aliases" : [ "blab" ]
+          } ]
+        }
+      }
+    } ],
+    "doc" : "[2]",
+    "default" : null
+  }, {
+    "name" : "numbers",
+    "type" : {
+      "type" : "array",
+      "items" : "float"
+    },
+    "doc" : "[3]"
+  } ]
+}
