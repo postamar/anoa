@@ -266,14 +266,19 @@ public class GenericDatumTextReader<D> implements DatumReader<D> {
   }
 
   protected Object readEnum(Schema expected, Decoder in) throws IOException {
-    String str = in.readString();
+    final String str = in.readString();
     if (expected.hasEnumSymbol(str)) {
       return createEnum(str, expected);
-    }
-    try {
-      return createEnum(expected.getEnumSymbols().get(Integer.parseInt(str)), expected);
-    } catch (NumberFormatException | IndexOutOfBoundsException e) {
-      throw new IOException(e);
+    } else if (expected.hasEnumSymbol(str.toUpperCase())) {
+      return createEnum(str.toUpperCase(), expected);
+    } else if (expected.hasEnumSymbol(str.toLowerCase())) {
+      return createEnum(str.toLowerCase(), expected);
+    } else {
+      try {
+        return createEnum(expected.getEnumSymbols().get(Integer.parseInt(str)), expected);
+      } catch (NumberFormatException | IndexOutOfBoundsException e) {
+        throw new IOException(e);
+      }
     }
   }
 
