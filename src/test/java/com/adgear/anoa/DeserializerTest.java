@@ -154,8 +154,7 @@ public class DeserializerTest {
   @Test
   public void testSimpleCsvSpecific() throws IOException {
     AvroProvider<List<String>> source = new CsvWithHeaderSource(readResource("/simple.csv"));
-    Codec<GenericRecord, Value>
-        toTree =
+    Codec<GenericRecord, Value> toTree =
         new AvroGenericToValue(new StringListToAvro<GenericRecord>(source, source.getAvroSchema()));
     Codec<Value, Simple> fromTree = new ValueToAvro<>(toTree, Simple.class);
     List<Simple> list = Lists.newArrayList(fromTree.iterator());

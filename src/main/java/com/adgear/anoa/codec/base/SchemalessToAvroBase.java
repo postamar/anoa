@@ -6,13 +6,12 @@ import com.adgear.anoa.provider.Provider;
 import com.adgear.anoa.provider.avro.AvroProvider;
 
 import org.apache.avro.Schema;
-import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.specific.SpecificData;
 
 import java.io.IOException;
 
-abstract public class SchemalessToAvroBase<S, R extends IndexedRecord>
+abstract public class SchemalessToAvroBase<S, R>
     extends CounterlessCodecBase<S, R> implements AvroProvider<R> {
 
   final protected Schema avroSchema;
@@ -28,9 +27,9 @@ abstract public class SchemalessToAvroBase<S, R extends IndexedRecord>
     this(provider, recordSchema, new GenericDatumTextReader<R>(recordSchema));
   }
 
-  private SchemalessToAvroBase(Provider<S> provider,
-                               Schema recordSchema,
-                               GenericDatumTextReader<R> reader) {
+  protected SchemalessToAvroBase(Provider<S> provider,
+                                 Schema recordSchema,
+                                 GenericDatumTextReader<R> reader) {
     super(provider);
     this.avroSchema = recordSchema;
     this.reader = reader.withBytesAsBase64();
