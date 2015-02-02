@@ -287,6 +287,7 @@ public class GenericDatumTextReader<D> implements DatumReader<D> {
     return new GenericData.EnumSymbol(schema, symbol);
   }
 
+  @SuppressWarnings("unchecked")
   protected Object readArray(Schema expected, Decoder in) throws IOException {
     Schema expectedType = expected.getElementType();
     long l = in.readArrayStart();
