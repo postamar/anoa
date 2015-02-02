@@ -62,9 +62,9 @@ import java.util.List;
  */
 public class ThriftDataModified extends ThriftData {
 
-  private static final ThriftDataModified INSTANCE = new ThriftDataModified();
-  static private final Schema NULL = Schema.create(Schema.Type.NULL);
-  static private final String THRIFT_PROP = "thrift";
+  static private final ThriftDataModified INSTANCE = new ThriftDataModified();
+  static public final Schema NULL = Schema.create(Schema.Type.NULL);
+  static public final String THRIFT_PROP = "thrift";
 
   static public ThriftDataModified getModified() {
     return INSTANCE;

@@ -2,26 +2,33 @@ package com.adgear.anoa;
 
 import com.google.common.collect.Lists;
 
-import com.adgear.anoa.avro.AvroUtils;
 import com.adgear.anoa.codec.avro.JsonNodeToAvro;
+import com.adgear.anoa.codec.avro.StringListToAvro;
+import com.adgear.anoa.codec.schemaless.AvroGenericToValue;
 import com.adgear.anoa.codec.schemaless.BytesToJsonNode;
 import com.adgear.anoa.codec.schemaless.ThriftToJsonBytes;
-import com.adgear.anoa.codec.serialized.AvroGenericToBytes;
 import com.adgear.anoa.codec.serialized.AvroSpecificToBytes;
 import com.adgear.anoa.codec.serialized.ThriftToCompactBytes;
 import com.adgear.anoa.codec.thrift.AvroBytesToThrift;
+import com.adgear.anoa.codec.thrift.JsonNodeToThrift;
+import com.adgear.anoa.codec.thrift.StringListToThrift;
+import com.adgear.anoa.codec.thrift.ValueToThrift;
 import com.adgear.anoa.provider.IteratorProvider;
+import com.adgear.anoa.provider.Provider;
 import com.adgear.anoa.provider.SingleProvider;
+import com.adgear.anoa.provider.avro.AvroProvider;
 import com.adgear.anoa.provider.avro.SingleAvroProvider;
 import com.adgear.anoa.sink.CollectionSink;
 import com.adgear.anoa.sink.serialized.BytesSink;
+import com.adgear.anoa.source.schemaless.CsvWithHeaderSource;
 import com.adgear.anoa.source.schemaless.JsonNodeSource;
+import com.adgear.anoa.source.schemaless.TsvSource;
 import com.adgear.anoa.source.thrift.ThriftCompactSource;
 import com.adgear.generated.avro.BrowserType;
 import com.adgear.generated.avro.Nested2;
 import com.adgear.generated.avro.flat.Simple;
+import com.fasterxml.jackson.databind.JsonNode;
 
-import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.junit.Test;
 
@@ -29,6 +36,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -63,6 +72,7 @@ public class ThriftTest {
     assertEquals((Object) tSimple.getBaz(), (Object) s.getBaz());
   }
 
+
   @Test
   public void testSimpleFromAvro() throws IOException {
     Simple s = Simple.newBuilder().setFoo(3).setBar("y").setBaz(-.4).build();
@@ -83,6 +93,7 @@ public class ThriftTest {
     assertEquals(r.getBar(), s.getBar().toString());
     assertEquals((Object) r.getBaz(), (Object) s.getBaz());
   }
+
 
   @Test
   public void testNested2Single() throws IOException {
@@ -120,11 +131,9 @@ public class ThriftTest {
     assertEquals(n2.getUgly().get("key").get(0).getBaz(), -0.7, 0.0001);
   }
 
+
   @Test
   public void testNested2Json() throws IOException {
-    final Class<com.adgear.generated.thrift.Nested2> thriftClass =
-        com.adgear.generated.thrift.Nested2.class;
-    final Schema thriftSchema = AvroUtils.getSchema(thriftClass);
     InputStream stream = getClass().getResourceAsStream("/nested2.json");
 
     List<Nested2> list =
@@ -133,10 +142,8 @@ public class ThriftTest {
                 new JsonNodeToAvro<>(
                     new BytesToJsonNode(
                         new ThriftToJsonBytes<>(
-                            new AvroBytesToThrift<>(
-                                new AvroGenericToBytes(
-                                    new JsonNodeToAvro<GenericRecord>(new JsonNodeSource(stream),
-                                                                      thriftSchema)),
+                            new JsonNodeToThrift<>(
+                                new JsonNodeSource(stream),
                                 com.adgear.generated.thrift.Nested2.class))),
                     Nested2.class))
             .getCollection();
@@ -148,6 +155,7 @@ public class ThriftTest {
     assertEquals(n.getNumbers().size(), 2);
     assertEquals(n.getUgly().size(), 1);
   }
+
 
   @Test
   public void testStream() throws IOException {
@@ -175,4 +183,79 @@ public class ThriftTest {
     assertEquals(1, out.get(0).getFoo());
     assertEquals(2, out.get(1).getFoo());
   }
+
+
+  @Test
+  public void testSimpleTsv() throws IOException {
+    Reader reader = new InputStreamReader(getClass().getResourceAsStream("/simple.tsv"));
+
+    List<com.adgear.generated.thrift.flat.Simple> list =
+        new CollectionSink<>(new ArrayList<com.adgear.generated.thrift.flat.Simple>())
+            .appendAll(
+                new StringListToThrift<com.adgear.generated.thrift.flat.Simple>(
+                    new TsvSource(reader),
+                    com.adgear.generated.thrift.flat.Simple.class))
+            .getCollection();
+
+    assertEquals(2, list.size());
+    com.adgear.generated.thrift.flat.Simple r1 = list.get(0);
+    com.adgear.generated.thrift.flat.Simple r2 = list.get(1);
+
+    assertEquals(3, r1.getFoo());
+    assertEquals("zig", r1.getBar());
+    assertEquals(0.0, r1.getBaz(), 0.0);
+
+    assertEquals(4, r2.getFoo());
+    assertEquals("zag", r2.getBar());
+    assertEquals(1.0, r2.getBaz(), 0.0);
+  }
+
+
+  @Test
+  public void testSimpleCsvAndMessagePack() throws IOException {
+    Reader reader = new InputStreamReader(getClass().getResourceAsStream("/simple.csv"));
+    AvroProvider<List<String>> source = new CsvWithHeaderSource(reader);
+
+    List<com.adgear.generated.thrift.flat.Simple> list =
+        new CollectionSink<>(new ArrayList<com.adgear.generated.thrift.flat.Simple>())
+            .appendAll(
+                new ValueToThrift<>(new AvroGenericToValue(
+                    new StringListToAvro<GenericRecord>(source,
+                                                        source.getAvroSchema())),
+                                    com.adgear.generated.thrift.flat.Simple.class))
+            .getCollection();
+
+    assertEquals(2, list.size());
+    com.adgear.generated.thrift.flat.Simple r1 = list.get(0);
+    com.adgear.generated.thrift.flat.Simple r2 = list.get(1);
+
+    assertEquals(1, r1.getFoo());
+    assertEquals("alpha", r1.getBar());
+    assertEquals(23.4, r1.getBaz(), 0.0);
+
+    assertEquals(2, r2.getFoo());
+    assertEquals("bra\"f'in\"\nvo", r2.getBar());
+    assertEquals(.56, r2.getBaz(), 0.0);
+  }
+
+
+  @Test
+  public void testSimpleJson() throws IOException {
+    Provider<JsonNode> source = new JsonNodeSource(getClass().getResourceAsStream("/simple.json"));
+    Provider<com.adgear.generated.thrift.flat.Simple> codec =
+        new JsonNodeToThrift<>(source, com.adgear.generated.thrift.flat.Simple.class);
+    List<com.adgear.generated.thrift.flat.Simple> list = new CollectionSink<>(
+        new ArrayList<com.adgear.generated.thrift.flat.Simple>())
+        .appendAll(codec)
+        .getCollection();
+
+    assertEquals(1, list.size());
+    assertEquals(1, codec.getCountDropped()); // because aliases not supported in Thrift.
+    com.adgear.generated.thrift.flat.Simple r1 = list.get(0);
+
+    assertEquals(5, r1.getFoo());
+    assertEquals("floobidoo", r1.getBar());
+    assertEquals(99.9, r1.getBaz(), 0.0);
+  }
+
 }

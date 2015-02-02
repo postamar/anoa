@@ -17,7 +17,7 @@ import java.lang.reflect.Constructor;
  * @see com.adgear.anoa.codec.Codec
  * @see com.adgear.anoa.codec.serialized.ThriftToCompactBytes
  */
-public class CompactBytesToThrift<T extends TBase<?, ?>>
+public class CompactBytesToThrift<T extends TBase<T,?>>
     extends CodecBase<byte[], T, CompactBytesToThrift.Counter> {
 
   final protected Class<T> thriftClass;

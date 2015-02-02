@@ -18,7 +18,7 @@ import org.apache.thrift.TBase;
  * @see com.adgear.anoa.codec.serialized.AvroGenericToBytes
  * @see com.adgear.anoa.codec.serialized.AvroSpecificToBytes
  */
-public class AvroBytesToThrift<T extends TBase<?, ?>> extends AvroDeserializerBase<T> {
+public class AvroBytesToThrift<T extends TBase<T,?>> extends AvroDeserializerBase<T> {
 
   /**
    * Construct codec assuming identical reader and writer Avro Schemas.

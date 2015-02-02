@@ -50,6 +50,7 @@ import org.apache.commons.codec.binary.Base64;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -161,7 +162,7 @@ public class GenericDatumTextReader<D> implements DatumReader<D> {
       case BYTES:
         return readBytes(in);
       case INT:
-        return in.readInt();
+        return readInt(expected, in);
       case LONG:
         return in.readLong();
       case FLOAT:
@@ -286,21 +287,24 @@ public class GenericDatumTextReader<D> implements DatumReader<D> {
     return new GenericData.EnumSymbol(schema, symbol);
   }
 
-  @SuppressWarnings("unchecked")
   protected Object readArray(Schema expected, Decoder in) throws IOException {
     Schema expectedType = expected.getElementType();
     long l = in.readArrayStart();
-    GenericData.Array array = new GenericData.Array((int) l, expected);
+    Collection array = newArray((int) l, expected);
     if (l > 0) {
       long base = 0;
       do {
         for (long i = 0; i < l; i++) {
-          array.add((int) (base + i), recursiveRead(expectedType, in));
+          array.add(recursiveRead(expectedType, in));
         }
         base += l;
       } while ((l = in.arrayNext()) > 0);
     }
     return array;
+  }
+
+  protected Collection newArray(int size, Schema schema) {
+    return new GenericData.Array(size, schema);
   }
 
   protected Object readMap(Schema expected, Decoder in) throws IOException {
@@ -316,6 +320,10 @@ public class GenericDatumTextReader<D> implements DatumReader<D> {
       } while ((l = in.mapNext()) > 0);
     }
     return map;
+  }
+
+  protected Object readInt(Schema s, Decoder in) throws IOException {
+    return in.readInt();
   }
 
   protected Object readFixed(Schema expected, Decoder in) throws IOException {
