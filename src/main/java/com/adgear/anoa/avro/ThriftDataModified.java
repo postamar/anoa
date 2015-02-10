@@ -55,16 +55,15 @@ import org.codehaus.jackson.node.NullNode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ThriftData modified with a few hacks.
  */
 public class ThriftDataModified extends ThriftData {
 
-  static private final Map<String, TBase> recordCache = new HashMap<>();
   static private final ThriftDataModified INSTANCE = new ThriftDataModified();
   static public final Schema NULL = Schema.create(Schema.Type.NULL);
   static public final String THRIFT_PROP = "thrift";
@@ -72,6 +71,9 @@ public class ThriftDataModified extends ThriftData {
   static public ThriftDataModified getModified() {
     return INSTANCE;
   }
+
+  private final Map<String,TBase> recordCache = new ConcurrentHashMap<>();
+  private final Map<Class,Schema> schemaCache = new ConcurrentHashMap<>();
 
   @Override
   public Object newRecord(Object old, Schema schema) {
@@ -81,6 +83,7 @@ public class ThriftDataModified extends ThriftData {
       final Object record = super.newRecord(old, schema);
       if (record instanceof TBase) {
         cachedRecord = (TBase) record;
+        cachedRecord.clear();
         recordCache.put(recordName, cachedRecord);
       } else {
         return record;
@@ -95,34 +98,38 @@ public class ThriftDataModified extends ThriftData {
   @SuppressWarnings("unchecked")
   @Override
   public Schema getSchema(Class c) {
-    Schema schema;
-    try {
-      if (TEnum.class.isAssignableFrom(c)) {    // enum
-        List<String> symbols = new ArrayList<String>();
-        for (Enum e : ((Class<? extends Enum>) c).getEnumConstants()) {
-          symbols.add(e.name());
-        }
-        schema = Schema.createEnum(c.getName(), null, null, symbols);
-      } else if (TBase.class.isAssignableFrom(c)) { // struct
-        schema = Schema.createRecord(c.getName(), null, null, Throwable.class.isAssignableFrom(c));
-        List<Schema.Field> fields = new ArrayList<>();
-        for (FieldMetaData f : FieldMetaData.getStructMetaDataMap(c).values()) {
-          Schema s = getSchema(f.valueMetaData);
-          JsonNode defaultValue = null;
-          if (f.requirementType == TFieldRequirementType.OPTIONAL) {
-            if (s.getType() != Schema.Type.UNION) {
-              s = nullable(s);
-            }
-            defaultValue = NullNode.getInstance();
+    Schema schema = schemaCache.get(c);
+    if (schema == null) {
+      try {
+        if (TEnum.class.isAssignableFrom(c)) {    // enum
+          List<String> symbols = new ArrayList<String>();
+          for (Enum e : ((Class<? extends Enum>) c).getEnumConstants()) {
+            symbols.add(e.name());
           }
-          fields.add(new Schema.Field(f.fieldName, s, null, defaultValue));
+          schema = Schema.createEnum(c.getName(), null, null, symbols);
+        } else if (TBase.class.isAssignableFrom(c)) { // struct
+          schema =
+              Schema.createRecord(c.getName(), null, null, Throwable.class.isAssignableFrom(c));
+          List<Schema.Field> fields = new ArrayList<>();
+          for (FieldMetaData f : FieldMetaData.getStructMetaDataMap(c).values()) {
+            Schema s = getSchema(f.valueMetaData);
+            JsonNode defaultValue = null;
+            if (f.requirementType == TFieldRequirementType.OPTIONAL) {
+              if (s.getType() != Schema.Type.UNION) {
+                s = nullable(s);
+              }
+              defaultValue = NullNode.getInstance();
+            }
+            fields.add(new Schema.Field(f.fieldName, s, null, defaultValue));
+          }
+          schema.setFields(fields);
+        } else {
+          throw new RuntimeException("Not a Thrift-generated class: " + c);
         }
-        schema.setFields(fields);
-      } else {
-        throw new RuntimeException("Not a Thrift-generated class: " + c);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
       }
-    } catch (Exception e) {
-      throw new RuntimeException(e);
+      schemaCache.put(c, schema);
     }
     return schema;
   }

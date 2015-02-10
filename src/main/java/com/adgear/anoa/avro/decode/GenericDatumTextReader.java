@@ -137,7 +137,8 @@ public class GenericDatumTextReader<D> implements DatumReader<D> {
   public D read(D reuse, Decoder in) throws IOException {
     try {
       final D datum = (D) recursiveRead(schema, in);
-      return data.validate(schema, datum) ? datum : null;
+      return datum;
+      //return data.validate(schema, datum) ? datum : null;
     } catch (RuntimeException e) {
       throw new IOException(e);
     }
@@ -180,23 +181,14 @@ public class GenericDatumTextReader<D> implements DatumReader<D> {
   }
 
   @SuppressWarnings("unchecked")
-  protected Object getDefaultValue(Schema.Field field) {
-    if (defaultMap.containsKey(field)) {
-      return defaultMap.get(field);
-    }
-    if (field.defaultValue() == null) {
-      defaultMap.put(field, null);
-      return null;
-    }
+  protected Object parseDefaultValue(Schema.Field field) {
     try {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
       ResolvingGrammarGenerator.encode(encoder, field.schema(), field.defaultValue());
       encoder.flush();
       BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);
-      Object defaultValue = data.createDatumReader(field.schema()).read(null, decoder);
-      defaultMap.put(field, defaultValue);
-      return defaultValue;
+      return data.createDatumReader(field.schema()).read(null, decoder);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -208,10 +200,11 @@ public class GenericDatumTextReader<D> implements DatumReader<D> {
       long l = in.readMapStart();
       boolean[] isSet = new boolean[expected.getFields().size()];
       if (l > 0) {
+        Map<String, Schema.Field> map = aliasMap.get(expected);
         do {
           for (int i = 0; i < l; i++) {
             final String fieldName = in.readString();
-            final Schema.Field field = aliasMap.get(expected).get(fieldName);
+            final Schema.Field field = map.get(fieldName);
             if (field == null) {
               in.readNull();
             } else {
@@ -226,8 +219,11 @@ public class GenericDatumTextReader<D> implements DatumReader<D> {
           if (field.defaultValue() == null) {
             throw new IOException("Field '" + field + "' not set.");
           }
-          data.setField(r, field.name(), field.pos(),
-                        data.deepCopy(field.schema(), getDefaultValue(field)));
+          if (!defaultMap.containsKey(field)) {
+            defaultMap.put(field, parseDefaultValue(field));
+          }
+          final Object value = data.deepCopy(field.schema(), defaultMap.get(field));
+          data.setField(r, field.name(), field.pos(), value);
         }
       }
     } else {
@@ -293,12 +289,10 @@ public class GenericDatumTextReader<D> implements DatumReader<D> {
     long l = in.readArrayStart();
     Collection array = newArray((int) l, expected);
     if (l > 0) {
-      long base = 0;
       do {
         for (long i = 0; i < l; i++) {
           array.add(recursiveRead(expectedType, in));
         }
-        base += l;
       } while ((l = in.arrayNext()) > 0);
     }
     return array;

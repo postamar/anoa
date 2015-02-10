@@ -2,16 +2,16 @@ package com.adgear.anoa.avro.decode;
 
 import com.adgear.anoa.avro.ThriftDataModified;
 
-import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.specific.SpecificData;
-import org.apache.avro.thrift.ThriftData;
 import org.apache.thrift.TBase;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 public class ThriftDatumTextReader<T extends TBase<T,?>> extends GenericDatumTextReader<T> {
 
@@ -23,20 +23,34 @@ public class ThriftDatumTextReader<T extends TBase<T,?>> extends GenericDatumTex
     this(reader, ThriftDataModified.getModified());
   }
 
-  protected ThriftDatumTextReader(Schema reader, ThriftData data) {
+  protected ThriftDatumTextReader(Schema reader, ThriftDataModified data) {
     super(reader, data);
   }
 
+  final private Map<String,Class> enumClassCache = new HashMap<>();
+  final private Map<String,Enum> enumSymbolCache = new HashMap<>();
+
   @Override
   protected Object createEnum(String symbol, Schema schema) {
-    try {
-      Class c = Class.forName(SpecificData.getClassName(schema));
-      if (c == null) {
-        return super.createEnum(symbol, schema); // punt to generic
+    final String enumClassName = SpecificData.getClassName(schema);
+    if (!enumClassCache.containsKey(enumClassName)) {
+      try {
+        enumClassCache.put(enumClassName, Class.forName(enumClassName));
+      } catch (Exception e) {
+        throw new RuntimeException(e);
       }
-      return Enum.valueOf(c, symbol);
-    } catch (Exception e) {
-      throw new AvroRuntimeException(e);
+    }
+    final Class c = enumClassCache.get(enumClassName);
+    if (c == null) {
+      return super.createEnum(symbol, schema); // punt to generic
+    } else {
+      final String enumSymbolName = enumClassName + '.' + symbol;
+      Enum value = enumSymbolCache.get(enumSymbolName);
+      if (value == null) {
+        value = Enum.valueOf(c, symbol);
+        enumSymbolCache.put(enumSymbolName, value);
+      }
+      return value;
     }
   }
 
