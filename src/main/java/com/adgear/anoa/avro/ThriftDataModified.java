@@ -55,19 +55,38 @@ import org.codehaus.jackson.node.NullNode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * ThriftData modified with a few hacks.
  */
 public class ThriftDataModified extends ThriftData {
 
+  static private final Map<String, TBase> recordCache = new HashMap<>();
   static private final ThriftDataModified INSTANCE = new ThriftDataModified();
   static public final Schema NULL = Schema.create(Schema.Type.NULL);
   static public final String THRIFT_PROP = "thrift";
 
   static public ThriftDataModified getModified() {
     return INSTANCE;
+  }
+
+  @Override
+  public Object newRecord(Object old, Schema schema) {
+    final String recordName = schema.getFullName();
+    TBase cachedRecord = recordCache.get(recordName);
+    if (cachedRecord == null) {
+      final Object record = super.newRecord(old, schema);
+      if (record instanceof TBase) {
+        cachedRecord = (TBase) record;
+        recordCache.put(recordName, cachedRecord);
+      } else {
+        return record;
+      }
+    }
+    return cachedRecord.deepCopy();
   }
 
   /**

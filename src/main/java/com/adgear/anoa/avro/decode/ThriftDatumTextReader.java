@@ -20,7 +20,7 @@ public class ThriftDatumTextReader<T extends TBase<T,?>> extends GenericDatumTex
   }
 
   public ThriftDatumTextReader(Schema reader) {
-    this(reader, ThriftData.get());
+    this(reader, ThriftDataModified.getModified());
   }
 
   protected ThriftDatumTextReader(Schema reader, ThriftData data) {

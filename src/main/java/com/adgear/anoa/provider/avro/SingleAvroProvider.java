@@ -14,12 +14,20 @@ public class SingleAvroProvider<R extends GenericContainer>
     extends SingleProvider<R>
     implements AvroProvider<R> {
 
+  final private Schema schema;
+
   public SingleAvroProvider(R datum) {
     super(datum);
+    this.schema = datum.getSchema();
+  }
+
+  public SingleAvroProvider(Schema schema) {
+    super(null);
+    this.schema = schema;
   }
 
   @Override
   public Schema getAvroSchema() {
-    return datum.getSchema();
+    return schema;
   }
 }
