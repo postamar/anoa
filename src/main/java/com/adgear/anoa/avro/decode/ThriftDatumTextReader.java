@@ -25,6 +25,7 @@ public class ThriftDatumTextReader<T extends TBase<T,?>> extends GenericDatumTex
 
   protected ThriftDatumTextReader(Schema reader, ThriftDataModified data) {
     super(reader, data);
+    withValidation = false;
   }
 
   final private Map<String,Class> enumClassCache = new HashMap<>();

@@ -1,40 +1,42 @@
 package com.adgear.anoa.codec.thrift;
 
-import com.adgear.anoa.avro.ThriftDataModified;
-import com.adgear.anoa.avro.decode.JsonNodeDecoder;
-import com.adgear.anoa.avro.decode.ThriftDatumTextReader;
-import com.adgear.anoa.codec.base.SchemalessToAvroBase;
+import com.adgear.anoa.codec.base.CodecBase;
 import com.adgear.anoa.provider.Provider;
+import com.adgear.anoa.thrift.JsonNodeParser;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import org.apache.avro.io.Decoder;
 import org.apache.thrift.TBase;
+import org.apache.thrift.TException;
 
-/**
- * Transform Jackson <code>JsonNode</code> instances into Thrift records.
- *
- * @param <T> Type of the Thrift record to be provided by the Codec.
- * @see com.adgear.anoa.codec.Codec
- * @see com.adgear.anoa.provider.Provider
- * @see com.adgear.anoa.source.schemaless.JsonNodeSource
- * @see com.adgear.anoa.codec.schemaless.BytesToJsonNode
- * @see com.adgear.anoa.codec.schemaless.StringToJsonNode
- */
-public class JsonNodeToThrift<T extends TBase<T,?>> extends SchemalessToAvroBase<JsonNode,T> {
+public class JsonNodeToThrift<T extends TBase<T,?>>
+    extends CodecBase<JsonNode,T,JsonNodeToThrift.Counter> {
 
-  /**
-   * @param provider    An upstream Provider of JsonNode instances.
-   * @param thriftClass The class object corresponding to the serialized Thrift records.
-   */
+  static public enum Counter {
+    THRIFT_DESERIALIZE_EXCEPTION
+  }
+
+  final protected JsonNodeParser<T> parser;
+  final protected boolean strict;
+
   public JsonNodeToThrift(Provider<JsonNode> provider, Class<T> thriftClass) {
-    super(provider,
-          ThriftDataModified.getModified().getSchema(thriftClass),
-          new ThriftDatumTextReader<>(thriftClass));
-    reader.withFieldNames();
+    this(provider, thriftClass, false);
+  }
+
+  public JsonNodeToThrift(Provider<JsonNode> provider, Class<T> thriftClass, boolean strict) {
+    super(provider, Counter.class);
+    this.strict = strict;
+    this.parser = JsonNodeParser.create(thriftClass);
   }
 
   @Override
-  protected Decoder makeDecoder(JsonNode input) {
-    return new JsonNodeDecoder(input);
+  public T transform(JsonNode input) {
+    try {
+      return JsonNodeParser.parse((ObjectNode) input, parser, strict);
+    } catch (TException e) {
+      logger.warn(e.getMessage());
+      increment(Counter.THRIFT_DESERIALIZE_EXCEPTION);
+      return null;
+    }
   }
 }

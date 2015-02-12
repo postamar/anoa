@@ -66,6 +66,7 @@ public class GenericDatumTextReader<D> implements DatumReader<D> {
   protected GenericData data;
   protected boolean bytesAsBase64 = false;
   protected boolean withFieldNames = false;
+  protected boolean withValidation = true;
   protected Map<Schema, Map<String, Schema.Field>> aliasMap;
   protected Map<Schema.Field, Object> defaultMap;
 
@@ -78,34 +79,9 @@ public class GenericDatumTextReader<D> implements DatumReader<D> {
     setSchema(schema);
     aliasMap = new HashMap<>();
     defaultMap = new HashMap<>();
-    recursiveAliasCollect(schema);
+    recursiveAliasCollect(aliasMap, schema);
   }
 
-  private void recursiveAliasCollect(Schema schema) {
-    switch (schema.getType()) {
-      case ARRAY:
-        recursiveAliasCollect(schema.getElementType());
-        return;
-      case MAP:
-        recursiveAliasCollect(schema.getValueType());
-        return;
-      case UNION:
-        for (Schema unionSchema : schema.getTypes()) {
-          recursiveAliasCollect(unionSchema);
-        }
-        return;
-      case RECORD:
-        Map<String, Schema.Field> map = new HashMap<>();
-        for (Schema.Field field : schema.getFields()) {
-          map.put(field.name(), field);
-          for (String alias : field.aliases()) {
-            map.put(alias, field);
-          }
-          recursiveAliasCollect(field.schema());
-        }
-        aliasMap.put(schema, map);
-    }
-  }
 
   public GenericDatumTextReader<D> withoutBytesAsBase64() {
     bytesAsBase64 = false;
@@ -127,6 +103,17 @@ public class GenericDatumTextReader<D> implements DatumReader<D> {
     return this;
   }
 
+  public GenericDatumTextReader<D> withValidation() {
+    withValidation = true;
+    return this;
+  }
+
+  public GenericDatumTextReader<D> withoutValidation() {
+    withValidation = false;
+    return this;
+  }
+
+
   @Override
   public void setSchema(Schema schema) {
     this.schema = schema;
@@ -137,8 +124,7 @@ public class GenericDatumTextReader<D> implements DatumReader<D> {
   public D read(D reuse, Decoder in) throws IOException {
     try {
       final D datum = (D) recursiveRead(schema, in);
-      return datum;
-      //return data.validate(schema, datum) ? datum : null;
+      return ((!withValidation) || data.validate(schema, datum)) ? datum : null;
     } catch (RuntimeException e) {
       throw new IOException(e);
     }
@@ -338,6 +324,33 @@ public class GenericDatumTextReader<D> implements DatumReader<D> {
       return ByteBuffer.wrap(Base64.decodeBase64(in.readString()));
     } else {
       return in.readBytes(null);
+    }
+  }
+
+  static public void recursiveAliasCollect(Map<Schema, Map<String, Schema.Field>> aliasMap,
+                                           Schema schema) {
+    switch (schema.getType()) {
+      case ARRAY:
+        recursiveAliasCollect(aliasMap, schema.getElementType());
+        return;
+      case MAP:
+        recursiveAliasCollect(aliasMap, schema.getValueType());
+        return;
+      case UNION:
+        for (Schema unionSchema : schema.getTypes()) {
+          recursiveAliasCollect(aliasMap, unionSchema);
+        }
+        return;
+      case RECORD:
+        Map<String, Schema.Field> map = new HashMap<>();
+        for (Schema.Field field : schema.getFields()) {
+          map.put(field.name(), field);
+          for (String alias : field.aliases()) {
+            map.put(alias, field);
+          }
+          recursiveAliasCollect(aliasMap, field.schema());
+        }
+        aliasMap.put(schema, map);
     }
   }
 }

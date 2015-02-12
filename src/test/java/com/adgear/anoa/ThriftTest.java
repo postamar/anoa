@@ -10,7 +10,7 @@ import com.adgear.anoa.codec.schemaless.ThriftToJsonBytes;
 import com.adgear.anoa.codec.serialized.AvroSpecificToBytes;
 import com.adgear.anoa.codec.serialized.ThriftToCompactBytes;
 import com.adgear.anoa.codec.thrift.AvroBytesToThrift;
-import com.adgear.anoa.codec.thrift.JsonNodeToThrift;
+import com.adgear.anoa.codec.thrift.JsonNodeToAvroThrift;
 import com.adgear.anoa.codec.thrift.StringListToThrift;
 import com.adgear.anoa.codec.thrift.ValueToThrift;
 import com.adgear.anoa.provider.IteratorProvider;
@@ -142,7 +142,7 @@ public class ThriftTest {
                 new JsonNodeToAvro<>(
                     new BytesToJsonNode(
                         new ThriftToJsonBytes<>(
-                            new JsonNodeToThrift<>(
+                            new JsonNodeToAvroThrift<>(
                                 new JsonNodeSource(stream),
                                 com.adgear.generated.thrift.Nested2.class))),
                     Nested2.class))
@@ -243,7 +243,7 @@ public class ThriftTest {
   public void testSimpleJson() throws IOException {
     Provider<JsonNode> source = new JsonNodeSource(getClass().getResourceAsStream("/simple.json"));
     Provider<com.adgear.generated.thrift.flat.Simple> codec =
-        new JsonNodeToThrift<>(source, com.adgear.generated.thrift.flat.Simple.class);
+        new JsonNodeToAvroThrift<>(source, com.adgear.generated.thrift.flat.Simple.class);
     List<com.adgear.generated.thrift.flat.Simple> list = new CollectionSink<>(
         new ArrayList<com.adgear.generated.thrift.flat.Simple>())
         .appendAll(codec)
