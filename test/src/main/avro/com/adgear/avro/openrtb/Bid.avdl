@@ -1,0 +1,53 @@
+/**
+4.3.3 Bid Object
+For each bid, the “nurl” attribute contains the win notice URL. If the bidder wins the impression, the exchange calls this notice URL a) to inform the bidder of the win and b) to convey certain information using substitution macros (see Section 4.6 Substitution Macros).
+The “adomain” attribute can be used to check advertiser block list compliance. The “iurl” attribute can provide a link to an image that is representative of the campaign’s content (irrespective of whether the campaign may have multiple creatives). This enables human review for spotting inappropriate content. The “cid” attribute can be used to block ads that were previously identified as inappropriate; essentially a safety net beyond the block lists. The “crid” attribute can be helpful in reporting creative issues back to bidders. Finally, the “attr” array indicates the creative attributes that describe the ad to be served.
+BEST PRACTICE: Substitution macros may allow a bidder to use a static notice URL for all of its bids. Thus, exchanges should offer the option of a default notice URL that can be pre- configured per bidder to reduce redundant data transfer.
+
+*/
+
+record Bid {
+
+  /** [01] ID for the bid object chosen by the bidder for tracking and debugging purposes. Useful when multiple bids are submitted for a single impression for a given seat. */
+  string id;
+
+  /** [02] ID of the impression object to which this bid applies. */
+  string impid;
+
+  /** [03] Bid price in CPM. WARNING/Best Practice Note: Although this value is a float, OpenRTB strongly suggests using integer math for accounting to avoid rounding errors.*/
+  double price;
+
+  /** [04] ID that references the ad to be served if the bid wins.*/
+  union {null, string} adid = null;
+
+  /** [05] Win notice URL. Note that ad markup is also typically, but not necessarily, returned via this URL.*/
+  union {null, string} nurl = null;
+
+  /** [06] Actual ad markup. XHTML if a response to a banner object, or VAST XML if a response to a video object.*/
+  union {null, string} adm = null;
+
+  /** [07] Advertiser’s primary or top-level domain for advertiser checking. This can be a list of domains if there is a rotating creative. However, exchanges may mandate that only one landing domain is allowed.*/
+  union {null, array<string>} adomain = null;
+
+  /** [08] Sample image URL (without cache busting) for content checking.*/
+  union {null, string} lurl = null;
+
+  /** [09] Campaign ID or similar that appears within the ad markup.*/
+  union {null, string} cid = null;
+
+  /** [10] Creative ID for reporting content issues or defects. This could also be used as a reference to a creative ID that is posted with an exchange.*/
+  union {null, string} crid = null;
+
+  /** [11] Array of creative attributes. See Table 6.3 Creative Attributes.*/
+  union {null, array<int>} attr = null;
+
+  /** [12] A unique identifier for the direct deal associated with the bid. If the bid is associated and in response to a dealid in the request object it is _required_ in the response object.*/
+  union {null, string} dealid = null;
+
+  /** [13] Width of the ad in pixels. If the bid request contained the wmax/hmax and wmin/hmin optional fields it is recommended that the response bid contains this field to signal the size of ad chosen.*/
+  union {null, int} w = null;
+
+  /** [14] Height of the ad in pixels. If the bid request contained the wmax/hmax and wmin/hmin optional fields it is recommended that the response bid contains this field to signal the size of ad chosen.*/
+  union {null, int} h = null;
+
+}

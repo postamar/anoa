@@ -1,0 +1,19 @@
+/**
+3.3.9 Producer Object
+The producer is useful when content where the ad is shown is syndicated, and may appear on a completely different publisher. The producer object itself and all of its parameters are optional, so default values are not provided. If an optional parameter is not specified, it should be considered unknown. This object is optional, but useful if the content producer is different from the site publisher.
+*/
+
+record Producer {
+
+  /** [1] Content producer or originator ID. Useful if content is syndicated, and may be posted on a site using embed tags.*/
+  union {null, string} id = null;
+
+  /** [2] Content producer or originator name (e.g., “Warner Bros”).*/
+  union {null, string} name = null;
+
+  /** [3] Array of IAB content categories for the content producer. See Table 6.1 Content Categories.*/
+  union {null, array<string>} cat = null;
+
+  /** [4] URL of the content producer.*/
+  union {null, string} domain = null;
+}
