@@ -1,32 +1,38 @@
 package com.adgear.anoa.io.json;
 
-import com.google.common.io.LineReader;
-
+import com.adgear.anoa.AnoaCollector;
+import com.adgear.anoa.AnoaFunction;
+import com.adgear.anoa.AnoaRecord;
+import com.adgear.anoa.AnoaSummary;
 import com.adgear.anoa.io.read.json.JsonReader;
 
 import org.junit.Test;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.nio.channels.Channels;
 
 import thrift.com.adgear.avro.openrtb.BidRequest;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class ThriftReaderTest {
 
   @Test
   public void test() throws Exception {
 
-    InputStream stream = getClass().getResourceAsStream("/bidreqs.json");
-    LineReader reader = new LineReader(new InputStreamReader(stream));
-    String line;
+    try (InputStream inputStream = getClass().getResourceAsStream("/bidreqs.json")) {
+      AnoaSummary<BidRequest> collected =
+          new BufferedReader(Channels.newReader(Channels.newChannel(inputStream), "UTF-8"))
+              .lines()
+              .map(String::getBytes)
+              .map(AnoaRecord::create)
+              .map(AnoaFunction.pokemonize(JsonReader::createParser))
+              .map(AnoaFunction.pokemonize(JsonReader.lambda(BidRequest.class, true)))
+              .collect(AnoaCollector.inList());
 
-    JsonReader<BidRequest> jr = JsonReader.create(BidRequest.class);
-
-    while ((line = reader.readLine()) != null) {
-      BidRequest bidRequest = jr.readStrict(JsonReader.createParser(line.getBytes()));
-      assertNotNull(bidRequest);
+      collected.streamCounters().forEach(System.err::println);
+      assertEquals(946, collected.streamPresent().filter(BidRequest.class::isInstance).count());
     }
   }
 

@@ -2,7 +2,6 @@ package com.adgear.anoa.io.read.json;
 
 import com.adgear.anoa.AnoaTypeException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

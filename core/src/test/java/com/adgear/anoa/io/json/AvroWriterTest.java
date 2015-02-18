@@ -1,37 +1,45 @@
 package com.adgear.anoa.io.json;
 
-import com.google.common.io.LineReader;
-
+import com.adgear.anoa.AnoaFunction;
+import com.adgear.anoa.AnoaRecord;
 import com.adgear.anoa.io.read.json.JsonReader;
 import com.adgear.anoa.io.write.json.JsonWriter;
 import com.adgear.avro.openrtb.BidRequest;
+import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 import org.apache.avro.generic.GenericRecord;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-
-import static org.junit.Assert.*;
+import java.io.UncheckedIOException;
+import java.nio.channels.Channels;
 
 public class AvroWriterTest {
 
   @Test
   public void test() throws Exception {
-    InputStream stream = getClass().getResourceAsStream("/bidreqs.json");
-    LineReader reader = new LineReader(new InputStreamReader(stream));
-    String line;
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-    JsonReader<BidRequest> jr = JsonReader.create(BidRequest.class);
-    JsonWriter<GenericRecord> jw = JsonWriter.create(BidRequest.getClassSchema());
-
-    while ((line = reader.readLine()) != null) {
-      final BidRequest bidRequest = jr.readStrict(JsonReader.createParser(line.getBytes()));
-      jw.writeToStream(bidRequest, baos);
-      System.err.println(new String(baos.toByteArray()));
-      baos.reset();
+    try(InputStream inputStream = getClass().getResourceAsStream("/bidreqs.json")) {
+      new BufferedReader(Channels.newReader(Channels.newChannel(inputStream), "UTF-8"))
+          .lines()
+          .map(String::getBytes)
+          .map(AnoaRecord::create)
+          .map(AnoaFunction.pokemonize(JsonReader::createParser))
+          .map(AnoaFunction.pokemonize(JsonReader.lambda(BidRequest.class, true)))
+          .map(AnoaFunction.of(x -> (GenericRecord) x))
+          .map(AnoaFunction.pokemonize(JsonWriter.lambda(BidRequest.getClassSchema())))
+          .flatMap(AnoaRecord::asStream)
+          .map(TokenBuffer::asParser)
+          .map(jp -> {
+            try {
+              return jp.readValueAsTree();
+            } catch (IOException e) {
+              throw new UncheckedIOException(e);
+            }
+          })
+          .forEach(System.err::println);
     }
   }
 }

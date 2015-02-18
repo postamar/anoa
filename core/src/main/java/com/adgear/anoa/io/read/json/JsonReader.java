@@ -1,12 +1,12 @@
 package com.adgear.anoa.io.read.json;
 
+import com.adgear.anoa.ThrowingFunction;
 import com.adgear.anoa.io.read.Reader;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.thrift.TBase;
@@ -22,31 +22,34 @@ abstract public class JsonReader<OUT> implements Reader<JsonParser,OUT> {
   static public JsonParser createParser(byte[] jsonBytes) throws IOException {
     JsonParser jsonParser = JSON_FACTORY.createParser(jsonBytes);
     JsonToken jsonToken = jsonParser.nextToken();
-    if (jsonToken == null) {
-      throw new IOException("JsonParser.nextToken() returned null.");
-    } else if (jsonToken != JsonToken.START_OBJECT) {
+    if (jsonToken == null || jsonToken != JsonToken.START_OBJECT) {
       throw new IOException("JsonParser.nextToken() returned " + jsonToken);
     }
     return jsonParser;
   }
 
   @SuppressWarnings("unchecked")
-  static public <OUT> JsonReader<OUT> create(Class<OUT> klazz) {
+  static public <OUT> ThrowingFunction<JsonParser,OUT> lambda(Class<OUT> klazz, boolean strict) {
+    final JsonReader<OUT> jsonReader;
     if (TBase.class.isAssignableFrom(klazz)) {
-      return new ThriftReader(klazz);
+      jsonReader = new ThriftReader(klazz);
     } else if (SpecificRecord.class.isAssignableFrom(klazz)) {
-      return new AvroReader.AvroSpecificReader(klazz);
+      jsonReader = new AvroReader.AvroSpecificReader(klazz);
+    } else {
+      throw new IllegalArgumentException("Class is not a Thrift or an Avro record: " + klazz);
     }
-    throw new IllegalArgumentException("Class is not a Thrift or an Avro record: " + klazz);
+    return strict ? jsonReader::readStrict : jsonReader::read;
   }
 
-  static public JsonReader<GenericRecord> create(Schema schema) {
-    return new AvroReader.AvroGenericReader(schema);
+  static public ThrowingFunction<JsonParser,GenericRecord> lambda(Schema schema, boolean strict) {
+    final JsonReader<GenericRecord> jsonReader = new AvroReader.AvroGenericReader(schema);
+    return strict ? jsonReader::readStrict : jsonReader::read;
   }
 
   @SuppressWarnings("unchecked")
-  static public <T extends TBase<T,? extends TFieldIdEnum>> JsonReader<T> create(StructMetaData s) {
-    return new ThriftReader(s.structClass);
+  static public <T extends TBase<T,? extends TFieldIdEnum>> ThrowingFunction<JsonParser,T>
+  lambda(StructMetaData structMetaData, boolean strict) {
+    return JsonReader.lambda((Class<T>) structMetaData.structClass, strict);
   }
 
   static protected interface ValueConsumer<E extends Exception> {

@@ -43,6 +43,16 @@
       <artifactId>josql</artifactId>
       <version>2.2</version>
     </dependency>
+    <dependency>
+      <groupId>edu.washington.cs.types.checker</groupId>
+      <artifactId>checker-framework</artifactId>
+      <version>1.7.5</version>
+    </dependency>
+    <dependency>
+      <groupId>io.dropwizard.metrics</groupId>
+      <artifactId>metrics-core</artifactId>
+      <version>3.1.0</version>
+    </dependency>
     <!-- test dependencies -->
     <dependency>
       <groupId>com.adgear</groupId>
