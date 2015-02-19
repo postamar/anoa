@@ -10,7 +10,7 @@ public interface AnoaConsumer<T> extends Consumer<@NonNull AnoaRecord<T>> {
     return new AnoaFunctionBase<T, T>() {
       @Override
       protected AnoaRecord<T> applyNonNull(@NonNull AnoaRecord<@NonNull T> record) {
-        consumer.accept(record.get());
+        consumer.accept(record.asOptional().get());
         return record;
       }
     };

@@ -27,7 +27,7 @@ class AnoaFunctionPokemon<T, R> extends AnoaFunctionBase<T, R> {
   final protected AnoaRecord<R> applyNonNull(@NonNull AnoaRecord<@NonNull T> record) {
     final R result;
     try {
-      result = wrappedFunction.apply(record.get());
+      result = wrappedFunction.apply(record.asOptional().get());
     } catch (RuntimeException e) {
       final AnoaCounted counted = AnoaCounted.get(toCountedLabel(e));
       return AnoaRecordImpl.create(null, Stream.concat(Stream.of(counted), record.asCountedStream()));

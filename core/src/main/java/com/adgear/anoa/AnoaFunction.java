@@ -11,7 +11,8 @@ public interface AnoaFunction<T, R>
     return new AnoaFunctionBase<T, R>() {
       @Override
       protected AnoaRecord<R> applyNonNull(@NonNull AnoaRecord<T> record) {
-        return AnoaRecordImpl.create(function.apply(record.get()), record.asCountedStream());
+        return AnoaRecordImpl.create(function.apply(record.asOptional().get()),
+                                     record.asCountedStream());
       }
     };
   }

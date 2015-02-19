@@ -3,43 +3,39 @@ package com.adgear.anoa;
 import checkers.nullness.quals.NonNull;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-final class AnoaRecordImpl<T> implements AnoaRecord<T> {
+class AnoaRecordImpl<T> implements AnoaRecord<T> {
 
-  final T record;
+  final Optional<T> optional;
   final private List<@NonNull AnoaCounted> countedList;
 
   static <T> AnoaRecordImpl<T> copy(AnoaRecordImpl<T> other) {
-    return new AnoaRecordImpl<>(other.record, other.countedList);
+    return new AnoaRecordImpl<>(other.optional, other.countedList);
   }
 
   static <T> AnoaRecordImpl<T> create(T record) {
-    return new AnoaRecordImpl<>(record, null);
+    return new AnoaRecordImpl<>(Optional.ofNullable(record), null);
   }
 
   static <T> AnoaRecordImpl<T> create(T record, Stream<@NonNull AnoaCounted> countedStream) {
     final List<AnoaCounted> list = countedStream
         .filter(c -> !(c instanceof AnoaCountedImpl.NullStatus))
         .collect(Collectors.toList());
-    return new AnoaRecordImpl<>(record, list.isEmpty() ? null : list);
+    return new AnoaRecordImpl<>(Optional.ofNullable(record), list.isEmpty() ? null : list);
   }
 
-  private AnoaRecordImpl(T record, List<AnoaCounted> countedList) {
-    this.record = record;
+  private AnoaRecordImpl(Optional<T> optional, List<AnoaCounted> countedList) {
+    this.optional = optional;
     this.countedList = countedList;
   }
 
   @Override
-  public T get() {
-    return record;
-  }
-
-  @Override
-  public boolean isPresent() {
-    return (record != null);
+  public Optional<T> asOptional() {
+    return optional;
   }
 
   @Override
@@ -51,9 +47,10 @@ final class AnoaRecordImpl<T> implements AnoaRecord<T> {
 
   @Override
   public String toString() {
-    return (record == null)
-           ? asCountedStream().map(Object::toString).collect(missingCollector)
-           : asStream().map(Object::toString).collect(presentCollector);
+    return optional.isPresent()
+           ? asStream().map(Object::toString).collect(presentCollector)
+           : asCountedStream().map(Object::toString).collect(missingCollector);
+
   }
 
   static private Collector<CharSequence,?,String> presentCollector =

@@ -3,25 +3,20 @@ package com.adgear.anoa;
 import checkers.nullness.quals.NonNull;
 
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public interface AnoaRecord<T> extends Supplier<T> {
+public interface AnoaRecord<T> {
 
-  default boolean isPresent() {
-    return (get() != null);
-  }
+  @NonNull Optional<T> asOptional();
 
   default @NonNull Stream<@NonNull AnoaCounted> asCountedStream() {
-    return Stream.of(AnoaCountedImpl.NullStatus.getNullStatus(get()));
+    return Stream.of(asOptional().isPresent()
+                     ? AnoaCountedImpl.NullStatus.PRESENT
+                     : AnoaCountedImpl.NullStatus.MISSING);
   }
 
   default @NonNull Stream<@NonNull T> asStream() {
-    return isPresent() ? Stream.of(get()) : Stream.<T>empty();
-  }
-
-  default @NonNull Optional<T> asOptional() {
-    return isPresent() ? Optional.of(get()) : Optional.<T>empty();
+    return asOptional().isPresent() ? Stream.of(asOptional().get()) : Stream.<T>empty();
   }
 
   static <T> @NonNull AnoaRecord<T> of(T record) {

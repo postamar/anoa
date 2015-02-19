@@ -34,7 +34,7 @@ public class AvroWriterTest {
             .map(TokenBuffer::asParser)
             .map(AnoaRecord::of)
             .map(AnoaFunction.pokemonizeChecked(JsonParser::readValueAsTree, JsonParser.class))
-            .collect(AnoaCollector.inList())
+            .collect(AnoaCollector.inSet())
             .streamCounters()
             .parallel()
             .peek(System.err::println)

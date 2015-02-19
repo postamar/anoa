@@ -1,5 +1,7 @@
 package com.adgear.anoa.write;
 
+import checkers.nullness.quals.NonNull;
+
 import com.adgear.anoa.AnoaFunction;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,27 +20,30 @@ import java.util.function.Function;
 
 public class AnoaWrite {
 
-  static public <T> AnoaFunction<T, TokenBuffer> anoaFn(Class<T> avroOrThriftClass) {
+  static public <T> @NonNull AnoaFunction<T, TokenBuffer> anoaFn(
+      @NonNull Class<T> avroOrThriftClass) {
     return AnoaFunction.pokemonize(fnWrap(biCo(avroOrThriftClass)),
                                    TBase.class.isAssignableFrom(avroOrThriftClass)
                                    ? ThriftWriter.class
                                    : AvroWriter.class);
   }
 
-  static public AnoaFunction<GenericRecord, TokenBuffer> anoaFn(Schema avroSchema, Class context) {
+  static public @NonNull AnoaFunction<GenericRecord, TokenBuffer> anoaFn(@NonNull Schema avroSchema,
+                                                                         Class context) {
     return AnoaFunction.pokemonize(fnWrap(biCo(avroSchema)), AvroWriter.class);
   }
 
-  static public <T> Function<T, TokenBuffer> fn(Class<T> avroOrThriftClass) {
+  static public <T> @NonNull Function<T, TokenBuffer> fn(@NonNull Class<T> avroOrThriftClass) {
     return fnWrap(biCo(avroOrThriftClass));
   }
 
-  static public Function<GenericRecord, TokenBuffer> fn(Schema avroSchema) {
+  static public @NonNull Function<GenericRecord, TokenBuffer> fn(@NonNull Schema avroSchema) {
     return fnWrap(biCo(avroSchema));
   }
 
   @SuppressWarnings("unchecked")
-  static public <T> BiConsumer<T, JsonGenerator> biCo(Class<T> avroOrThriftClass) {
+  static public <T> @NonNull BiConsumer<T, JsonGenerator> biCo(
+      @NonNull Class<T> avroOrThriftClass) {
     if (TBase.class.isAssignableFrom(avroOrThriftClass)) {
       return cache.computeIfAbsent(avroOrThriftClass, __ -> new ThriftWriter(avroOrThriftClass));
     } else if (SpecificRecord.class.isAssignableFrom(avroOrThriftClass)) {
@@ -49,7 +54,7 @@ public class AnoaWrite {
   }
 
   @SuppressWarnings("unchecked")
-  static public BiConsumer<GenericRecord, JsonGenerator> biCo(Schema avroSchema) {
+  static public @NonNull BiConsumer<GenericRecord, JsonGenerator> biCo(@NonNull Schema avroSchema) {
     return cache.computeIfAbsent(avroSchema, __ -> new AvroWriter(avroSchema));
   }
 

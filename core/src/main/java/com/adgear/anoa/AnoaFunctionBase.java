@@ -13,7 +13,7 @@ abstract class AnoaFunctionBase<T, R> implements AnoaFunction<T, R>, AnoaConsume
   @Override
   @SuppressWarnings("unchecked")
   public @NonNull AnoaRecord<R> apply(@NonNull AnoaRecord<T> record) {
-    return record.isPresent()
+    return record.asOptional().isPresent()
            ? applyNonNull(record)
            : ((record instanceof AnoaRecordImpl)
               ? (AnoaRecordImpl<R>) record
@@ -22,7 +22,7 @@ abstract class AnoaFunctionBase<T, R> implements AnoaFunction<T, R>, AnoaConsume
 
   @Override
   public void accept(@NonNull AnoaRecord<T> record) {
-    if (record.isPresent()) {
+    if (record.asOptional().isPresent()) {
       acceptNonNull(record);
     }
   }

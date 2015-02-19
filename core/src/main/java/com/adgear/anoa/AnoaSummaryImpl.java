@@ -23,8 +23,8 @@ class AnoaSummaryImpl<T> implements AnoaSummary<T> {
   }
 
   void accumulate(AnoaRecord<T> record) {
-    if (present != null && record.isPresent()) {
-      present.add(record.get());
+    if (present != null && record.asOptional().isPresent()) {
+      present.add(record.asOptional().get());
     }
     record.asCountedStream()
         .forEach(ac -> counters.merge(ac, 1L, Long::sum));
