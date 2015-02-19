@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
-class AnoaCollectorImpl<T> implements AnoaCollector<T,AnoaSummaryImpl<T>> {
+class AnoaCollectorImpl<T> implements AnoaCollector<T, AnoaSummaryImpl<T>> {
 
   final Supplier<AnoaSummaryImpl<T>> supplier;
   final Set<Characteristics> characteristicsSet;

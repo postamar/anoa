@@ -15,43 +15,13 @@
   <dependencies>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>2.5.0</version>
+      <artifactId>jackson-core</artifactId>
+      <version>${project.version.jackson}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-      <version>2.5.0</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>1.10</version>
-    </dependency>
-    <dependency>
-      <groupId>net.sf.supercsv</groupId>
-      <artifactId>super-csv</artifactId>
-      <version>2.2.1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.msgpack</groupId>
-      <artifactId>msgpack</artifactId>
-      <version>0.6.11</version>
-    </dependency>
-    <dependency>
-      <groupId>net.sf.josql</groupId>
-      <artifactId>josql</artifactId>
-      <version>2.2</version>
-    </dependency>
-    <dependency>
-      <groupId>edu.washington.cs.types.checker</groupId>
-      <artifactId>checker-framework</artifactId>
-      <version>1.7.5</version>
-    </dependency>
-    <dependency>
-      <groupId>io.dropwizard.metrics</groupId>
-      <artifactId>metrics-core</artifactId>
-      <version>3.1.0</version>
+      <artifactId>jackson-databind</artifactId>
+      <version>${project.version.jackson}</version>
     </dependency>
     <!-- test dependencies -->
     <dependency>

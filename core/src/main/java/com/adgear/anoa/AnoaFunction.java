@@ -3,29 +3,37 @@ package com.adgear.anoa;
 import checkers.nullness.quals.NonNull;
 
 import java.util.function.Function;
-import java.util.stream.Stream;
 
-public interface AnoaFunction<T, R> extends Function<AnoaRecord<T>, AnoaRecord<R>> {
+public interface AnoaFunction<T, R>
+    extends Function<@NonNull AnoaRecord<T>, @NonNull AnoaRecord<R>> {
 
-  @Override
-  @NonNull AnoaRecord<R> apply(@NonNull AnoaRecord<T> record);
-
-  static <T, R> AnoaFunction<T, R> of(@NonNull Function<T, R> function) {
+  static <T, R> @NonNull AnoaFunction<T, R> of(@NonNull Function<T, R> function) {
     return new AnoaFunctionBase<T, R>() {
       @Override
-      protected AnoaRecord<R> applyNonNull(@NonNull T record,
-                                           @NonNull Stream<AnoaCounted> countedStream) {
-        return AnoaRecordImpl.create(function.apply(record), countedStream);
+      protected AnoaRecord<R> applyNonNull(@NonNull AnoaRecord<T> record) {
+        return AnoaRecordImpl.create(function.apply(record.get()), record.asCountedStream());
       }
     };
   }
 
-  static <T, R> AnoaFunction<T, R> pokemonize(@NonNull ThrowingFunction<T, R> function) {
-    return pokemonize(function, null);
+  static <T, R> @NonNull AnoaFunction<T, R> pokemonize(@NonNull Function<T, R> function,
+                                                       Class functionContext) {
+    return new AnoaFunctionPokemon<>(function, functionContext);
   }
 
-  static <T, R> AnoaFunction<T, R> pokemonize(@NonNull ThrowingFunction<T, R> function,
-                                              Class functionContext) {
-    return new AnoaFunctionPokemon<>(function, functionContext);
+  interface ThrowingFunction<T, R> {
+    R apply(T t) throws Exception;
+  }
+
+  static <T, R> @NonNull  AnoaFunction<T, R> pokemonizeChecked(
+      @NonNull ThrowingFunction<T, R> function,
+      Class functionContext) {
+    return new AnoaFunctionPokemon<>(t -> {
+      try {
+        return function.apply(t);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }, functionContext);
   }
 }

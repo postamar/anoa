@@ -16,4 +16,12 @@ public interface AnoaCounted extends Comparable<AnoaCounted> {
   static AnoaCounted get(String label) {
     return AnoaCountedImpl.get(label);
   }
+
+  static boolean isPresent(AnoaCounted anoaCounted) {
+    return anoaCounted.equals(AnoaCountedImpl.NullStatus.PRESENT);
+  }
+
+  static boolean isMissing(AnoaCounted anoaCounted) {
+    return anoaCounted.equals(AnoaCountedImpl.NullStatus.MISSING);
+  }
 }

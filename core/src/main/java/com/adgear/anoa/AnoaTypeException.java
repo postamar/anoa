@@ -1,6 +1,6 @@
 package com.adgear.anoa;
 
-public class AnoaTypeException extends AnoaException {
+public class AnoaTypeException extends RuntimeException {
 
   public AnoaTypeException(String message) {
     super(message);

@@ -7,6 +7,7 @@
   <properties>
     <project.version.avro>1.7.6</project.version.avro>
     <project.version.thrift>0.9.2</project.version.thrift>
+    <project.version.jackson>2.5.0</project.version.jackson>
   </properties>
 
   <parent>
@@ -17,8 +18,9 @@
 
   <modules>
     <module>plugin</module>
-    <module>core</module>
     <module>test</module>
+    <module>core</module>
+    <module>tools</module>
   </modules>
 
   <groupId>com.adgear</groupId>
@@ -29,7 +31,7 @@
   <name>Anoa</name>
   <description>
     A Java 1.8 library for robust record manipulation,
-    loosely centered on the Apache Avro and Thrift systems.
+    centered on the Apache Avro and Thrift systems and on the Jackson library.
   </description>
 
   <inceptionYear>2013</inceptionYear>
@@ -121,7 +123,6 @@
   </build>
 
   <dependencies>
-
     <dependency>
       <groupId>org.apache.avro</groupId>
       <artifactId>avro</artifactId>
@@ -142,6 +143,11 @@
       <groupId>org.apache.thrift</groupId>
       <artifactId>libthrift</artifactId>
       <version>${project.version.thrift}</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.washington.cs.types.checker</groupId>
+      <artifactId>checker-framework</artifactId>
+      <version>1.7.5</version>
     </dependency>
   </dependencies>
 

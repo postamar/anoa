@@ -15,25 +15,23 @@ class AnoaCountedImpl implements AnoaCounted {
     return label;
   }
 
-  static AnoaCounted getPresentOrNotPresent(Object o) {
-    return (o == null) ? NOT_PRESENT : PRESENT;
-  }
-
-  static final Basic PRESENT = new Basic("PRESENT");
-  static final Basic NOT_PRESENT = new Basic("NOT_PRESENT");
-  static final Basic UNSPECIFIED = new Basic("UNSPECIFIED");
-
-  static final class Basic extends AnoaCountedImpl {
-
-    private Basic(String label) {
-      super(label);
-    }
-
-  }
-
-  static private ConcurrentHashMap<String, AnoaCountedImpl> cache = new ConcurrentHashMap<>();
-
   static AnoaCountedImpl get(String label) {
     return cache.computeIfAbsent(label, AnoaCountedImpl::new);
   }
+
+  static final class NullStatus extends AnoaCountedImpl {
+
+    private NullStatus(String label) {
+      super(label);
+    }
+
+    static NullStatus getNullStatus(Object o) {
+      return (o == null) ? MISSING : PRESENT;
+    }
+
+    static final NullStatus PRESENT = new NullStatus("PRESENT");
+    static final NullStatus MISSING = new NullStatus("MISSING");
+  }
+
+  static private ConcurrentHashMap<String, AnoaCountedImpl> cache = new ConcurrentHashMap<>();
 }

@@ -13,7 +13,7 @@ public interface AnoaRecord<T> extends Supplier<T> {
   }
 
   default @NonNull Stream<@NonNull AnoaCounted> asCountedStream() {
-    return Stream.of(isPresent() ? AnoaCountedImpl.PRESENT : AnoaCountedImpl.NOT_PRESENT);
+    return Stream.of(AnoaCountedImpl.NullStatus.getNullStatus(get()));
   }
 
   default @NonNull Stream<@NonNull T> asStream() {
@@ -24,7 +24,7 @@ public interface AnoaRecord<T> extends Supplier<T> {
     return isPresent() ? Optional.of(get()) : Optional.<T>empty();
   }
 
-  static <T> @NonNull AnoaRecord<T> create(T record) {
+  static <T> @NonNull AnoaRecord<T> of(T record) {
     return AnoaRecordImpl.create(record);
   }
 }
