@@ -78,7 +78,7 @@ class ThriftWriter<F extends TFieldIdEnum, T extends TBase<T,F>> extends Jackson
       case TType.STRUCT:
         return new ThriftWriter<>(((StructMetaData) metaData).structClass);
       case TType.STRING:
-        return metaData.isBinary() ? new ByteBufferWriter() : new StringWriter();
+        return metaData.isBinary() ? new ByteArrayWriter() : new StringWriter();
     }
     throw new RuntimeException("Unknown type in metadata " + metaData);
   }

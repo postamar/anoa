@@ -23,7 +23,7 @@ class AnoaRecordImpl<T> implements AnoaRecord<T> {
 
   static <T> AnoaRecordImpl<T> create(T record, Stream<@NonNull AnoaCounted> countedStream) {
     final List<AnoaCounted> list = countedStream
-        .filter(c -> !(c instanceof AnoaCountedImpl.NullStatus))
+        .filter(c -> !(c instanceof PresentCounted) && !(c instanceof EmptyCounted))
         .collect(Collectors.toList());
     return new AnoaRecordImpl<>(Optional.ofNullable(record), list.isEmpty() ? null : list);
   }

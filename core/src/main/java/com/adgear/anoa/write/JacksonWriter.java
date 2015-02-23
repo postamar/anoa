@@ -8,7 +8,7 @@ import java.util.function.BiConsumer;
 
 abstract class JacksonWriter<T> implements BiConsumer<T, JsonGenerator> {
 
-  abstract protected void write(T in, JsonGenerator jp) throws IOException;
+  abstract protected void write(T in, JsonGenerator jg) throws IOException;
 
   @Override
   public void accept(T t, JsonGenerator jg) throws UncheckedIOException {

@@ -19,15 +19,21 @@
       <version>${project.version.jackson}</version>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>${project.version.jackson}</version>
+      <groupId>org.jooq</groupId>
+      <artifactId>jool</artifactId>
+      <version>0.9.6</version>
     </dependency>
     <!-- test dependencies -->
     <dependency>
       <groupId>com.adgear</groupId>
       <artifactId>anoa-test</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${project.version.jackson}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

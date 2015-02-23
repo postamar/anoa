@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
 
@@ -62,7 +63,7 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
     }
   }
 
-  final private Map<String,Field> fieldLookUp;
+  final private Map<String, Optional<Field>> fieldLookUp;
 
   abstract protected R newInstance() throws Exception;
 
@@ -70,7 +71,8 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
   private AvroReader(Schema schema) {
     this.fieldLookUp = new HashMap<>();
     for (Schema.Field field : schema.getFields()) {
-      final Field lookUpValue = new Field(field, createReader(field.schema()));
+      final Optional<Field> lookUpValue = Optional.of(new Field(field,
+                                                                createReader(field.schema())));
       fieldLookUp.put(field.name(), lookUpValue);
       for (String alias : field.aliases()) {
         fieldLookUp.put(alias, lookUpValue);
@@ -88,8 +90,16 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
         return null;
       }
       doMap(jp, (fieldName, p) -> {
-        final Field field = fieldLookUp.get(fieldName);
-        if (field != null) {
+        Optional<Field> cacheValue = fieldLookUp.get(fieldName);
+        if (cacheValue == null) {
+          Optional<Map.Entry<String,Optional<Field>>> found = fieldLookUp.entrySet().stream()
+              .filter(e -> (0 == fieldName.compareToIgnoreCase(e.getKey())))
+              .findAny();
+          cacheValue = found.isPresent() ? found.get().getValue() : Optional.<Field>empty();
+          fieldLookUp.put(fieldName, cacheValue);
+        }
+        if (cacheValue.isPresent()) {
+          final Field field = cacheValue.get();
           record.put(field.pos, field.valueOrDefault(field.reader.read(p)));
         } else {
           gobbleValue(p);
@@ -115,8 +125,10 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
           throw new AnoaTypeException(e);
         }
         doMap(jp, (fieldName, p) -> {
-          final Field field = fieldLookUp.get(fieldName);
-          if (field != null) {
+          final Optional<Field> cacheValue =
+              fieldLookUp.computeIfAbsent(fieldName, __ -> Optional.<Field>empty());
+          if (cacheValue.isPresent()) {
+            final Field field = cacheValue.get();
             record.put(field.pos, field.valueOrDefault(field.reader.readStrict(p)));
           } else {
             gobbleValue(p);

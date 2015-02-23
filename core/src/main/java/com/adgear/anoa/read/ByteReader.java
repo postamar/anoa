@@ -2,7 +2,6 @@ package com.adgear.anoa.read;
 
 import com.adgear.anoa.AnoaTypeException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 
 import java.io.IOException;
 
@@ -10,12 +9,8 @@ class ByteReader extends JacksonReader<Byte> {
 
   @Override
   public Byte read(JsonParser jp) throws IOException {
-    if (jp.getCurrentToken() != JsonToken.VALUE_NUMBER_INT) {
-      gobbleValue(jp);
-      return null;
-    }
-    int intValue = jp.getIntValue();
-    return (intValue > Byte.MAX_VALUE || intValue < Byte.MIN_VALUE) ? null : ((byte) intValue);
+    int intValue = jp.getValueAsInt();
+    return (intValue > Byte.MAX_VALUE || intValue < Byte.MIN_VALUE) ? 0 : ((byte) intValue);
   }
 
   @Override

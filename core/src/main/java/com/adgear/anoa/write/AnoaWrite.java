@@ -4,8 +4,6 @@ import checkers.nullness.quals.NonNull;
 
 import com.adgear.anoa.AnoaFunction;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -17,28 +15,37 @@ import java.io.UncheckedIOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class AnoaWrite {
 
-  static public <T> @NonNull AnoaFunction<T, TokenBuffer> anoaFn(
-      @NonNull Class<T> avroOrThriftClass) {
-    return AnoaFunction.pokemonize(fnWrap(biCo(avroOrThriftClass)),
+  static public <T, JG extends JsonGenerator> @NonNull AnoaFunction<T, JG> anoaFn(
+      @NonNull Class<T> avroOrThriftClass,
+      @NonNull Supplier<@NonNull JG> jsonGeneratorSupplier) {
+    return AnoaFunction.pokemonize(fnWrap(biCo(avroOrThriftClass), jsonGeneratorSupplier),
                                    TBase.class.isAssignableFrom(avroOrThriftClass)
                                    ? ThriftWriter.class
                                    : AvroWriter.class);
   }
 
-  static public @NonNull AnoaFunction<GenericRecord, TokenBuffer> anoaFn(@NonNull Schema avroSchema,
-                                                                         Class context) {
-    return AnoaFunction.pokemonize(fnWrap(biCo(avroSchema)), AvroWriter.class);
+  static public <JG extends JsonGenerator> @NonNull AnoaFunction<GenericRecord, JG> anoaFn(
+      @NonNull Schema avroSchema,
+      @NonNull Supplier<@NonNull JG> jsonGeneratorSupplier,
+      Class context) {
+    return AnoaFunction.pokemonize(fnWrap(biCo(avroSchema), jsonGeneratorSupplier),
+                                   AvroWriter.class);
   }
 
-  static public <T> @NonNull Function<T, TokenBuffer> fn(@NonNull Class<T> avroOrThriftClass) {
-    return fnWrap(biCo(avroOrThriftClass));
+  static public <T, JG extends JsonGenerator> @NonNull Function<T, JG> fn(
+      @NonNull Class<T> avroOrThriftClass,
+      @NonNull Supplier<@NonNull JG> jsonGeneratorSupplier) {
+    return fnWrap(biCo(avroOrThriftClass), jsonGeneratorSupplier);
   }
 
-  static public @NonNull Function<GenericRecord, TokenBuffer> fn(@NonNull Schema avroSchema) {
-    return fnWrap(biCo(avroSchema));
+  static public <JG extends JsonGenerator> @NonNull Function<GenericRecord, JG> fn(
+      @NonNull Schema avroSchema,
+      @NonNull Supplier<@NonNull JG> jsonGeneratorSupplier) {
+    return fnWrap(biCo(avroSchema), jsonGeneratorSupplier);
   }
 
   @SuppressWarnings("unchecked")
@@ -59,18 +66,19 @@ public class AnoaWrite {
   }
 
   static private ConcurrentHashMap<Object, BiConsumer> cache = new ConcurrentHashMap<>();
-  static private ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  static private <T> Function<T, TokenBuffer> fnWrap(BiConsumer<T, JsonGenerator> biCo) {
+  static private <T, JG extends JsonGenerator> Function<T, JG> fnWrap(
+      BiConsumer<T, JsonGenerator> biCo,
+      Supplier<JG> jgSupplier) {
     return ((T t) -> {
-      final TokenBuffer tb = new TokenBuffer(OBJECT_MAPPER, false);
-      biCo.accept(t, tb);
+      final JG jg = jgSupplier.get();
+      biCo.accept(t, jg);
       try {
-        tb.flush();
+        jg.flush();
       } catch (IOException e) {
         throw new UncheckedIOException(e);
       }
-      return tb;
+      return jg;
     });
   }
 }

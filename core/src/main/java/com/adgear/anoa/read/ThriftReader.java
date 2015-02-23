@@ -19,6 +19,7 @@ import org.apache.thrift.protocol.TType;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 
 class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends JacksonReader<T> {
@@ -36,7 +37,7 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends Jackson
     final protected JacksonReader<?> reader;
   }
 
-  final private Map<String,Field<F>> fieldLookUp;
+  final private Map<String,Optional<Field<F>>> fieldLookUp;
   final private T instance;
   final private int nRequired;
 
@@ -61,9 +62,9 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends Jackson
       final boolean required = (fieldMetaData.requirementType == TFieldRequirementType.REQUIRED);
       n += required ? 1 : 0;
       fieldLookUp.put(entry.getKey().getFieldName(),
-                      new Field<>(entry.getKey(),
-                                  required,
-                                  createReader(entry.getValue().valueMetaData)));
+                      Optional.of(new Field<>(entry.getKey(),
+                                              required,
+                                              createReader(entry.getValue().valueMetaData))));
     }
     nRequired = n;
   }
@@ -73,8 +74,16 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends Jackson
     if (jp.getCurrentToken() == JsonToken.START_OBJECT) {
       final T result = newInstance();
       doMap(jp, (fieldName, p) -> {
-        final Field<F> field = fieldLookUp.get(fieldName);
-        if (field != null) {
+        Optional<Field<F>> cacheValue = fieldLookUp.get(fieldName);
+        if (cacheValue == null) {
+          Optional<Map.Entry<String, Optional<Field<F>>>> found = fieldLookUp.entrySet().stream()
+              .filter(e -> (0 == fieldName.compareToIgnoreCase(e.getKey())))
+              .findAny();
+          cacheValue = found.isPresent() ? found.get().getValue() : Optional.empty();
+          fieldLookUp.put(fieldName, cacheValue);
+        }
+        if (cacheValue.isPresent()) {
+          final Field<F> field = cacheValue.get();
           result.setFieldValue(field.tFieldIdEnum, field.reader.read(p));
         } else {
           gobbleValue(p);
@@ -100,8 +109,10 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends Jackson
         final T result = newInstance();
         final Counter countRequired = new Counter();
         doMap(jp, (fieldName, p) -> {
-          final Field<F> field = fieldLookUp.get(fieldName);
-          if (field != null) {
+          final Optional<Field<F>> cacheValue =
+              fieldLookUp.computeIfAbsent(fieldName, __ -> Optional.<Field<F>>empty());
+          if (cacheValue.isPresent()) {
+            final Field<F> field = cacheValue.get();
             result.setFieldValue(field.tFieldIdEnum, field.reader.readStrict(p));
             if (field.isRequired) {
               ++countRequired.n;
@@ -111,10 +122,10 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends Jackson
           }
         });
         if (countRequired.n < nRequired) {
-          for (Field<F> field : fieldLookUp.values()) {
-            if (!result.isSet(field.tFieldIdEnum)) {
+          for (Optional<Field<F>> cacheValue : fieldLookUp.values()) {
+            if (!result.isSet(cacheValue.get().tFieldIdEnum)) {
               throw new AnoaTypeException("Required field not set: "
-                                          + field.tFieldIdEnum.getFieldName());
+                                          + cacheValue.get().tFieldIdEnum.getFieldName());
             }
           }
         }

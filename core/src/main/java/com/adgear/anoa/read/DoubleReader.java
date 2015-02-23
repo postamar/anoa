@@ -9,15 +9,7 @@ class DoubleReader extends JacksonReader<Double> {
 
   @Override
   public Double read(JsonParser jp) throws IOException {
-    switch (jp.getCurrentToken()) {
-      case VALUE_NUMBER_FLOAT:
-        return jp.getDoubleValue();
-      case VALUE_NUMBER_INT:
-        return jp.getValueAsDouble();
-      default:
-        gobbleValue(jp);
-        return null;
-    }
+    return jp.getValueAsDouble();
   }
 
   @Override

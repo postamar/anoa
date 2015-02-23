@@ -1,6 +1,14 @@
 package com.adgear.anoa;
 
+import com.adgear.anoa.read.AnoaRead;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.TokenBuffer;
+
+import org.apache.commons.codec.binary.Hex;
+import org.jooq.lambda.Unchecked;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -9,6 +17,10 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import thrift.com.adgear.avro.Simple;
 
 public class JdbcTest {
 
@@ -21,28 +33,63 @@ public class JdbcTest {
     Class.forName("org.h2.Driver");
     try (Connection conn = openDBConnection()) {
       try (Statement stmt = conn.createStatement()) {
-        stmt.execute("CREATE TABLE simple (foo INTEGER, bar VARCHAR(255), baz NUMERIC)");
-        stmt.executeUpdate("INSERT INTO simple VALUES ('101', 'brick', '789.1')");
-        stmt.executeUpdate("INSERT INTO simple VALUES ('-102', 'mortar', '543.2')");
+        stmt.execute("CREATE TABLE simple (foo INTEGER, bar VARBINARY(255), baz NUMERIC)");
+      }
+    }
+  }
+
+  @Before
+  public void resetTable() throws Exception {
+    try (Connection conn = openDBConnection()) {
+      try (Statement stmt = conn.createStatement()) {
+        stmt.execute("TRUNCATE TABLE simple");
+        stmt.executeUpdate("INSERT INTO simple VALUES ('101', 'FEEB', '789.1')");
+        stmt.executeUpdate("INSERT INTO simple VALUES ('-102', 'F00B', '543.2')");
       }
     }
   }
 
   @Test
-  public void testDB() throws SQLException {
-    try (Connection conn = openDBConnection()) {
-      try (Statement stmt = conn.createStatement()) {
-        try (ResultSet rs = stmt.executeQuery("SELECT * FROM simple")) {
-          Assert.assertEquals(3, rs.getMetaData().getColumnCount());
-          Assert.assertTrue(rs.next());
-          Assert.assertEquals(101, rs.getInt(1));
-          Assert.assertEquals("brick", rs.getString(2));
-          Assert.assertEquals(789.1, rs.getDouble(3), 0.0000001);
-          Assert.assertTrue(rs.next());
-          Assert.assertEquals(-102, rs.getInt(1));
-          Assert.assertEquals("mortar", rs.getString(2));
-          Assert.assertEquals(543.2, rs.getDouble(3), 0.0000001);
-          Assert.assertFalse(rs.next());
+  public void testToThrift() throws Exception {
+
+    ObjectMapper m = new ObjectMapper();
+    try (Connection connection = openDBConnection()) {
+      try (Statement statement = connection.createStatement()) {
+        try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {
+
+          List<Simple> simples = AnoaSQL.stream(resultSet)
+              .map(AnoaRecord::of)
+              .map(AnoaFunction.of(TokenBuffer::asParser))
+              .map(AnoaRead.anoaFn(Simple.class, false))
+              .peek(System.out::println)
+              .collect(AnoaCollector.toList())
+              .streamPresent()
+              .collect(Collectors.toList());
+
+          Assert.assertEquals(2, simples.size());
+          Assert.assertEquals(101, simples.get(0).getFoo());
+          Assert.assertArrayEquals(Hex.decodeHex("FEEB".toCharArray()), simples.get(0).getBar());
+          Assert.assertEquals(789.1, simples.get(0).getBaz(), 0.0000001);
+          Assert.assertEquals(-102, simples.get(1).getFoo());
+          Assert.assertArrayEquals(Hex.decodeHex("F00B".toCharArray()), simples.get(1).getBar());
+          Assert.assertEquals(543.2, simples.get(1).getBaz(), 0.0000001);
+        }
+      }
+    }
+  }
+
+  @Test
+  public void test() throws Exception {
+
+    ObjectMapper m = new ObjectMapper();
+    try (Connection connection = openDBConnection()) {
+      try (Statement statement = connection.createStatement()) {
+        try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {
+
+          AnoaSQL.stream(resultSet)
+              .map(TokenBuffer::asParser)
+              .map(Unchecked.function(JsonParser::readValueAsTree))
+              .forEach(System.out::println);
         }
       }
     }

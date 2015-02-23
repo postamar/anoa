@@ -10,9 +10,7 @@ public interface AnoaRecord<T> {
   @NonNull Optional<T> asOptional();
 
   default @NonNull Stream<@NonNull AnoaCounted> asCountedStream() {
-    return Stream.of(asOptional().isPresent()
-                     ? AnoaCountedImpl.NullStatus.PRESENT
-                     : AnoaCountedImpl.NullStatus.MISSING);
+    return Stream.of(asOptional().isPresent() ? PresentCounted.INSTANCE : EmptyCounted.INSTANCE);
   }
 
   default @NonNull Stream<@NonNull T> asStream() {

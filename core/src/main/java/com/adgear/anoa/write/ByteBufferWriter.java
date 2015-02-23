@@ -9,8 +9,6 @@ class ByteBufferWriter extends JacksonWriter<ByteBuffer> {
 
   @Override
   public void write(ByteBuffer byteBuffer, JsonGenerator jsonGenerator) throws IOException {
-    final byte[] bytes = new byte[byteBuffer.limit() - byteBuffer.position()];
-    byteBuffer.get(bytes, byteBuffer.position(), byteBuffer.limit());
-    jsonGenerator.writeBinary(bytes);
+    jsonGenerator.writeBinary(byteBuffer.array());
   }
 }

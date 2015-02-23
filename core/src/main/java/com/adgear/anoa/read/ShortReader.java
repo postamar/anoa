@@ -2,7 +2,6 @@ package com.adgear.anoa.read;
 
 import com.adgear.anoa.AnoaTypeException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 
 import java.io.IOException;
 
@@ -10,12 +9,8 @@ class ShortReader extends JacksonReader<Short> {
 
   @Override
   public Short read(JsonParser jp) throws IOException {
-    if (jp.getCurrentToken() != JsonToken.VALUE_NUMBER_INT) {
-      gobbleValue(jp);
-      return null;
-    }
-    final int i = jp.getIntValue();
-    return (i > Short.MAX_VALUE || i < Short.MIN_VALUE) ? null : ((short) i);
+    final int i = jp.getValueAsInt();
+    return (i > Short.MAX_VALUE || i < Short.MIN_VALUE) ? 0 : ((short) i);
   }
 
   @Override

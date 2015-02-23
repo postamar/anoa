@@ -1,12 +1,14 @@
 package com.adgear.anoa;
 
+import checkers.nullness.quals.NonNull;
+
 import java.util.concurrent.ConcurrentHashMap;
 
 class AnoaCountedImpl implements AnoaCounted {
 
-  final public String label;
+  final @NonNull String label;
 
-  AnoaCountedImpl(String label) {
+  AnoaCountedImpl(@NonNull String label) {
     this.label = label;
   }
 
@@ -15,22 +17,26 @@ class AnoaCountedImpl implements AnoaCounted {
     return label;
   }
 
-  static AnoaCountedImpl get(String label) {
-    return cache.computeIfAbsent(label, AnoaCountedImpl::new);
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    } else if (o == null) {
+      return false;
+    } else if (getClass() != o.getClass()) {
+      return false;
+    } else {
+      return label.equals(((AnoaCountedImpl) o).label);
+    }
   }
 
-  static final class NullStatus extends AnoaCountedImpl {
+  @Override
+  public int hashCode() {
+    return label.hashCode();
+  }
 
-    private NullStatus(String label) {
-      super(label);
-    }
-
-    static NullStatus getNullStatus(Object o) {
-      return (o == null) ? MISSING : PRESENT;
-    }
-
-    static final NullStatus PRESENT = new NullStatus("PRESENT");
-    static final NullStatus MISSING = new NullStatus("MISSING");
+  static AnoaCountedImpl get(String label) {
+    return cache.computeIfAbsent(label, AnoaCountedImpl::new);
   }
 
   static private ConcurrentHashMap<String, AnoaCountedImpl> cache = new ConcurrentHashMap<>();

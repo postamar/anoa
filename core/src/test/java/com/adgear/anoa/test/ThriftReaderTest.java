@@ -28,7 +28,7 @@ public class ThriftReaderTest {
              .sequential()
              .map(AnoaRead.anoaFn(BidRequest.class, true))
              .peek(AnoaConsumer.of(System.out::println))
-             .collect(AnoaCollector.inList());
+             .collect(AnoaCollector.toList());
       }
     }
     collected.streamCounters().map(Object::toString).sorted().forEach(System.err::println);

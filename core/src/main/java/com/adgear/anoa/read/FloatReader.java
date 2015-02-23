@@ -9,19 +9,7 @@ class FloatReader extends JacksonReader<Float> {
 
   @Override
   public Float read(JsonParser jp) throws IOException {
-    switch (jp.getCurrentToken()) {
-      case VALUE_NUMBER_FLOAT:
-        return jp.getFloatValue();
-      case VALUE_NUMBER_INT:
-        try {
-          return (float) jp.getValueAsDouble();
-        } catch (NumberFormatException e) {
-          return null;
-        }
-      default:
-        gobbleValue(jp);
-        return null;
-    }
+    return (float) jp.getValueAsDouble();
   }
 
   @Override

@@ -2,6 +2,9 @@ package com.adgear.anoa;
 
 import checkers.nullness.quals.NonNull;
 
+import org.jooq.lambda.Unchecked;
+import org.jooq.lambda.fi.util.function.CheckedConsumer;
+
 import java.util.function.Consumer;
 
 public interface AnoaConsumer<T> extends Consumer<@NonNull AnoaRecord<T>> {
@@ -21,19 +24,8 @@ public interface AnoaConsumer<T> extends Consumer<@NonNull AnoaRecord<T>> {
     return new AnoaFunctionPokemon<>(t -> {consumer.accept(t); return t;}, functionContext);
   }
 
-  interface ThrowingConsumer<T> {
-    void accept(T t) throws Exception;
-  }
-
-  static <T, R> @NonNull AnoaConsumer<T> pokemonizeChecked(@NonNull ThrowingConsumer<T> consumer,
+  static <T, R> @NonNull AnoaConsumer<T> pokemonizeChecked(@NonNull CheckedConsumer<T> consumer,
                                                             Class functionContext) {
-    return new AnoaFunctionPokemon<>(t -> {
-      try {
-        consumer.accept(t);
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-      return t;
-    }, functionContext);
+    return pokemonize(Unchecked.consumer(consumer), functionContext);
   }
 }

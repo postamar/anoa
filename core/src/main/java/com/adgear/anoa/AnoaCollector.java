@@ -9,11 +9,11 @@ import java.util.stream.Collector;
 public interface AnoaCollector<T, S extends AnoaSummary<T>>
     extends Collector<AnoaRecord<T>, S, AnoaSummary<T>> {
 
-  static <T> @NonNull AnoaCollector<T, ? extends AnoaSummary<T>> inList() {
+  static <T> @NonNull AnoaCollector<T, ? extends AnoaSummary<T>> toList() {
     return new AnoaCollectorImpl<>(() -> new AnoaSummaryImpl<>(new ArrayList<>(), false));
   }
 
-  static <T> @NonNull AnoaCollector<T, ? extends AnoaSummary<T>> inSet() {
+  static <T> @NonNull AnoaCollector<T, ? extends AnoaSummary<T>> toSet() {
     return new AnoaCollectorImpl<>(() -> new AnoaSummaryImpl<>(new HashSet<>(), true));
   }
 

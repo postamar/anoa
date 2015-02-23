@@ -9,15 +9,7 @@ class BooleanReader extends JacksonReader<Boolean> {
 
   @Override
   public Boolean read(JsonParser jp) throws IOException {
-    switch (jp.getCurrentToken()) {
-      case VALUE_TRUE:
-        return true;
-      case VALUE_FALSE:
-        return false;
-      default:
-        gobbleValue(jp);
-        return null;
-    }
+    return jp.getValueAsBoolean();
   }
 
   @Override

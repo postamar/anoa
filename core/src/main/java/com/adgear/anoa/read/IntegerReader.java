@@ -2,7 +2,6 @@ package com.adgear.anoa.read;
 
 import com.adgear.anoa.AnoaTypeException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 
 import java.io.IOException;
 
@@ -10,12 +9,7 @@ class IntegerReader extends JacksonReader<Integer> {
 
   @Override
   public Integer read(JsonParser jp) throws IOException {
-    if (jp.getCurrentToken() == JsonToken.VALUE_NUMBER_INT) {
-      return jp.getIntValue();
-    } else {
-      gobbleValue(jp);
-      return null;
-    }
+    return jp.getValueAsInt();
   }
 
   @Override
