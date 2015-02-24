@@ -15,14 +15,25 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.function.BiConsumer;
 
-public class AnoaSQL {
+public class AnoaJdbc {
 
-  static public Seq<TokenBuffer> stream(ResultSet resultSet) throws SQLException {
-    ObjectMapper objectMapper = new ObjectMapper();
-    BiConsumer<JsonGenerator,ResultSet> bico = rowReadBiConsumer(resultSet.getMetaData());
+  static final public ObjectMapper OBJECT_MAPPER;
+
+  static {
+    OBJECT_MAPPER = new ObjectMapper();
+    OBJECT_MAPPER.findAndRegisterModules();
+  }
+
+  static public Seq<TokenBuffer> from(ResultSet resultSet) {
+    final BiConsumer<JsonGenerator,ResultSet> biCo;
+    try {
+      biCo = rowReadBiConsumer(resultSet.getMetaData());
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
     return SQL.seq(resultSet, rs -> {
-      TokenBuffer tb = new TokenBuffer(objectMapper, false);
-      bico.accept(tb, rs);
+      TokenBuffer tb = new TokenBuffer(OBJECT_MAPPER, false);
+      biCo.accept(tb, rs);
       try {
         tb.flush();
       } catch(IOException e) {
@@ -32,7 +43,7 @@ public class AnoaSQL {
     });
   }
 
-  static public BiConsumer<JsonGenerator, ResultSet> rowReadBiConsumer(ResultSetMetaData rsmd)
+  static protected BiConsumer<JsonGenerator, ResultSet> rowReadBiConsumer(ResultSetMetaData rsmd)
       throws SQLException {
     String[] columnNames = new String[rsmd.getColumnCount()];
     for (int c = 0; c < columnNames.length; c++) {

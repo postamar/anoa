@@ -57,7 +57,7 @@ public class JdbcTest {
       try (Statement statement = connection.createStatement()) {
         try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {
 
-          List<Simple> simples = AnoaSQL.stream(resultSet)
+          List<Simple> simples = AnoaJdbc.from(resultSet)
               .map(AnoaRecord::of)
               .map(AnoaFunction.of(TokenBuffer::asParser))
               .map(AnoaRead.anoaFn(Simple.class, false))
@@ -86,7 +86,7 @@ public class JdbcTest {
       try (Statement statement = connection.createStatement()) {
         try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {
 
-          AnoaSQL.stream(resultSet)
+          AnoaJdbc.from(resultSet)
               .map(TokenBuffer::asParser)
               .map(Unchecked.function(JsonParser::readValueAsTree))
               .forEach(System.out::println);
