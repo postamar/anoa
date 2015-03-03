@@ -2,6 +2,8 @@ package com.adgear.anoa;
 
 import checkers.nullness.quals.NonNull;
 
+import com.adgear.anoa.impl.AnoaRecordImpl;
+
 import java.util.Optional;
 import java.util.stream.Stream;
 

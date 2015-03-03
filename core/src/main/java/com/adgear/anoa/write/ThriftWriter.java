@@ -1,10 +1,10 @@
 package com.adgear.anoa.write;
 
+import com.adgear.anoa.factory.util.ReflectionUtils;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import org.apache.thrift.TBase;
 import org.apache.thrift.TFieldIdEnum;
-import org.apache.thrift.meta_data.FieldMetaData;
 import org.apache.thrift.meta_data.FieldValueMetaData;
 import org.apache.thrift.meta_data.ListMetaData;
 import org.apache.thrift.meta_data.MapMetaData;
@@ -13,7 +13,6 @@ import org.apache.thrift.meta_data.StructMetaData;
 import org.apache.thrift.protocol.TType;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -24,16 +23,10 @@ class ThriftWriter<F extends TFieldIdEnum, T extends TBase<T,F>> extends Jackson
   @SuppressWarnings("unchecked")
   ThriftWriter(Class<T> thriftClass) {
     fieldMap = new LinkedHashMap<>();
-    FieldMetaData.getStructMetaDataMap(thriftClass).entrySet().stream()
-        .sorted(new Comparator<Map.Entry<? extends TFieldIdEnum, FieldMetaData>>() {
-          @Override
-          public int compare(Map.Entry<? extends TFieldIdEnum, FieldMetaData> o1,
-                             Map.Entry<? extends TFieldIdEnum, FieldMetaData> o2) {
-            return o1.getKey().getThriftFieldId() - o2.getKey().getThriftFieldId();
-          }
-        })
-        .forEach(e -> fieldMap.put((F) e.getKey(),
-                                   (JacksonWriter<Object>) createWriter(e.getValue().valueMetaData)));
+    ReflectionUtils.getThriftMetaDataMap(thriftClass).entrySet().stream()
+        .forEach(e -> fieldMap.put(
+            (F) e.getKey(),
+            (JacksonWriter<Object>) createWriter(e.getValue().valueMetaData)));
   }
 
   @Override

@@ -17,6 +17,7 @@ import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificFixed;
 import org.apache.avro.specific.SpecificRecord;
+import org.codehaus.jackson.node.NullNode;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,25 +31,11 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
   static protected class Field {
 
     @SuppressWarnings("unchecked")
-    protected Field(Schema.Field field, JacksonReader<?> reader) {
-      if (field.defaultValue() == null) {
-        defaultValue = null;
-      } else {
-        try {
-          ByteArrayOutputStream baos = new ByteArrayOutputStream();
-          BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
-          ResolvingGrammarGenerator.encode(encoder, field.schema(), field.defaultValue());
-          encoder.flush();
-          BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);
-          this.defaultValue =
-              SpecificData.get().createDatumReader(field.schema()).read(null, decoder);
-        } catch (IOException e) {
-          throw new AvroRuntimeException(e);
-        }
-      }
+    protected Field(Schema.Field field, Object defaultValue, JacksonReader<?> reader) {
       this.pos = field.pos();
       this.schema = field.schema();
       this.reader = reader;
+      this.defaultValue = defaultValue;
     }
 
     final protected int pos;
@@ -63,6 +50,7 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
     }
   }
 
+  final private Map<Integer, Object> defaultValues;
   final private Map<String, Optional<Field>> fieldLookUp;
 
   abstract protected R newInstance() throws Exception;
@@ -70,13 +58,34 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
   @SuppressWarnings("unchecked")
   private AvroReader(Schema schema) {
     this.fieldLookUp = new HashMap<>();
-    for (Schema.Field field : schema.getFields()) {
-      final Optional<Field> lookUpValue = Optional.of(new Field(field,
-                                                                createReader(field.schema())));
-      fieldLookUp.put(field.name(), lookUpValue);
-      for (String alias : field.aliases()) {
-        fieldLookUp.put(alias, lookUpValue);
+    this.defaultValues = new HashMap<>();
+    for (Schema.Field f : schema.getFields()) {
+      final Object v = defaultValue(f);
+      if (v != null) {
+        defaultValues.put(f.pos(), v);
       }
+      Optional<Field> cached = Optional.of(new Field(f, v, createReader(f.schema())));
+      fieldLookUp.put(f.name(), cached);
+      for (String alias : f.aliases()) {
+        fieldLookUp.put(alias, cached);
+      }
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private Object defaultValue(Schema.Field field) {
+    if (field.defaultValue() == null || NullNode.getInstance().equals(field.defaultValue())) {
+        return null;
+    }
+    try {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
+      ResolvingGrammarGenerator.encode(encoder, field.schema(), field.defaultValue());
+      encoder.flush();
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);
+      return SpecificData.get().createDatumReader(field.schema()).read(null, decoder);
+    } catch (IOException e) {
+      throw new AvroRuntimeException(e);
     }
   }
 
@@ -89,10 +98,11 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
       } catch (Exception e) {
         return null;
       }
+      defaultValues.entrySet().stream().forEach(e -> record.put(e.getKey(), e.getValue()));
       doMap(jp, (fieldName, p) -> {
         Optional<Field> cacheValue = fieldLookUp.get(fieldName);
         if (cacheValue == null) {
-          Optional<Map.Entry<String,Optional<Field>>> found = fieldLookUp.entrySet().stream()
+          Optional<Map.Entry<String, Optional<Field>>> found = fieldLookUp.entrySet().stream()
               .filter(e -> (0 == fieldName.compareToIgnoreCase(e.getKey())))
               .findAny();
           cacheValue = found.isPresent() ? found.get().getValue() : Optional.<Field>empty();
@@ -124,6 +134,7 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
         } catch (Exception e) {
           throw new AnoaTypeException(e);
         }
+        defaultValues.entrySet().stream().forEach(e -> record.put(e.getKey(), e.getValue()));
         doMap(jp, (fieldName, p) -> {
           final Optional<Field> cacheValue =
               fieldLookUp.computeIfAbsent(fieldName, __ -> Optional.<Field>empty());
@@ -134,6 +145,7 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
             gobbleValue(p);
           }
         });
+        SpecificData.get().validate(record.getSchema(), record);
         return record;
       default:
         throw new AnoaTypeException("Token is not '{': " + jp.getCurrentToken());

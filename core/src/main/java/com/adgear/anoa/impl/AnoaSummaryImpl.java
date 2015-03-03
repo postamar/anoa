@@ -1,4 +1,8 @@
-package com.adgear.anoa;
+package com.adgear.anoa.impl;
+
+import com.adgear.anoa.AnoaCounted;
+import com.adgear.anoa.AnoaRecord;
+import com.adgear.anoa.AnoaSummary;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -6,13 +10,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.stream.Stream;
 
-class AnoaSummaryImpl<T> implements AnoaSummary<T> {
+public class AnoaSummaryImpl<T> implements AnoaSummary<T> {
 
   final private Collection<T> present;
   final private Map<AnoaCounted,Long> counters;
   final boolean isConcurrent;
 
-  AnoaSummaryImpl(Collection<T> present, boolean isConcurrent) {
+  public AnoaSummaryImpl(Collection<T> present, boolean isConcurrent) {
     this.present = present;
     this.counters = new HashMap<>();
     this.isConcurrent = isConcurrent;

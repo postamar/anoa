@@ -1,16 +1,19 @@
-package com.adgear.anoa;
+package com.adgear.anoa.impl;
 
 import checkers.nullness.quals.NonNull;
+
+import com.adgear.anoa.AnoaCounted;
+import com.adgear.anoa.AnoaRecord;
 
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-class AnoaFunctionPokemon<T, R> extends AnoaFunctionBase<T, R> {
+public class AnoaFunctionPokemon<T, R> extends AnoaFunctionBase<T, R> {
 
   final @NonNull Function<T, R> wrappedFunction;
   final Class functionContext;
 
-  AnoaFunctionPokemon(@NonNull Function<T, R> wrappedFunction,
+  public AnoaFunctionPokemon(@NonNull Function<T, R> wrappedFunction,
                       Class functionContext) {
     this.wrappedFunction = wrappedFunction;
     this.functionContext = functionContext;
@@ -24,13 +27,13 @@ class AnoaFunctionPokemon<T, R> extends AnoaFunctionBase<T, R> {
   }
 
   @Override
-  final protected AnoaRecord<R> applyNonNull(@NonNull AnoaRecord<@NonNull T> record) {
+  final protected AnoaRecord<R> applyPresent(@NonNull AnoaRecord<@NonNull T> record) {
     final R result;
     try {
       result = wrappedFunction.apply(record.asOptional().get());
     } catch (RuntimeException e) {
       final AnoaCounted counted = AnoaCounted.get(toCountedLabel(e));
-      return AnoaRecordImpl.create(null, Stream.concat(Stream.of(counted), record.asCountedStream()));
+      return AnoaRecordImpl.createEmpty(record, Stream.of(counted));
     }
     return AnoaRecordImpl.create(result, record.asCountedStream());
   }

@@ -1,20 +1,24 @@
-package com.adgear.anoa;
+package com.adgear.anoa.impl;
 
 import checkers.nullness.quals.NonNull;
 
-abstract class AnoaFunctionBase<T, R> implements AnoaFunction<T, R>, AnoaConsumer<T> {
+import com.adgear.anoa.AnoaConsumer;
+import com.adgear.anoa.AnoaFunction;
+import com.adgear.anoa.AnoaRecord;
 
-  abstract protected AnoaRecord<R> applyNonNull(@NonNull AnoaRecord<@NonNull T> record);
+public abstract class AnoaFunctionBase<T, R> implements AnoaFunction<T, R>, AnoaConsumer<T> {
 
-  protected void acceptNonNull(@NonNull AnoaRecord<@NonNull T> record) {
-    applyNonNull(record);
+  abstract protected AnoaRecord<R> applyPresent(@NonNull AnoaRecord<@NonNull T> record);
+
+  protected void acceptPresent(@NonNull AnoaRecord<@NonNull T> record) {
+    applyPresent(record);
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public @NonNull AnoaRecord<R> apply(@NonNull AnoaRecord<T> record) {
     return record.asOptional().isPresent()
-           ? applyNonNull(record)
+           ? applyPresent(record)
            : ((record instanceof AnoaRecordImpl)
               ? (AnoaRecordImpl<R>) record
               : AnoaRecordImpl.create(null, record.asCountedStream()));
@@ -23,7 +27,7 @@ abstract class AnoaFunctionBase<T, R> implements AnoaFunction<T, R>, AnoaConsume
   @Override
   public void accept(@NonNull AnoaRecord<T> record) {
     if (record.asOptional().isPresent()) {
-      acceptNonNull(record);
+      acceptPresent(record);
     }
   }
 }

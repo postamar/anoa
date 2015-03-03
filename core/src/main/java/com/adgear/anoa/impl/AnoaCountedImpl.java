@@ -1,10 +1,12 @@
-package com.adgear.anoa;
+package com.adgear.anoa.impl;
 
 import checkers.nullness.quals.NonNull;
 
+import com.adgear.anoa.AnoaCounted;
+
 import java.util.concurrent.ConcurrentHashMap;
 
-class AnoaCountedImpl implements AnoaCounted {
+public class AnoaCountedImpl implements AnoaCounted {
 
   final @NonNull String label;
 
@@ -35,7 +37,7 @@ class AnoaCountedImpl implements AnoaCounted {
     return label.hashCode();
   }
 
-  static AnoaCountedImpl get(String label) {
+  static public AnoaCountedImpl get(String label) {
     return cache.computeIfAbsent(label, AnoaCountedImpl::new);
   }
 

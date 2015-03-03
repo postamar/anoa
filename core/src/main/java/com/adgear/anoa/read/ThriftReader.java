@@ -1,6 +1,7 @@
 package com.adgear.anoa.read;
 
 import com.adgear.anoa.AnoaTypeException;
+import com.adgear.anoa.factory.util.ReflectionUtils;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
@@ -47,24 +48,21 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends Jackson
 
   @SuppressWarnings("unchecked")
   private ThriftReader(StructMetaData metaData) {
+    Class<T> thriftClass = (Class<T>) metaData.structClass;
     try {
-      instance = (T) metaData.structClass.newInstance();
+      instance = thriftClass.newInstance();
     } catch (InstantiationException | IllegalAccessException e) {
       throw new RuntimeException(e);
     }
     instance.clear();
     fieldLookUp = new HashMap<>();
     int n = 0;
-    final Map<F,FieldMetaData> metaDataMap = (Map<F,FieldMetaData>)
-        FieldMetaData.getStructMetaDataMap(metaData.structClass);
-    for (Map.Entry<F,FieldMetaData> entry : metaDataMap.entrySet()) {
-      final FieldMetaData fieldMetaData = entry.getValue();
-      final boolean required = (fieldMetaData.requirementType == TFieldRequirementType.REQUIRED);
+    for (Map.Entry<F,FieldMetaData> entry :
+        ReflectionUtils.getThriftMetaDataMap(thriftClass).entrySet()) {
+      final boolean required = (entry.getValue().requirementType == TFieldRequirementType.REQUIRED);
       n += required ? 1 : 0;
-      fieldLookUp.put(entry.getKey().getFieldName(),
-                      Optional.of(new Field<>(entry.getKey(),
-                                              required,
-                                              createReader(entry.getValue().valueMetaData))));
+      fieldLookUp.put(entry.getKey().getFieldName(), Optional.of(
+          new Field<>(entry.getKey(), required, createReader(entry.getValue().valueMetaData))));
     }
     nRequired = n;
   }

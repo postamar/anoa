@@ -1,17 +1,23 @@
 package com.adgear.anoa;
 
+import com.adgear.anoa.factory.AvroConsumers;
+import com.adgear.anoa.factory.AvroSpecificStreams;
+import com.adgear.anoa.factory.JdbcStreams;
+import com.adgear.anoa.factory.util.WriteConsumer;
 import com.adgear.anoa.read.AnoaRead;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.TokenBuffer;
+import com.fasterxml.jackson.core.TreeNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.commons.codec.binary.Hex;
-import org.jooq.lambda.Unchecked;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -33,7 +39,7 @@ public class JdbcTest {
     Class.forName("org.h2.Driver");
     try (Connection conn = openDBConnection()) {
       try (Statement stmt = conn.createStatement()) {
-        stmt.execute("CREATE TABLE simple (foo INTEGER, bar VARBINARY(255), baz NUMERIC)");
+        stmt.execute("CREATE TABLE simple (foo INTEGER, bar VARBINARY(255), baz DOUBLE)");
       }
     }
   }
@@ -51,15 +57,13 @@ public class JdbcTest {
 
   @Test
   public void testToThrift() throws Exception {
-
-    ObjectMapper m = new ObjectMapper();
     try (Connection connection = openDBConnection()) {
       try (Statement statement = connection.createStatement()) {
         try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {
 
-          List<Simple> simples = AnoaJdbc.from(resultSet)
+          List<Simple> simples = JdbcStreams.from(resultSet)
               .map(AnoaRecord::of)
-              .map(AnoaFunction.of(TokenBuffer::asParser))
+              .map(AnoaFunction.of(TreeNode::traverse))
               .map(AnoaRead.anoaFn(Simple.class, false))
               .peek(System.out::println)
               .collect(AnoaCollector.toList())
@@ -79,17 +83,34 @@ public class JdbcTest {
   }
 
   @Test
-  public void test() throws Exception {
-
-    ObjectMapper m = new ObjectMapper();
+  public void testDB() throws Exception {
     try (Connection connection = openDBConnection()) {
       try (Statement statement = connection.createStatement()) {
         try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {
-
-          AnoaJdbc.from(resultSet)
-              .map(TokenBuffer::asParser)
-              .map(Unchecked.function(JsonParser::readValueAsTree))
+          JdbcStreams.from(resultSet)
               .forEach(System.out::println);
+        }
+      }
+    }
+  }
+
+  @Test
+  public void testSchema() throws Exception {
+    try (Connection connection = openDBConnection()) {
+      try (Statement statement = connection.createStatement()) {
+        try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {
+          Schema induced = JdbcStreams.induceSchema(resultSet.getMetaData());
+
+          ByteArrayOutputStream baos = new ByteArrayOutputStream();
+          try (WriteConsumer<GenericRecord> consumer = AvroConsumers.batch(baos, induced)) {
+            JdbcStreams.from(resultSet)
+                .map(ObjectNode::traverse)
+                .map(AnoaRead.fn(induced, false))
+                .forEach(consumer);
+          }
+          Assert.assertEquals(2, AvroSpecificStreams.batch(
+              new ByteArrayInputStream(baos.toByteArray()),
+              com.adgear.avro.Simple.class).count());
         }
       }
     }

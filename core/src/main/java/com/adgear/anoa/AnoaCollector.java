@@ -2,6 +2,9 @@ package com.adgear.anoa;
 
 import checkers.nullness.quals.NonNull;
 
+import com.adgear.anoa.impl.AnoaCollectorImpl;
+import com.adgear.anoa.impl.AnoaSummaryImpl;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.stream.Collector;

@@ -2,6 +2,8 @@ package com.adgear.anoa;
 
 import checkers.nullness.quals.NonNull;
 
+import com.adgear.anoa.impl.AnoaCountedImpl;
+
 public interface AnoaCounted extends Comparable<AnoaCounted> {
 
   @Override

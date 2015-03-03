@@ -5,7 +5,8 @@ import com.adgear.anoa.AnoaConsumer;
 import com.adgear.anoa.AnoaFunction;
 import com.adgear.anoa.AnoaRecord;
 import com.adgear.anoa.AnoaSummary;
-import com.adgear.anoa.AnoaThrift;
+import com.adgear.anoa.factory.ThriftDecoders;
+import com.adgear.anoa.factory.ThriftEncoders;
 import com.adgear.anoa.read.AnoaRead;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -30,8 +31,8 @@ public class ThriftTest {
              .sequential()
              .map(AnoaRead.anoaFn(BidRequest.class, true))
              .peek(AnoaConsumer.of(System.out::println))
-             .map(AnoaFunction.of(AnoaThrift.<BidRequest>toBinaryFn()))
-             .map(AnoaFunction.of(AnoaThrift.fromBinaryFn(BidRequest::new)))
+             .map(AnoaFunction.of(ThriftEncoders.<BidRequest>binary()))
+             .map(AnoaFunction.of(ThriftDecoders.binary(BidRequest::new)))
              .collect(AnoaCollector.toList());
       }
     }

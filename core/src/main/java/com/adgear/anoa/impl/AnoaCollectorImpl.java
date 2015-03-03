@@ -1,4 +1,8 @@
-package com.adgear.anoa;
+package com.adgear.anoa.impl;
+
+import com.adgear.anoa.AnoaCollector;
+import com.adgear.anoa.AnoaRecord;
+import com.adgear.anoa.AnoaSummary;
 
 import java.util.Collections;
 import java.util.Set;
@@ -9,13 +13,12 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-
-class AnoaCollectorImpl<T> implements AnoaCollector<T, AnoaSummaryImpl<T>> {
+public class AnoaCollectorImpl<T> implements AnoaCollector<T, AnoaSummaryImpl<T>> {
 
   final Supplier<AnoaSummaryImpl<T>> supplier;
   final Set<Characteristics> characteristicsSet;
 
-  AnoaCollectorImpl(Supplier<AnoaSummaryImpl<T>> supplier) {
+  public AnoaCollectorImpl(Supplier<AnoaSummaryImpl<T>> supplier) {
     this.supplier = supplier;
     this.characteristicsSet = supplier.get().isConcurrent
                               ? CONCURRENT_CHARACTERISTICS
