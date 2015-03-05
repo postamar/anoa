@@ -1,18 +1,21 @@
 package com.adgear.anoa;
 
 import com.adgear.anoa.factory.AvroGenericStreams;
-import com.adgear.anoa.tools.data.Format;
+import com.adgear.anoa.factory.CborObjects;
 import com.adgear.anoa.tools.runnable.DataTool;
+import com.adgear.anoa.tools.runnable.Format;
 
 import org.apache.avro.Schema;
 import org.apache.thrift.TBase;
 import org.apache.thrift.TFieldIdEnum;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
+
+import thrift.com.adgear.avro.openrtb.BidRequest;
 
 public class DataToolTest {
 
@@ -29,18 +32,9 @@ public class DataToolTest {
       Class<T> thriftClass,
       Format in,
       Format out,
-      InputStream inputStream,
-      OutputStream outputStream) {
+      InputStream inputStream) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     new DataTool<>(null, thriftClass, in, out, inputStream, baos).run();
-    return baos.toByteArray();
-  }
-
-  static public byte[] convert(Format in,
-                               Format out,
-                               InputStream inputStream) {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    new DataTool<>(null, null, in, out, inputStream, baos).run();
     return baos.toByteArray();
   }
 
@@ -48,12 +42,33 @@ public class DataToolTest {
     return getClass().getResourceAsStream("/bidreqs.json");
   }
 
-  private Schema schema = com.adgear.avro.openrtb.BidRequest.getClassSchema();
+  final private Schema schema = com.adgear.avro.openrtb.BidRequest.getClassSchema();
 
   @Test
   public void testJsonToAvro() {
-    AvroGenericStreams.batch(new ByteArrayInputStream(convert(schema, Format.JSON, Format.AVRO, bidreqs())))
-        .forEach(System.err::println);
+    Assert.assertEquals(
+        946,
+        AvroGenericStreams.batch(
+            new ByteArrayInputStream(convert(schema, Format.JSON, Format.AVRO, bidreqs())))
+            .map(AnoaRecord::of)
+            .collect(AnoaCollector.toList())
+            .streamPresent()
+            .count());
+  }
 
+  @Test
+  public void testJsonToThriftToCbor() {
+    Assert.assertEquals(
+        946,
+        new CborObjects()
+            .from(convert(BidRequest.class,
+                          Format.THRIFT_JSON,
+                          Format.CBOR,
+                          new ByteArrayInputStream(
+                              convert(BidRequest.class,
+                                      Format.JSON,
+                                      Format.THRIFT_JSON,
+                                      bidreqs()))))
+            .count());
   }
 }

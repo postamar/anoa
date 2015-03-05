@@ -1,7 +1,10 @@
-package com.adgear.anoa.factory.util;
+package com.adgear.anoa.factory;
 
 import checkers.nullness.quals.NonNull;
 
+import com.adgear.anoa.factory.util.JacksonReadIterator;
+import com.adgear.anoa.factory.util.JacksonWriteConsumer;
+import com.adgear.anoa.factory.util.WriteConsumer;
 import com.fasterxml.jackson.core.FormatSchema;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -10,6 +13,10 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.core.TreeNode;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +50,7 @@ public class JacksonFactory<
   @SuppressWarnings("unchecked")
   public @NonNull P parser(@NonNull InputStream inputStream) {
     try {
-      return with((P) factory.createParser(inputStream));
+      return with((P) factory.createParser(new BufferedInputStream(inputStream)));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -52,7 +59,7 @@ public class JacksonFactory<
   @SuppressWarnings("unchecked")
   public @NonNull P parser(@NonNull Reader reader) {
     try {
-      return with((P) factory.createParser(reader));
+      return with((P) factory.createParser(new BufferedReader(reader)));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -131,7 +138,7 @@ public class JacksonFactory<
   @SuppressWarnings("unchecked")
   public @NonNull G generator(@NonNull Writer writer) {
     try {
-      return with((G) factory.createGenerator(writer));
+      return with((G) factory.createGenerator(new BufferedWriter(writer)));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -140,7 +147,7 @@ public class JacksonFactory<
   @SuppressWarnings("unchecked")
   public @NonNull G generator(@NonNull OutputStream outputStream) {
     try {
-      return with((G) factory.createGenerator(outputStream, JsonEncoding.UTF8));
+      return with((G) factory.createGenerator(new BufferedOutputStream(outputStream), JsonEncoding.UTF8));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -156,7 +163,6 @@ public class JacksonFactory<
   }
 
   public @NonNull G with(@NonNull G generator) {
-    generator.setCodec(objectCodec);
     schema.ifPresent(generator::setSchema);
     return generator;
   }

@@ -28,7 +28,6 @@ public class AvroBatchWriteConsumer<R extends IndexedRecord> implements WriteCon
   @Override
   public void accept(R r) {
     try {
-      System.err.println(r);
       dataFileWriter.append(r);
     } catch (IOException e) {
       throw new UncheckedIOException(e);

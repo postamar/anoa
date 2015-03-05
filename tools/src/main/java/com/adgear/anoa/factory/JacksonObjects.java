@@ -2,7 +2,6 @@ package com.adgear.anoa.factory;
 
 import checkers.nullness.quals.NonNull;
 
-import com.adgear.anoa.factory.util.JacksonFactory;
 import com.fasterxml.jackson.core.FormatSchema;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;

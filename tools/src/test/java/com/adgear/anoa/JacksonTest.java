@@ -4,8 +4,6 @@ import com.adgear.anoa.factory.CborObjects;
 import com.adgear.anoa.factory.CsvObjects;
 import com.adgear.anoa.factory.JsonObjects;
 import com.adgear.anoa.factory.SmileObjects;
-import com.adgear.anoa.factory.XmlObjects;
-import com.adgear.anoa.factory.YamlObjects;
 import com.adgear.anoa.factory.util.WriteConsumer;
 import com.adgear.anoa.read.AnoaRead;
 import com.adgear.anoa.write.AnoaWrite;
@@ -18,7 +16,6 @@ import com.fasterxml.jackson.dataformat.cbor.CBORGenerator;
 import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.smile.SmileGenerator;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Assert;
@@ -79,14 +76,14 @@ public class JacksonTest {
     Function<JsonParser, Simple> reader = AnoaRead.fn(Simple.class, false);
 
     {
-      XmlObjects xmlObjects = new XmlObjects();
-      try (WriteConsumer<ObjectNode> writeConsumer = xmlObjects.to(baos)) {
-        TokenBuffer tokenBuffer = xmlObjects.buffer();
+      JsonObjects jsonObjects = new JsonObjects();
+      try (WriteConsumer<ObjectNode> writeConsumer = jsonObjects.to(baos)) {
+        TokenBuffer tokenBuffer = jsonObjects.buffer();
         writer.accept(simple, tokenBuffer);
         writeConsumer.accept(tokenBuffer.asParser().readValueAsTree());
       }
       System.out.println(baos);
-      Assert.assertEquals(simple, reader.apply(xmlObjects.parser(baos.toByteArray())));
+      Assert.assertEquals(simple, reader.apply(jsonObjects.parser(baos.toByteArray())));
     }
     baos.reset();
 
@@ -109,25 +106,6 @@ public class JacksonTest {
       Assert.assertEquals(simple, reader.apply(smileObjects.parser(baos.toByteArray())));
     }
     baos.reset();
-
-    {
-      YamlObjects yamlObjects = new YamlObjects();
-      try (YAMLGenerator yamlGenerator = yamlObjects.generator(baos)) {
-        writer.accept(simple, yamlGenerator);
-      }
-      System.out.println(baos);
-      Assert.assertEquals(simple, reader.apply(yamlObjects.parser(baos.toByteArray())));
-    }
-    baos.reset();
-
-    {
-      JsonObjects jsonObjects = new JsonObjects();
-      try (JsonGenerator jsonGenerator = jsonObjects.generator(baos)) {
-        writer.accept(simple, jsonGenerator);
-      }
-      System.out.println(baos);
-      Assert.assertEquals(simple, reader.apply(jsonObjects.parser(baos.toByteArray())));
-    }
   }
 
   @Test
@@ -147,17 +125,7 @@ public class JacksonTest {
           .from(baos.toByteArray())
           .collect(Collectors.toList()));
     }
-/*
-    {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      try (WriteConsumer<ObjectNode> writeConsumer = new XmlObjects().to(baos)) {
-        list.stream().forEach(writeConsumer);
-      }
-      ListAssert.assertEquals(list, new XmlObjects()
-          .from(baos.toByteArray())
-          .collect(Collectors.toList()));
-    }
-*/
+
     {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       try (WriteConsumer<ObjectNode> writeConsumer = new SmileObjects().to(baos)) {
@@ -167,18 +135,7 @@ public class JacksonTest {
           .from(baos.toByteArray())
           .collect(Collectors.toList()));
     }
-/*
-    {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      try (WriteConsumer<ObjectNode> writeConsumer = new YamlObjects().to(baos)) {
-        list.stream().forEach(writeConsumer);
-      }
-      System.err.println(baos.toString());
-      ListAssert.assertEquals(list, new YamlObjects()
-          .from(baos.toByteArray())
-          .collect(Collectors.toList()));
-    }
-*/
+
     {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       try (WriteConsumer<ObjectNode> writeConsumer = new JsonObjects().to(baos)) {

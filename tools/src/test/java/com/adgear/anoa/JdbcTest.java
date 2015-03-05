@@ -2,9 +2,12 @@ package com.adgear.anoa;
 
 import com.adgear.anoa.factory.AvroConsumers;
 import com.adgear.anoa.factory.AvroSpecificStreams;
+import com.adgear.anoa.factory.CsvObjects;
 import com.adgear.anoa.factory.JdbcStreams;
 import com.adgear.anoa.factory.util.WriteConsumer;
 import com.adgear.anoa.read.AnoaRead;
+import com.adgear.anoa.tools.runnable.DataTool;
+import com.adgear.anoa.tools.runnable.Format;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -23,6 +26,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -115,4 +119,51 @@ public class JdbcTest {
       }
     }
   }
+
+
+  @Test
+  public void testDataToolCsv() throws Exception {
+    final byte[] bytes;
+    try (Connection connection = JdbcTest.openDBConnection()) {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      new DataTool<>(null,
+                     null,
+                     Format.CSV,
+                     baos,
+                     connection,
+                     Collections.emptyList(),
+                     "SELECT * FROM simple",
+                     4096).run();
+      bytes = baos.toByteArray();
+    }
+    System.out.println(new String(bytes));
+    Assert.assertEquals(2, CsvObjects.csvWithHeader().from(bytes)
+        .map(TreeNode::traverse)
+        .map(AnoaRead.fn(com.adgear.avro.Simple.class, false))
+        .filter(x -> x != null)
+        .count());
+  }
+
+  @Test
+  public void testDataToolAvro() throws Exception {
+    final byte[] bytes;
+    try (Connection connection = JdbcTest.openDBConnection()) {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      new DataTool<>(com.adgear.avro.Simple.getClassSchema(),
+                     null,
+                     Format.AVRO_JSON,
+                     baos,
+                     connection,
+                     Collections.emptyList(),
+                     "SELECT * FROM simple",
+                     4096).run();
+      bytes = baos.toByteArray();
+    }
+    System.out.println(new String(bytes));
+    Assert.assertEquals(2, AvroSpecificStreams.json(new ByteArrayInputStream(bytes),
+                                                    com.adgear.avro.Simple.class)
+        .filter(x -> x != null)
+        .count());
+  }
+
 }

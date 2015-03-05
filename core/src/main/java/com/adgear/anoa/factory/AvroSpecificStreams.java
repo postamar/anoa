@@ -2,14 +2,10 @@ package com.adgear.anoa.factory;
 
 import checkers.nullness.quals.NonNull;
 
-import com.adgear.anoa.factory.util.AvroReadIterator;
 import com.adgear.anoa.factory.util.IteratorWrapper;
 
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.Decoder;
-import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecord;
 
@@ -25,19 +21,13 @@ public class AvroSpecificStreams {
   static public <R extends SpecificRecord> @NonNull Stream<R> binary(
       @NonNull InputStream inputStream,
       @NonNull Class<R> recordClass) {
-    return from(new SpecificDatumReader<>(recordClass),
-                DecoderFactory.get().binaryDecoder(inputStream, null));
+    return AvroGenericStreams.binary(new SpecificDatumReader<>(recordClass), inputStream);
   }
 
   static public <R extends SpecificRecord> @NonNull Stream<R> json(
       @NonNull InputStream inputStream,
       @NonNull Class<R> recordClass) {
-    SpecificDatumReader<R> reader = new SpecificDatumReader<>(recordClass);
-    try {
-      return from(reader, DecoderFactory.get().jsonDecoder(reader.getSchema(), inputStream));
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
+    return AvroGenericStreams.json(new SpecificDatumReader<>(recordClass), inputStream);
   }
 
   static public <R extends SpecificRecord> @NonNull Stream<R> batch(
@@ -82,11 +72,4 @@ public class AvroSpecificStreams {
       Iterator<R> iterator) {
     return new IteratorWrapper<>(iterator).stream();
   }
-
-  static public <R extends SpecificRecord> @NonNull Stream<R> from(
-      @NonNull DatumReader<R> reader,
-      @NonNull Decoder decoder) {
-    return new AvroReadIterator<R>(reader, decoder).stream();
-  }
-
 }

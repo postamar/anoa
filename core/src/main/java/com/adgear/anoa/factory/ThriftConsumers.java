@@ -13,6 +13,7 @@ import org.apache.thrift.transport.TFileTransport;
 import org.apache.thrift.transport.TIOStreamTransport;
 import org.apache.thrift.transport.TTransport;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
@@ -21,7 +22,7 @@ public class ThriftConsumers {
 
   static public <T extends TBase<T,?>> @NonNull WriteConsumer<T> compact(
       @NonNull OutputStream outputStream) {
-    return compact(new TIOStreamTransport(outputStream));
+    return compact(new TIOStreamTransport(new BufferedOutputStream(outputStream)));
   }
 
   static public <T extends TBase<T,?>> @NonNull WriteConsumer<T> compact(
@@ -41,7 +42,7 @@ public class ThriftConsumers {
 
   static public <T extends TBase<T,?>> @NonNull WriteConsumer<T> binary(
       @NonNull OutputStream outputStream) {
-    return binary(new TIOStreamTransport(outputStream));
+    return binary(new TIOStreamTransport(new BufferedOutputStream(outputStream)));
   }
 
   static public <T extends TBase<T,?>> @NonNull WriteConsumer<T> binary(
@@ -61,7 +62,7 @@ public class ThriftConsumers {
 
   static public <T extends TBase<T,?>> @NonNull WriteConsumer<T> json(
       @NonNull OutputStream outputStream) {
-    return json(new TIOStreamTransport(outputStream));
+    return json(new TIOStreamTransport(new BufferedOutputStream(outputStream)));
   }
 
   static public <T extends TBase<T,?>> @NonNull WriteConsumer<T> json(

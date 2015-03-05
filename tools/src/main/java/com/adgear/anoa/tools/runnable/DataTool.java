@@ -10,12 +10,9 @@ import com.adgear.anoa.factory.JsonObjects;
 import com.adgear.anoa.factory.SmileObjects;
 import com.adgear.anoa.factory.ThriftConsumers;
 import com.adgear.anoa.factory.ThriftStreams;
-import com.adgear.anoa.factory.XmlObjects;
-import com.adgear.anoa.factory.YamlObjects;
 import com.adgear.anoa.factory.util.ReflectionUtils;
 import com.adgear.anoa.factory.util.WriteConsumer;
 import com.adgear.anoa.read.AnoaRead;
-import com.adgear.anoa.tools.data.Format;
 import com.adgear.anoa.write.AnoaWrite;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.TreeNode;
@@ -70,6 +67,7 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
    * Constructor for when reading from JDBC source.
    *
    * @param avroSchema         Declared Avro record schema (optional).
+   * @param thriftClass Declared Thrift record class (optional for some input formats).
    * @param outFormat          Declared output serialization format.
    * @param out                Stream to write records to.
    * @param jdbcConnection     Connection object used to open session.
@@ -84,7 +82,7 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
                   Connection jdbcConnection,
                   List<String> jdbcInitStatements,
                   String jdbcQuery,
-                  int jdbcFetchSize) throws Exception {
+                  int jdbcFetchSize) {
     this.avroSchema = this.declaredAvroSchema = avroSchema;
     this.thriftClass = thriftClass;
     this.inFormat = Format.JDBC;
@@ -101,6 +99,7 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
    * Constructor for when reading from stream.
    *
    * @param avroSchema  Declared Avro record schema (optional for some input formats).
+   * @param thriftClass Declared Thrift record class (optional for some input formats).
    * @param inFormat    Declared input serialization format.
    * @param outFormat   Declared output serialization format.
    * @param in          Stream to read records from.
@@ -200,12 +199,6 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
           case SMILE:
             jacksonObjects = new SmileObjects();
             break;
-          case XML:
-            jacksonObjects = new XmlObjects();
-            break;
-          case YAML:
-            jacksonObjects = new YamlObjects();
-            break;
           default:
             throw new IllegalArgumentException("Unsupported output format " + outFormat);
         }
@@ -267,12 +260,6 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
           case SMILE:
             jacksonObjects = new SmileObjects();
             break;
-          case XML:
-            jacksonObjects = new XmlObjects();
-            break;
-          case YAML:
-            jacksonObjects = new YamlObjects();
-            break;
           default:
             throw new IllegalArgumentException("Unsupported output format " + outFormat);
         }
@@ -306,12 +293,6 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
         break;
       case SMILE:
         supplier = SmileObjects::new;
-        break;
-      case XML:
-        supplier = XmlObjects::new;
-        break;
-      case YAML:
-        supplier = YamlObjects::new;
         break;
       default:
         throw new IllegalArgumentException("Unsupported output format " + outFormat);
@@ -387,12 +368,6 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
         return;
       case TSV_NO_HEADER:
         runJackson(CsvObjects.tsv().from(in));
-        return;
-      case XML:
-        runJackson(new XmlObjects().from(in));
-        return;
-      case YAML:
-        runJackson(new YamlObjects().from(in));
         return;
     }
     throw new UnsupportedOperationException();

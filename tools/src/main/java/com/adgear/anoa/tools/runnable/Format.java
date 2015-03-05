@@ -1,4 +1,4 @@
-package com.adgear.anoa.tools.data;
+package com.adgear.anoa.tools.runnable;
 
 /**
  * Supported input/output serialization formats.
@@ -65,11 +65,6 @@ public enum Format {
   TSV_NO_HEADER(FormatCategory.JACKSON),
 
   /**
-   * XML trees encoding
-   */
-  XML(FormatCategory.JACKSON),
-
-  /**
    * CBOR encoding
    */
   CBOR(FormatCategory.JACKSON),
@@ -77,12 +72,8 @@ public enum Format {
   /**
    * SMILE encoding
    */
-  SMILE(FormatCategory.JACKSON),
+  SMILE(FormatCategory.JACKSON);
 
-  /**
-   * YAML encoding
-   */
-  YAML(FormatCategory.JACKSON);
 
   final public FormatCategory category;
 

@@ -7,42 +7,30 @@ import org.apache.avro.io.Decoder;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.NoSuchElementException;
+import java.util.function.Supplier;
 
-public class AvroReadIterator<R extends IndexedRecord> implements ReadIterator<R> {
+public class AvroReadIterator<R extends IndexedRecord> extends AbstractReadIterator<R> {
 
   final public DatumReader<R> datumReader;
   final public Decoder decoder;
 
-  public AvroReadIterator(DatumReader<R> datumReader, Decoder decoder) {
+  public AvroReadIterator(DatumReader<R> datumReader,
+                          Decoder decoder,
+                          Supplier<Boolean> eofSupplier) {
+    super(eofSupplier);
     this.datumReader = datumReader;
     this.decoder = decoder;
   }
 
-  private R nextValue = null;
-
   @Override
-  public boolean hasNext() {
-    if (nextValue != null) {
-      return true;
-    }
+  protected R doNext() {
     try {
-      nextValue = datumReader.read(null, decoder);
+      return datumReader.read(null, decoder);
     } catch (EOFException e) {
-      nextValue = null;
+      declareNoNext();
+      return null;
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-    return (nextValue != null);
-  }
-
-  @Override
-  public R next() {
-    if (!hasNext()) {
-      throw new NoSuchElementException();
-    }
-    final R value = nextValue;
-    nextValue = null;
-    return value;
   }
 }

@@ -8,7 +8,7 @@ import com.adgear.anoa.factory.AvroConsumers;
 import com.adgear.anoa.factory.AvroDecoders;
 import com.adgear.anoa.factory.AvroEncoders;
 import com.adgear.anoa.factory.AvroGenericStreams;
-import com.adgear.anoa.factory.util.JacksonFactory;
+import com.adgear.anoa.factory.JacksonFactory;
 import com.adgear.anoa.factory.util.WriteConsumer;
 import com.adgear.anoa.read.AnoaRead;
 import com.adgear.anoa.write.AnoaWrite;
@@ -53,7 +53,6 @@ public class AvroTest {
           .collect(AnoaCollector.toSet())
           .streamCounters()
           .parallel()
-          .peek(System.err::println)
           .filter(e -> PresentCounted.is(e.getKey()))
           .findAny()
           .map(Map.Entry::getValue)

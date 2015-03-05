@@ -11,9 +11,11 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.Decoder;
+import org.apache.avro.generic.IndexedRecord;
+import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.JsonDecoder;
+import org.jooq.lambda.Unchecked;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,20 +30,32 @@ public class AvroGenericStreams {
   static public @NonNull Stream<GenericRecord> binary(
       @NonNull InputStream inputStream,
       @NonNull Schema schema) {
-    return from(new GenericDatumReader<>(schema),
-                DecoderFactory.get().binaryDecoder(inputStream, null));
+    return binary(new GenericDatumReader<>(schema), inputStream);
+  }
+
+  static <R extends IndexedRecord> Stream<R> binary(GenericDatumReader<R> reader,
+                                                    InputStream inputStream) {
+    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(inputStream, null);
+    return new AvroReadIterator<>(reader, decoder, Unchecked.supplier(decoder::isEnd)).stream();
   }
 
   static public @NonNull Stream<GenericRecord> json(
       @NonNull InputStream inputStream,
       @NonNull Schema schema) {
+    return json(new GenericDatumReader<>(schema), inputStream);
+  }
+
+  static <R extends IndexedRecord> Stream<R> json(GenericDatumReader<R> reader,
+                                                  InputStream inputStream) {
+    final JsonDecoder decoder;
     try {
-      return from(new GenericDatumReader<>(schema),
-                  DecoderFactory.get().jsonDecoder(schema, inputStream));
+      decoder = DecoderFactory.get().jsonDecoder(reader.getSchema(), inputStream);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
+    return new AvroReadIterator<>(reader, decoder, () -> false).stream();
   }
+
 
   static public @NonNull Stream<GenericRecord> batch(
       @NonNull File file) {
@@ -84,11 +98,5 @@ public class AvroGenericStreams {
   static public @NonNull Stream<GenericRecord> from(
       @NonNull Iterator<GenericRecord> iterator) {
     return new IteratorWrapper<>(iterator).stream();
-  }
-
-  static public @NonNull Stream<GenericRecord> from(
-      @NonNull DatumReader<GenericRecord> reader,
-      @NonNull Decoder decoder) {
-    return new AvroReadIterator<>(reader, decoder).stream();
   }
 }

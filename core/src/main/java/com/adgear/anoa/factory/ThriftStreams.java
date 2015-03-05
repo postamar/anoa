@@ -14,6 +14,7 @@ import org.apache.thrift.transport.TFileTransport;
 import org.apache.thrift.transport.TIOStreamTransport;
 import org.apache.thrift.transport.TTransport;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -49,7 +50,7 @@ public class ThriftStreams {
   static public <T extends TBase<T, ? extends TFieldIdEnum>> @NonNull Stream<T> binary(
       @NonNull Supplier<T> supplier,
       @NonNull InputStream inputStream) {
-    return binary(supplier, new TIOStreamTransport(inputStream));
+    return binary(supplier, new TIOStreamTransport(new BufferedInputStream(inputStream)));
   }
 
   static public <T extends TBase<T, ? extends TFieldIdEnum>> @NonNull Stream<T> binary(
@@ -72,7 +73,7 @@ public class ThriftStreams {
   static public <T extends TBase<T, ? extends TFieldIdEnum>> @NonNull Stream<T> json(
       @NonNull Supplier<T> supplier,
       @NonNull InputStream inputStream) {
-    return json(supplier, new TIOStreamTransport(inputStream));
+    return json(supplier, new TIOStreamTransport(new BufferedInputStream(inputStream)));
   }
 
   static public <T extends TBase<T, ? extends TFieldIdEnum>> @NonNull Stream<T> json(

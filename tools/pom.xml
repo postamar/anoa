@@ -44,21 +44,6 @@
       <artifactId>jackson-dataformat-smile</artifactId>
       <version>${project.version.jackson}</version>
     </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
-      <artifactId>jackson-dataformat-xml</artifactId>
-      <version>${project.version.jackson}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.woodstox</groupId>
-      <artifactId>woodstox-core-asl</artifactId>
-      <version>4.1.4</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
-      <artifactId>jackson-dataformat-yaml</artifactId>
-      <version>${project.version.jackson}</version>
-    </dependency>
     <!-- tool dependencies -->
     <dependency>
       <groupId>io.dropwizard.metrics</groupId>
