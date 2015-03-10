@@ -29,6 +29,7 @@ import org.apache.thrift.TBase;
 import org.apache.thrift.TFieldIdEnum;
 import org.jooq.lambda.Unchecked;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -62,6 +63,10 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
   final private int jdbcFetchSize;
 
   private Schema avroSchema = null;
+
+  public Schema getAvroSchema() {
+    return avroSchema;
+  }
 
   /**
    * Constructor for when reading from JDBC source.
@@ -379,6 +384,7 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
     final String avroClassName = System.getProperty("recordClass", "");
     final String thriftClassName = System.getProperty("thriftClass", "");
     final String outFilePath = System.getProperty("out", "");
+    final String schemaFilePath = System.getProperty("schemaFilePath", "");
     final String inFilePath = System.getProperty("in", "");
 
     Schema avroSchema = null;
@@ -392,34 +398,42 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
     if (!thriftClassName.isEmpty()) {
       thriftRecordClass = ReflectionUtils.getThriftClass(thriftClassName);
     }
-
-    final OutputStream out = outFilePath.isEmpty() ? System.out : new FileOutputStream(outFilePath);
     final DataTool instance;
-
-    if (inFormat == Format.JDBC) {
-      final String jdbcUrl = System.getProperty("url");
-      final String jdbcQuery = System.getProperty("query");
-      final String initPath = System.getProperty("initScript", "");
-      Stream<String> initStream = initPath.isEmpty()
-                                  ? Stream.<String>empty()
-                                  : new BufferedReader(new FileReader(initPath)).lines();
-      instance = new DataTool<>(avroSchema,
-                                thriftRecordClass,
-                                outFormat,
-                                out,
-                                DriverManager.getConnection(jdbcUrl),
-                                initStream.collect(Collectors.toList()),
-                                jdbcQuery,
-                                4096);
-    } else {
-      InputStream in = inFilePath.isEmpty() ? System.in : new FileInputStream(inFilePath);
-      instance = new DataTool<>(avroSchema,
-                                thriftRecordClass,
-                                inFormat,
-                                outFormat,
-                                in,
-                                out);
+    try (OutputStream out = outFilePath.isEmpty()
+                            ? System.out
+                            : new FileOutputStream(outFilePath)) {
+      if (inFormat == Format.JDBC) {
+        final String jdbcUrl = System.getProperty("url");
+        final String jdbcQuery = System.getProperty("query");
+        final String initPath = System.getProperty("initScript", "");
+        Stream<String> initStream = initPath.isEmpty()
+                                    ? Stream.<String>empty()
+                                    : new BufferedReader(new FileReader(initPath)).lines();
+        instance = new DataTool<>(avroSchema,
+                                  thriftRecordClass,
+                                  outFormat,
+                                  out,
+                                  DriverManager.getConnection(jdbcUrl),
+                                  initStream.collect(Collectors.toList()),
+                                  jdbcQuery,
+                                  4096);
+      } else {
+        InputStream in = inFilePath.isEmpty() ? System.in : new FileInputStream(inFilePath);
+        instance = new DataTool<>(avroSchema,
+                                  thriftRecordClass,
+                                  inFormat,
+                                  outFormat,
+                                  in,
+                                  out);
+      }
+      instance.run();
     }
-    instance.run();
+    final Schema schema = instance.getAvroSchema();
+    if (schema != null && !schemaFilePath.isEmpty()) {
+      try (OutputStream out = new BufferedOutputStream(new FileOutputStream(schemaFilePath))) {
+        out.write(schema.toString(true).getBytes("UTF-8"));
+        out.flush();
+      }
+    }
   }
 }
