@@ -5,34 +5,34 @@ import com.fasterxml.jackson.core.JsonParser;
 
 import java.io.IOException;
 
-class StringReader extends JacksonReader<String> {
+class StringReader extends AbstractReader<String> {
 
   @Override
-  public String read(JsonParser jp) throws IOException {
-    switch (jp.getCurrentToken()) {
+  protected String read(JsonParser jacksonParser) throws IOException {
+    switch (jacksonParser.getCurrentToken()) {
       case VALUE_STRING:
-        return jp.getText();
+        return jacksonParser.getText();
       case VALUE_NUMBER_FLOAT:
       case VALUE_NUMBER_INT:
       case VALUE_FALSE:
       case VALUE_TRUE:
       case VALUE_EMBEDDED_OBJECT:
-        return jp.getValueAsString();
+        return jacksonParser.getValueAsString();
       default:
-        gobbleValue(jp);
+        gobbleValue(jacksonParser);
         return null;
     }
   }
 
   @Override
-  public String readStrict(JsonParser jp) throws AnoaTypeException, IOException {
-    switch (jp.getCurrentToken()) {
+  protected String readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+    switch (jacksonParser.getCurrentToken()) {
       case VALUE_STRING:
-        return jp.getText();
+        return jacksonParser.getText();
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaTypeException("Token is not string: " + jp.getCurrentToken());
+        throw new AnoaTypeException("Token is not string: " + jacksonParser.getCurrentToken());
     }
   }
 }

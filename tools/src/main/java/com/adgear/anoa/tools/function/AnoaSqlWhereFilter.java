@@ -2,33 +2,34 @@ package com.adgear.anoa.tools.function;
 
 import checkers.nullness.quals.NonNull;
 
-import com.adgear.anoa.AnoaCounted;
-import com.adgear.anoa.AnoaRecord;
-import com.adgear.anoa.impl.AnoaFunctionBase;
-import com.adgear.anoa.impl.AnoaRecordImpl;
-
 import org.jooq.lambda.Unchecked;
+import org.jooq.lambda.fi.util.function.CheckedPredicate;
+import org.josql.QueryExecutionException;
 import org.josql.utils.ExpressionEvaluator;
 
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
-public class AnoaSqlWhereFilter<T> extends AnoaFunctionBase<T, T> {
+public class AnoaSqlWhereFilter<T> implements Predicate<T> {
 
-  final public Predicate<T> predicate;
+  final public ExpressionEvaluator expressionEvaluator;
 
   public AnoaSqlWhereFilter(@NonNull ExpressionEvaluator expressionEvaluator) {
-    this.predicate = Unchecked.predicate(expressionEvaluator::isTrue);
+    this.expressionEvaluator = expressionEvaluator;
   }
 
   public AnoaSqlWhereFilter(@NonNull Class<T> klazz, @NonNull String whereClause) {
     this(Unchecked.supplier(() -> new ExpressionEvaluator(whereClause, klazz)).get());
   }
 
-  @Override
-  protected AnoaRecord<T> applyPresent(@NonNull AnoaRecord<T> record) {
-    return predicate.test(record.asOptional().get())
-           ? record
-           : AnoaRecordImpl.createEmpty(record, Stream.of(AnoaCounted.get("FILTERED_OUT")));
+  public boolean test(@NonNull T object) {
+    try {
+      return expressionEvaluator.isTrue(object);
+    } catch (QueryExecutionException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public @NonNull CheckedPredicate<T> asChecked() {
+    return expressionEvaluator::isTrue;
   }
 }

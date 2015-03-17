@@ -1,14 +1,13 @@
 package com.adgear.anoa.write;
 
-
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
 
-class BooleanWriter extends JacksonWriter<Boolean> {
+class BooleanWriter extends AbstractWriter<Boolean> {
 
   @Override
-  public void write(Boolean aBoolean, JsonGenerator jsonGenerator) throws IOException {
-    jsonGenerator.writeBoolean(aBoolean);
+  protected void writeChecked(Boolean aBoolean, JsonGenerator jacksonGenerator) throws IOException {
+    jacksonGenerator.writeBoolean(aBoolean);
   }
 }

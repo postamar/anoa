@@ -7,20 +7,20 @@ import com.fasterxml.jackson.core.JsonToken;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-class ByteArrayReader extends JacksonReader<byte[]> {
+class ByteArrayReader extends AbstractReader<byte[]> {
 
   @Override
-  public byte[] read(JsonParser jp) throws IOException {
-    if (jp.getCurrentToken() == JsonToken.VALUE_STRING) {
+  protected byte[] read(JsonParser jacksonParser) throws IOException {
+    if (jacksonParser.getCurrentToken() == JsonToken.VALUE_STRING) {
       try {
-        return jp.getBinaryValue();
+        return jacksonParser.getBinaryValue();
       } catch (IOException e) {
         return null;
       }
-    } else if (jp.getCurrentToken() == JsonToken.VALUE_EMBEDDED_OBJECT) {
+    } else if (jacksonParser.getCurrentToken() == JsonToken.VALUE_EMBEDDED_OBJECT) {
       final Object object;
       try {
-        object = jp.getEmbeddedObject();
+        object = jacksonParser.getEmbeddedObject();
       } catch (IOException e) {
         return null;
       }
@@ -32,32 +32,32 @@ class ByteArrayReader extends JacksonReader<byte[]> {
         return null;
       }
     }
-    gobbleValue(jp);
+    gobbleValue(jacksonParser);
     return null;
   }
 
   @Override
-  public byte[] readStrict(JsonParser jp) throws AnoaTypeException, IOException {
-    switch (jp.getCurrentToken()) {
+  protected byte[] readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+    switch (jacksonParser.getCurrentToken()) {
       case VALUE_STRING:
         try {
-          return jp.getBinaryValue();
+          return jacksonParser.getBinaryValue();
         } catch (IOException e) {
-          throw new AnoaTypeException("String is not base64 encoded bytes: " + jp.getText());
+          throw new AnoaTypeException("String is not base64 encoded bytes: " + jacksonParser.getText());
         }
       case VALUE_EMBEDDED_OBJECT:
-        final Object object = jp.getEmbeddedObject();
+        final Object object = jacksonParser.getEmbeddedObject();
         if (object instanceof byte[]) {
           return (byte[]) object;
         } else if (object instanceof ByteBuffer) {
           return ((ByteBuffer) object).array();
         } else {
-          throw new AnoaTypeException("Token is not byte[]: " + jp.getCurrentToken());
+          throw new AnoaTypeException("Token is not byte[]: " + jacksonParser.getCurrentToken());
         }
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaTypeException("Token is not string or byte[]: " + jp.getCurrentToken());
+        throw new AnoaTypeException("Token is not string or byte[]: " + jacksonParser.getCurrentToken());
     }
   }
 }

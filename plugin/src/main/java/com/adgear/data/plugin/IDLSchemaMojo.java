@@ -370,8 +370,8 @@ public class IDLSchemaMojo extends AbstractAvroMojo {
    */
   protected Collection<String> collectDependencies(String source) {
     HashSet<String> found = new HashSet<String>();
-    Matcher start = Pattern.compile("\\/\\*\\*", Pattern.MULTILINE).matcher(source);
-    Matcher end = Pattern.compile("\\*\\/", Pattern.MULTILINE).matcher(source);
+    Matcher start = Pattern.compile("/\\*\\*", Pattern.MULTILINE).matcher(source);
+    Matcher end = Pattern.compile("\\*/", Pattern.MULTILINE).matcher(source);
     if (start.find() && end.find()) {
       String doc = source.substring(start.start() + 3, end.end() - 2);
       Matcher dep = docstringPattern.matcher(doc);

@@ -7,37 +7,37 @@ import com.fasterxml.jackson.core.JsonToken;
 import java.io.IOException;
 import java.util.HashMap;
 
-class MapReader extends JacksonReader<HashMap<String,Object>> {
+class MapReader extends AbstractReader<HashMap<String,Object>> {
 
-  final JacksonReader<?> valueElementReader;
+  final AbstractReader<?> valueElementReader;
 
-  MapReader(JacksonReader<?> valueElementReader) {
+  MapReader(AbstractReader<?> valueElementReader) {
     this.valueElementReader = valueElementReader;
   }
 
   @Override
-  public HashMap<String, Object> read(JsonParser jp) throws IOException {
-    if (jp.getCurrentToken() == JsonToken.START_OBJECT) {
+  protected HashMap<String, Object> read(JsonParser jacksonParser) throws IOException {
+    if (jacksonParser.getCurrentToken() == JsonToken.START_OBJECT) {
       HashMap<String, Object> result = new HashMap<>();
-      doMap(jp, (k, p) -> result.put(k, valueElementReader.read(p)));
+      doMap(jacksonParser, (k, p) -> result.put(k, valueElementReader.read(p)));
       return result;
     } else {
-      gobbleValue(jp);
+      gobbleValue(jacksonParser);
       return null;
     }
   }
 
   @Override
-  public HashMap<String, Object> readStrict(JsonParser jp) throws AnoaTypeException, IOException {
-    switch (jp.getCurrentToken()) {
+  protected HashMap<String, Object> readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+    switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;
       case START_OBJECT:
         HashMap<String,Object> result = new HashMap<>();
-        doMap(jp, (k, p) -> result.put(k, valueElementReader.readStrict(p)));
+        doMap(jacksonParser, (k, p) -> result.put(k, valueElementReader.readStrict(p)));
         return result;
       default:
-        throw new AnoaTypeException("Token is not '{': " + jp.getCurrentToken());
+        throw new AnoaTypeException("Token is not '{': " + jacksonParser.getCurrentToken());
     }
   }
 }

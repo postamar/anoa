@@ -5,22 +5,22 @@ import com.fasterxml.jackson.core.JsonParser;
 
 import java.io.IOException;
 
-class IntegerReader extends JacksonReader<Integer> {
+class IntegerReader extends AbstractReader<Integer> {
 
   @Override
-  public Integer read(JsonParser jp) throws IOException {
-    return jp.getValueAsInt();
+  protected Integer read(JsonParser jacksonParser) throws IOException {
+    return jacksonParser.getValueAsInt();
   }
 
   @Override
-  public Integer readStrict(JsonParser jp) throws AnoaTypeException, IOException {
-    switch (jp.getCurrentToken()) {
+  protected Integer readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+    switch (jacksonParser.getCurrentToken()) {
       case VALUE_NUMBER_INT:
-        return jp.getIntValue();
+        return jacksonParser.getIntValue();
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaTypeException("Token is not integer: " + jp.getCurrentToken());
+        throw new AnoaTypeException("Token is not integer: " + jacksonParser.getCurrentToken());
     }
   }
 }

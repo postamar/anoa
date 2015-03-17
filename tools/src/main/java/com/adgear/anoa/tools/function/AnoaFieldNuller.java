@@ -2,16 +2,14 @@ package com.adgear.anoa.tools.function;
 
 import checkers.nullness.quals.NonNull;
 
-import com.adgear.anoa.AnoaRecord;
-import com.adgear.anoa.impl.AnoaFunctionBase;
-
-import org.jooq.lambda.Unchecked;
+import org.jooq.lambda.fi.util.function.CheckedUnaryOperator;
 
 import java.lang.reflect.Field;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 
-public class AnoaFieldNuller<T> extends AnoaFunctionBase<T, T> {
+public class AnoaFieldNuller<T> implements UnaryOperator<T> {
 
   final protected String[] fields;
 
@@ -19,17 +17,29 @@ public class AnoaFieldNuller<T> extends AnoaFunctionBase<T, T> {
     return Stream.of(fields);
   }
 
-  public AnoaFieldNuller(String... fields) {
+  public AnoaFieldNuller(@NonNull String... fields) {
     this.fields = fields;
   }
 
-  @Override
-  protected AnoaRecord<T> applyPresent(@NonNull AnoaRecord<T> record) {
-    final T object = record.asOptional().get();
-    Stream.of(fields)
-        .map(Unchecked.function(name -> getFieldAtPath(object, name)))
-        .forEach(Unchecked.consumer(wrapper -> wrapper.field.set(wrapper.object, null)));
-    return record;
+  public @NonNull T apply(@NonNull T object) {
+    try {
+      return applyChecked(object);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public @NonNull T applyChecked(@NonNull T object)
+      throws NoSuchFieldException, IllegalAccessException {
+    for (String field : fields) {
+      ObjectFieldWrapper wrapper = getFieldAtPath(object, field);
+      wrapper.field.set(wrapper.object, null);
+    }
+    return object;
+  }
+
+  public @NonNull CheckedUnaryOperator<T> asChecked() {
+    return this::applyChecked;
   }
 
   protected Object getObjectAtPath(Object o, String[] path, int startIndex)

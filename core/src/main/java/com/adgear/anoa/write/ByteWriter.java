@@ -4,10 +4,10 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
 
-class ByteWriter extends JacksonWriter<Byte> {
+class ByteWriter extends AbstractWriter<Byte> {
 
   @Override
-  public void write(Byte aByte, JsonGenerator jsonGenerator) throws IOException {
-    jsonGenerator.writeNumber(aByte);
+  protected void writeChecked(Byte aByte, JsonGenerator jacksonGenerator) throws IOException {
+    jacksonGenerator.writeNumber(aByte);
   }
 }

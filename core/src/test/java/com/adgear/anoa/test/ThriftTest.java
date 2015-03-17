@@ -1,21 +1,19 @@
 package com.adgear.anoa.test;
 
-import com.adgear.anoa.AnoaCollector;
-import com.adgear.anoa.AnoaConsumer;
-import com.adgear.anoa.AnoaFunction;
-import com.adgear.anoa.AnoaRecord;
-import com.adgear.anoa.AnoaSummary;
-import com.adgear.anoa.factory.ThriftDecoders;
-import com.adgear.anoa.factory.ThriftEncoders;
-import com.adgear.anoa.read.AnoaRead;
+import com.adgear.anoa.AnoaFactory;
+import com.adgear.anoa.read.ThriftDecoders;
+import com.adgear.anoa.read.ThriftStreams;
+import com.adgear.anoa.write.ThriftEncoders;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.InputStream;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.List;
 
 import thrift.com.adgear.avro.openrtb.BidRequest;
 
@@ -23,21 +21,19 @@ public class ThriftTest {
 
   @Test
   public void test() throws Exception {
-    final AnoaSummary<BidRequest> collected;
+    final List<BidRequest> collected = new ArrayList<>();
+    AnoaFactory<Throwable> f = AnoaFactory.passAlong();
     try (InputStream inputStream = getClass().getResourceAsStream("/bidreqs.json")) {
-      try (JsonParser jp = new JsonFactory().createParser(inputStream)) {
-         collected = Stream.generate(() -> jp).limit(1000)
-             .map(AnoaRecord::of)
-             .sequential()
-             .map(AnoaRead.anoaFn(BidRequest.class, true))
-             .peek(AnoaConsumer.of(System.out::println))
-             .map(AnoaFunction.of(ThriftEncoders.<BidRequest>binary()))
-             .map(AnoaFunction.of(ThriftDecoders.binary(BidRequest::new)))
-             .collect(AnoaCollector.toList());
+      try (JsonParser jp = new JsonFactory(new ObjectMapper()).createParser(inputStream)) {
+        long total = ThriftStreams.jackson(f, jp, BidRequest.class, true)
+            .map(ThriftEncoders.binary(f))
+            .map(ThriftDecoders.binary(f, BidRequest::new))
+            .map(f.consumer(collected::add))
+            .count();
+        Assert.assertEquals(946, total);
       }
     }
-    collected.streamCounters().map(Object::toString).sorted().forEach(System.err::println);
-    Assert.assertEquals(946, collected.streamPresent().filter(BidRequest.class::isInstance).count());
-    collected.streamPresent().forEach(Assert::assertNotNull);
+    Assert.assertEquals(946, collected.stream().filter(BidRequest.class::isInstance).count());
+    collected.stream().forEach(Assert::assertNotNull);
   }
 }

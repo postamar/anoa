@@ -5,16 +5,16 @@ import com.fasterxml.jackson.core.JsonParser;
 
 import java.io.IOException;
 
-class BooleanReader extends JacksonReader<Boolean> {
+class BooleanReader extends AbstractReader<Boolean> {
 
   @Override
-  public Boolean read(JsonParser jp) throws IOException {
-    return jp.getValueAsBoolean();
+  protected Boolean read(JsonParser jacksonParser) throws IOException {
+    return jacksonParser.getValueAsBoolean();
   }
 
   @Override
-  public Boolean readStrict(JsonParser jp) throws AnoaTypeException, IOException {
-    switch (jp.getCurrentToken()) {
+  protected Boolean readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+    switch (jacksonParser.getCurrentToken()) {
       case VALUE_TRUE:
         return true;
       case VALUE_FALSE:
@@ -22,7 +22,7 @@ class BooleanReader extends JacksonReader<Boolean> {
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaTypeException("Token is not boolean: " + jp.getCurrentToken());
+        throw new AnoaTypeException("Token is not boolean: " + jacksonParser.getCurrentToken());
     }
   }
 }

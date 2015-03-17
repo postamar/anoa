@@ -1,23 +1,28 @@
 package com.adgear.anoa;
 
-import com.adgear.anoa.factory.CborObjects;
-import com.adgear.anoa.factory.CsvObjects;
-import com.adgear.anoa.factory.JsonObjects;
-import com.adgear.anoa.factory.SmileObjects;
-import com.adgear.anoa.factory.util.WriteConsumer;
-import com.adgear.anoa.read.AnoaRead;
-import com.adgear.anoa.write.AnoaWrite;
+import com.adgear.anoa.read.AvroDecoders;
+import com.adgear.anoa.read.AvroSpecificStreams;
+import com.adgear.anoa.read.CborStreams;
+import com.adgear.anoa.read.CsvStreams;
+import com.adgear.anoa.read.JsonStreams;
+import com.adgear.anoa.read.SmileStreams;
+import com.adgear.anoa.write.AvroConsumers;
+import com.adgear.anoa.write.AvroEncoders;
+import com.adgear.anoa.write.CborConsumers;
+import com.adgear.anoa.write.CsvConsumers;
+import com.adgear.anoa.write.JsonConsumers;
+import com.adgear.anoa.write.SmileConsumers;
+import com.adgear.anoa.write.WriteConsumer;
 import com.adgear.avro.Simple;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.util.TokenBuffer;
 import com.fasterxml.jackson.dataformat.cbor.CBORGenerator;
 import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.smile.SmileGenerator;
 
 import org.apache.commons.codec.binary.Hex;
+import org.jooq.lambda.Unchecked;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -26,11 +31,8 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Scanner;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import junitx.framework.ListAssert;
 
@@ -38,8 +40,6 @@ public class JacksonTest {
 
   @Test
   public void testCsv() throws Exception {
-    BiFunction<JsonParser, Boolean, Simple> readBiFn = AnoaRead.biFn(Simple.class);
-    BiConsumer<Simple, JsonGenerator> writeBiCo = AnoaWrite.biCo(Simple.class);
     CsvSchema schema = CsvSchema.builder()
         .addColumn("foo").addColumn("bar").addColumn("baz")
         .setColumnSeparator('\t')
@@ -49,15 +49,14 @@ public class JacksonTest {
     InputStream inputStream = getClass().getResourceAsStream("/in/simple.csv");
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-    JsonParser csvParser = CsvObjects.csvWithHeader().parser(inputStream);
+    JsonParser csvParser = CsvStreams.csvWithHeader().parser(inputStream);
     csvParser.setSchema(CsvSchema.builder().setUseHeader(true).build());
 
-    CsvGenerator tsvGenerator = new CsvObjects(schema).generator(outputStream);
-    Stream.of(false, false)
-        .sequential()
-        .map(b -> readBiFn.apply(csvParser, b))
-        .forEach(s -> writeBiCo.accept(s, tsvGenerator));
-    tsvGenerator.flush();
+    try (CsvGenerator tsvGenerator = new CsvConsumers(schema).generator(outputStream)) {
+      AvroSpecificStreams.jackson(csvParser, Simple.class, false)
+          .map(AvroEncoders.jackson(() -> tsvGenerator, Simple.class))
+          .forEach(Unchecked.consumer(CsvGenerator::flush));
+    }
 
     Assert.assertEquals(new Scanner(getClass().getResourceAsStream("/out/simple.csv"), "UTF-8")
                             .useDelimiter("\\A").next(),
@@ -72,45 +71,43 @@ public class JacksonTest {
         .setBaz(789.1)
         .build();
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    BiConsumer<Simple, JsonGenerator> writer = AnoaWrite.biCo(Simple.class);
-    Function<JsonParser, Simple> reader = AnoaRead.fn(Simple.class, false);
+    Function<JsonParser, Simple> readFn = AvroDecoders.jackson(Simple.class, true);
 
     {
-      JsonObjects jsonObjects = new JsonObjects();
-      try (WriteConsumer<ObjectNode> writeConsumer = jsonObjects.to(baos)) {
-        TokenBuffer tokenBuffer = jsonObjects.buffer();
-        writer.accept(simple, tokenBuffer);
-        writeConsumer.accept(tokenBuffer.asParser().readValueAsTree());
+      JsonConsumers jsonConsumers = new JsonConsumers();
+      JsonStreams jsonStreams = new JsonStreams();
+      try (WriteConsumer<ObjectNode, ?> writeConsumer = jsonConsumers.to(baos)) {
+        writeConsumer.accept(jsonStreams.parser(
+            AvroEncoders.jackson(jsonConsumers::generator, Simple.class).apply(simple))
+                                 .readValueAsTree());
       }
       System.out.println(baos);
-      Assert.assertEquals(simple, reader.apply(jsonObjects.parser(baos.toByteArray())));
+      Assert.assertEquals(simple, readFn.apply(jsonStreams.parser(baos.toByteArray())));
     }
     baos.reset();
 
     {
-      CborObjects cborObjects = new CborObjects();
-      try (CBORGenerator cborGenerator = cborObjects.generator(baos)) {
-        writer.accept(simple, cborGenerator);
+      try (CBORGenerator cborGenerator = new CborConsumers().generator(baos)) {
+        AvroConsumers.jackson(cborGenerator, Simple.class).accept(simple);
       }
       System.out.println(baos);
-      Assert.assertEquals(simple, reader.apply(cborObjects.parser(baos.toByteArray())));
+      Assert.assertEquals(simple, readFn.apply(new CborStreams().parser(baos.toByteArray())));
     }
     baos.reset();
 
     {
-      SmileObjects smileObjects = new SmileObjects();
-      try (SmileGenerator smileGenerator = smileObjects.generator(baos)) {
-        writer.accept(simple, smileGenerator);
+      try (SmileGenerator smileGenerator = new SmileConsumers().generator(baos)) {
+        AvroConsumers.jackson(smileGenerator, Simple.class).accept(simple);
       }
       System.out.println(baos);
-      Assert.assertEquals(simple, reader.apply(smileObjects.parser(baos.toByteArray())));
+      Assert.assertEquals(simple, readFn.apply(new SmileStreams().parser(baos.toByteArray())));
     }
     baos.reset();
   }
 
   @Test
   public void testBidRequest() throws Exception {
-    List<ObjectNode> list = new JsonObjects()
+    List<ObjectNode> list = new JsonStreams()
         .from(getClass().getResourceAsStream("/bidreqs.json"))
         .collect(Collectors.toList());
 
@@ -118,30 +115,30 @@ public class JacksonTest {
 
     {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      try (WriteConsumer<ObjectNode> writeConsumer = new CborObjects().to(baos)) {
+      try (WriteConsumer<ObjectNode, ?> writeConsumer = new CborConsumers().to(baos)) {
         list.stream().forEach(writeConsumer);
       }
-      ListAssert.assertEquals(list, new CborObjects()
+      ListAssert.assertEquals(list, new CborStreams()
           .from(baos.toByteArray())
           .collect(Collectors.toList()));
     }
 
     {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      try (WriteConsumer<ObjectNode> writeConsumer = new SmileObjects().to(baos)) {
+      try (WriteConsumer<ObjectNode, ?> writeConsumer = new SmileConsumers().to(baos)) {
         list.stream().forEach(writeConsumer);
       }
-      ListAssert.assertEquals(list, new SmileObjects()
+      ListAssert.assertEquals(list, new SmileStreams()
           .from(baos.toByteArray())
           .collect(Collectors.toList()));
     }
 
     {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      try (WriteConsumer<ObjectNode> writeConsumer = new JsonObjects().to(baos)) {
+      try (WriteConsumer<ObjectNode, ?> writeConsumer = new JsonConsumers().to(baos)) {
         list.stream().forEach(writeConsumer);
       }
-      ListAssert.assertEquals(list, new JsonObjects()
+      ListAssert.assertEquals(list, new JsonStreams()
           .from(baos.toByteArray())
           .collect(Collectors.toList()));
     }

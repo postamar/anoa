@@ -10,15 +10,15 @@ import org.apache.avro.specific.SpecificFixed;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 
-abstract class AvroFixedReader<F extends GenericData.Fixed> extends JacksonReader<F> {
+abstract class AvroFixedReader<F extends GenericData.Fixed> extends AbstractReader<F> {
 
   abstract protected F newInstance(byte[] bytes) throws Exception;
 
   static private ByteArrayReader byteArrayReader = new ByteArrayReader();
 
   @Override
-  public F read(JsonParser jp) throws IOException {
-    final byte[] array = byteArrayReader.read(jp);
+  protected F read(JsonParser jacksonParser) throws IOException {
+    final byte[] array = byteArrayReader.read(jacksonParser);
     if (array == null) {
       return null;
     }
@@ -30,8 +30,8 @@ abstract class AvroFixedReader<F extends GenericData.Fixed> extends JacksonReade
   }
 
   @Override
-  public F readStrict(JsonParser jp) throws AnoaTypeException, IOException {
-    final byte[] array = byteArrayReader.readStrict(jp);
+  protected F readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+    final byte[] array = byteArrayReader.readStrict(jacksonParser);
     if (array == null) {
       return null;
     }

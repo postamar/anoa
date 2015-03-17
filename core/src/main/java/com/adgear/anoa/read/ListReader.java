@@ -7,37 +7,37 @@ import com.fasterxml.jackson.core.JsonToken;
 import java.io.IOException;
 import java.util.ArrayList;
 
-class ListReader extends JacksonReader<ArrayList<Object>> {
+class ListReader extends AbstractReader<ArrayList<Object>> {
 
-  final JacksonReader<?> elementReader;
+  final AbstractReader<?> elementReader;
 
-  ListReader(JacksonReader<?> elementReader) {
+  ListReader(AbstractReader<?> elementReader) {
     this.elementReader = elementReader;
   }
 
   @Override
-  public ArrayList<Object> read(JsonParser jp) throws IOException {
-    if (jp.getCurrentToken() == JsonToken.START_ARRAY) {
+  protected ArrayList<Object> read(JsonParser jacksonParser) throws IOException {
+    if (jacksonParser.getCurrentToken() == JsonToken.START_ARRAY) {
       ArrayList<Object> result = new ArrayList<>();
-      doArray(jp, p -> result.add(elementReader.read(p)));
+      doArray(jacksonParser, p -> result.add(elementReader.read(p)));
       return result;
     } else {
-      gobbleValue(jp);
+      gobbleValue(jacksonParser);
       return null;
     }
   }
 
   @Override
-  public ArrayList<Object> readStrict(JsonParser jp) throws AnoaTypeException, IOException {
-    switch (jp.getCurrentToken()) {
+  protected ArrayList<Object> readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+    switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;
       case START_ARRAY:
         ArrayList<Object> result = new ArrayList<>();
-        doArray(jp, p -> result.add(elementReader.readStrict(p)));
+        doArray(jacksonParser, p -> result.add(elementReader.readStrict(p)));
         return result;
       default:
-        throw new AnoaTypeException("Token is not '[': " + jp.getCurrentToken());
+        throw new AnoaTypeException("Token is not '[': " + jacksonParser.getCurrentToken());
     }
   }
 }

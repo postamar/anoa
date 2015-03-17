@@ -1,19 +1,22 @@
 package com.adgear.anoa.tools.runnable;
 
-import com.adgear.anoa.factory.AvroConsumers;
-import com.adgear.anoa.factory.AvroGenericStreams;
-import com.adgear.anoa.factory.CborObjects;
-import com.adgear.anoa.factory.CsvObjects;
-import com.adgear.anoa.factory.JacksonObjects;
-import com.adgear.anoa.factory.JdbcStreams;
-import com.adgear.anoa.factory.JsonObjects;
-import com.adgear.anoa.factory.SmileObjects;
-import com.adgear.anoa.factory.ThriftConsumers;
-import com.adgear.anoa.factory.ThriftStreams;
-import com.adgear.anoa.factory.util.ReflectionUtils;
-import com.adgear.anoa.factory.util.WriteConsumer;
-import com.adgear.anoa.read.AnoaRead;
-import com.adgear.anoa.write.AnoaWrite;
+import com.adgear.anoa.AnoaReflectionUtils;
+import com.adgear.anoa.read.AvroDecoders;
+import com.adgear.anoa.read.AvroGenericStreams;
+import com.adgear.anoa.read.CborStreams;
+import com.adgear.anoa.read.CsvStreams;
+import com.adgear.anoa.read.JdbcStreams;
+import com.adgear.anoa.read.JsonStreams;
+import com.adgear.anoa.read.SmileStreams;
+import com.adgear.anoa.read.ThriftDecoders;
+import com.adgear.anoa.read.ThriftStreams;
+import com.adgear.anoa.write.AvroConsumers;
+import com.adgear.anoa.write.CborConsumers;
+import com.adgear.anoa.write.CsvConsumers;
+import com.adgear.anoa.write.JacksonConsumers;
+import com.adgear.anoa.write.SmileConsumers;
+import com.adgear.anoa.write.ThriftConsumers;
+import com.adgear.anoa.write.WriteConsumer;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -26,6 +29,7 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.thrift.TBase;
+import org.apache.thrift.TException;
 import org.apache.thrift.TFieldIdEnum;
 import org.jooq.lambda.Unchecked;
 
@@ -44,12 +48,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements Runnable {
+public class DataTool<F extends TFieldIdEnum, T extends TBase<T, F>> implements Runnable {
 
   final private Schema declaredAvroSchema;
   final private Class<T> thriftClass;
@@ -69,7 +72,7 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
   }
 
   /**
-   * Constructor for when reading from JDBC source.
+   * Constructor for when reading parser JDBC source.
    *
    * @param avroSchema         Declared Avro record schema (optional).
    * @param thriftClass Declared Thrift record class (optional for some input formats).
@@ -101,13 +104,13 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
   }
 
   /**
-   * Constructor for when reading from stream.
+   * Constructor for when reading parser stream.
    *
    * @param avroSchema  Declared Avro record schema (optional for some input formats).
    * @param thriftClass Declared Thrift record class (optional for some input formats).
    * @param inFormat    Declared input serialization format.
    * @param outFormat   Declared output serialization format.
-   * @param in          Stream to read records from.
+   * @param in          Stream to read records parser.
    * @param out         Stream to write records to.
    */
   public DataTool(Schema avroSchema,
@@ -160,7 +163,7 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
   public void runAvro(Stream<GenericRecord> stream) {
     switch (outFormat.category) {
       case AVRO:
-        final Supplier<WriteConsumer<GenericRecord>> avroSupplier;
+        final Supplier<WriteConsumer<GenericRecord, IOException>> avroSupplier;
         switch (outFormat) {
           case AVRO_BINARY:
             avroSupplier = () -> AvroConsumers.binary(out, avroSchema);
@@ -172,17 +175,17 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
             avroSupplier = () -> AvroConsumers.batch(out, avroSchema);
             break;
         }
-        try (WriteConsumer<GenericRecord> writeConsumer = avroSupplier.get()) {
-          stream.forEach(writeConsumer);
+        try (WriteConsumer<GenericRecord, IOException> writeConsumer = avroSupplier.get()) {
+          stream.sequential().forEach(writeConsumer);
         } catch (IOException e) {
           throw new UncheckedIOException(e);
         }
         return;
       case JACKSON:
-        final JacksonObjects<?,?,?,?,?> jacksonObjects;
+        final JacksonConsumers<? extends TreeNode,?,?,?,?> jacksonConsumers;
         switch (outFormat) {
           case CBOR:
-            jacksonObjects = new CborObjects();
+            jacksonConsumers = new CborConsumers();
             break;
           case CSV:
           case CSV_NO_HEADER:
@@ -196,20 +199,22 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
             avroSchema.getFields().stream()
                 .map(Schema.Field::name)
                 .forEach(builder::addColumn);
-            jacksonObjects = new CsvObjects(builder.build());
+            jacksonConsumers = new CsvConsumers(builder.build());
             break;
           case JSON:
-            jacksonObjects = new JsonObjects();
+            jacksonConsumers = new com.adgear.anoa.write.JsonConsumers();
             break;
           case SMILE:
-            jacksonObjects = new SmileObjects();
+            jacksonConsumers = new SmileConsumers();
             break;
           default:
             throw new IllegalArgumentException("Unsupported output format " + outFormat);
         }
-        BiConsumer<GenericRecord, JsonGenerator> biConsumer = AnoaWrite.biCo(avroSchema);
-        try (JsonGenerator generator = jacksonObjects.generator(out)) {
-          stream.sequential().forEach(record -> biConsumer.accept(record, generator));
+        try (JsonGenerator generator = jacksonConsumers.generator(out)) {
+          try (WriteConsumer<GenericRecord, IOException> consumer =
+                   AvroConsumers.jackson(generator, avroSchema)) {
+            stream.sequential().forEach(consumer);
+          }
         } catch (IOException e) {
           throw new UncheckedIOException(e);
         }
@@ -222,7 +227,7 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
   public void runThrift(Stream<T> stream) {
     switch (outFormat.category) {
       case THRIFT:
-        final Supplier<WriteConsumer<T>> thriftSupplier;
+        final Supplier<WriteConsumer<T, TException>> thriftSupplier;
         switch (outFormat) {
           case THRIFT_COMPACT:
             thriftSupplier = () -> ThriftConsumers.compact(out);
@@ -233,17 +238,17 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
           default:
             thriftSupplier = () -> ThriftConsumers.binary(out);
         }
-        try (WriteConsumer<T> writeConsumer = thriftSupplier.get()) {
-          stream.forEach(writeConsumer);
+        try (WriteConsumer<T, TException> writeConsumer = thriftSupplier.get()) {
+          stream.sequential().forEach(writeConsumer);
         } catch (IOException e) {
           throw new UncheckedIOException(e);
         }
         return;
       case JACKSON:
-        final JacksonObjects<?,?,?,?,?> jacksonObjects;
+        final JacksonConsumers<? extends TreeNode,?,?,?,?> jacksonConsumers;
         switch (outFormat) {
           case CBOR:
-            jacksonObjects = new CborObjects();
+            jacksonConsumers = new CborConsumers();
             break;
           case CSV:
           case CSV_NO_HEADER:
@@ -254,23 +259,25 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
             if (outFormat == Format.TSV || outFormat == Format.TSV_NO_HEADER) {
               builder.setColumnSeparator('\t');
             }
-            ReflectionUtils.getThriftMetaDataMap(thriftClass).keySet().stream()
+            AnoaReflectionUtils.getThriftMetaDataMap(thriftClass).keySet().stream()
                 .map(TFieldIdEnum::getFieldName)
                 .forEach(builder::addColumn);
-            jacksonObjects = new CsvObjects(builder.build());
+            jacksonConsumers = new CsvConsumers(builder.build());
             break;
           case JSON:
-            jacksonObjects = new JsonObjects();
+            jacksonConsumers = new com.adgear.anoa.write.JsonConsumers();
             break;
           case SMILE:
-            jacksonObjects = new SmileObjects();
+            jacksonConsumers = new SmileConsumers();
             break;
           default:
             throw new IllegalArgumentException("Unsupported output format " + outFormat);
         }
-        BiConsumer<T, JsonGenerator> biConsumer = AnoaWrite.biCo(thriftClass);
-        try (JsonGenerator generator = jacksonObjects.generator(out)) {
-          stream.sequential().forEach(record -> biConsumer.accept(record, generator));
+        try (JsonGenerator generator = jacksonConsumers.generator(out)) {
+          try (WriteConsumer<T, IOException> consumer =
+                   ThriftConsumers.jackson(generator, thriftClass)) {
+            stream.sequential().forEach(consumer);
+          }
         } catch (IOException e) {
           throw new UncheckedIOException(e);
         }
@@ -282,28 +289,28 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
 
   public void runJackson(Stream<ObjectNode> stream) {
     if (avroSchema != null) {
-      runAvro(stream.map(TreeNode::traverse).map(AnoaRead.fn(avroSchema, false)));
+      runAvro(stream.map(TreeNode::traverse).map(AvroDecoders.jackson(avroSchema, false)));
       return;
     } else if (thriftClass != null) {
-      runThrift(stream.map(TreeNode::traverse).map(AnoaRead.fn(thriftClass, false)));
+      runThrift(stream.map(TreeNode::traverse).map(ThriftDecoders.jackson(thriftClass, false)));
       return;
     }
-    final Supplier<JacksonObjects<?,?,?,?,?>> supplier;
+    final Supplier<JacksonConsumers<ObjectNode,?,?,?,?>> supplier;
     switch (outFormat) {
       case CBOR:
-        supplier = CborObjects::new;
+        supplier = CborConsumers::new;
         break;
       case JSON:
-        supplier = JsonObjects::new;
+        supplier = com.adgear.anoa.write.JsonConsumers::new;
         break;
       case SMILE:
-        supplier = SmileObjects::new;
+        supplier = SmileConsumers::new;
         break;
       default:
         throw new IllegalArgumentException("Unsupported output format " + outFormat);
     }
-    try (WriteConsumer<ObjectNode> writeConsumer = supplier.get().to(out)) {
-      stream.forEach(writeConsumer);
+    try (WriteConsumer<ObjectNode, IOException> writeConsumer = supplier.get().to(out)) {
+      stream.sequential().forEach(writeConsumer);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -316,7 +323,7 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
         GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(declaredAvroSchema);
         try (DataFileStream<GenericRecord> it = new DataFileStream<>(in, reader)) {
           avroSchema = reader.getSchema();
-          runAvro(AvroGenericStreams.from(it));
+          runAvro(AvroGenericStreams.batch(it));
         } catch (IOException e) {
           throw new UncheckedIOException(e);
         }
@@ -328,13 +335,13 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
         runAvro(AvroGenericStreams.json(in, declaredAvroSchema));
         return;
       case CBOR:
-        runJackson(new CborObjects().from(in));
+        runJackson(new CborStreams().from(in));
         return;
       case CSV:
-        runJackson(CsvObjects.csvWithHeader().from(in));
+        runJackson(CsvStreams.csvWithHeader().from(in));
         return;
       case CSV_NO_HEADER:
-        runJackson(CsvObjects.csv().from(in));
+        runJackson(CsvStreams.csv().from(in));
         return;
       case THRIFT_BINARY:
         runThrift(ThriftStreams.binary(Unchecked.supplier(thriftClass::newInstance), in));
@@ -355,24 +362,25 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
             if (avroSchema == null) {
               avroSchema = JdbcStreams.induceSchema(resultSet.getMetaData());
             }
-            runAvro(JdbcStreams.from(resultSet)
-                        .map(AnoaRead.fn(avroSchema, false).compose(TreeNode::traverse)));
+            runAvro(new JdbcStreams().from(resultSet)
+                        .map(ObjectNode::traverse)
+                        .map(AvroDecoders.jackson(avroSchema, false)));
           }
         } catch (SQLException e) {
           throw new RuntimeException(e);
         }
         return;
       case JSON:
-        runJackson(new JsonObjects().from(in));
+        runJackson(new JsonStreams().from(in));
         return;
       case SMILE:
-        runJackson(new SmileObjects().from(in));
+        runJackson(new SmileStreams().from(in));
         return;
       case TSV:
-        runJackson(CsvObjects.tsvWithHeader().from(in));
+        runJackson(CsvStreams.tsvWithHeader().from(in));
         return;
       case TSV_NO_HEADER:
-        runJackson(CsvObjects.tsv().from(in));
+        runJackson(CsvStreams.tsv().from(in));
         return;
     }
     throw new UnsupportedOperationException();
@@ -389,14 +397,15 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T,F>> implements R
 
     Schema avroSchema = null;
     if (!avroClassName.isEmpty()) {
-      Class<? extends SpecificRecord> avroRecordClass = ReflectionUtils.getAvroClass(avroClassName);
+      Class<? extends SpecificRecord> avroRecordClass = AnoaReflectionUtils
+          .getAvroClass(avroClassName);
       if (avroRecordClass != null) {
         avroSchema = SpecificData.get().getSchema(avroRecordClass);
       }
     }
     Class<? extends TBase> thriftRecordClass = null;
     if (!thriftClassName.isEmpty()) {
-      thriftRecordClass = ReflectionUtils.getThriftClass(thriftClassName);
+      thriftRecordClass = AnoaReflectionUtils.getThriftClass(thriftClassName);
     }
     final DataTool instance;
     try (OutputStream out = outFilePath.isEmpty()

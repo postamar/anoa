@@ -6,19 +6,19 @@ import com.fasterxml.jackson.core.JsonParser;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-class ByteBufferReader extends JacksonReader<ByteBuffer> {
+class ByteBufferReader extends AbstractReader<ByteBuffer> {
 
   static private ByteArrayReader byteArrayReader = new ByteArrayReader();
 
   @Override
-  public ByteBuffer read(JsonParser jp) throws IOException {
-    final byte[] array = byteArrayReader.read(jp);
+  protected ByteBuffer read(JsonParser jacksonParser) throws IOException {
+    final byte[] array = byteArrayReader.read(jacksonParser);
     return (array == null) ? null : ByteBuffer.wrap(array);
   }
 
   @Override
-  public ByteBuffer readStrict(JsonParser jp) throws AnoaTypeException, IOException {
-    final byte[] array = byteArrayReader.readStrict(jp);
+  protected ByteBuffer readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+    final byte[] array = byteArrayReader.readStrict(jacksonParser);
     return (array == null) ? null : ByteBuffer.wrap(array);
   }
 }

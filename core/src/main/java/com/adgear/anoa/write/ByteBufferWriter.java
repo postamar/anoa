@@ -5,10 +5,10 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-class ByteBufferWriter extends JacksonWriter<ByteBuffer> {
+class ByteBufferWriter extends AbstractWriter<ByteBuffer> {
 
   @Override
-  public void write(ByteBuffer byteBuffer, JsonGenerator jsonGenerator) throws IOException {
-    jsonGenerator.writeBinary(byteBuffer.array());
+  protected void writeChecked(ByteBuffer byteBuffer, JsonGenerator jacksonGenerator) throws IOException {
+    jacksonGenerator.writeBinary(byteBuffer.array());
   }
 }

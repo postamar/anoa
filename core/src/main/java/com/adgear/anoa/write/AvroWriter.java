@@ -10,9 +10,9 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-class AvroWriter<R extends IndexedRecord> extends JacksonWriter<R> {
+class AvroWriter<R extends IndexedRecord> extends AbstractWriter<R> {
 
-  final private LinkedHashMap<Schema.Field,JacksonWriter<Object>> fieldMap;
+  final private LinkedHashMap<Schema.Field,AbstractWriter<Object>> fieldMap;
 
   AvroWriter(Class<R> recordClass) {
     this(SpecificData.get().getSchema(recordClass));
@@ -22,24 +22,24 @@ class AvroWriter<R extends IndexedRecord> extends JacksonWriter<R> {
   AvroWriter(Schema schema) {
     fieldMap = new LinkedHashMap<>();
     schema.getFields().stream()
-        .forEach(f -> fieldMap.put(f, (JacksonWriter<Object>) createWriter(f.schema())));
+        .forEach(f -> fieldMap.put(f, (AbstractWriter<Object>) createWriter(f.schema())));
   }
 
   @Override
-  public void write(R record, JsonGenerator jsonGenerator) throws IOException {
-    jsonGenerator.writeStartObject();
-    for (Map.Entry<Schema.Field,JacksonWriter<Object>> entry : fieldMap.entrySet()) {
+  protected void writeChecked(R record, JsonGenerator jacksonGenerator) throws IOException {
+    jacksonGenerator.writeStartObject();
+    for (Map.Entry<Schema.Field,AbstractWriter<Object>> entry : fieldMap.entrySet()) {
       Schema.Field field = entry.getKey();
       Object value = record.get(field.pos());
       if (!(value == null && (field.defaultValue() == null || field.defaultValue().isNull()))) {
-        jsonGenerator.writeFieldName(field.name());
-        entry.getValue().write(value, jsonGenerator);
+        jacksonGenerator.writeFieldName(field.name());
+        entry.getValue().writeChecked(value, jacksonGenerator);
       }
     }
-    jsonGenerator.writeEndObject();
+    jacksonGenerator.writeEndObject();
   }
 
-  static protected JacksonWriter<?> createWriter(Schema schema) {
+  static protected AbstractWriter<?> createWriter(Schema schema) {
     switch (schema.getType()) {
       case ARRAY:
         return new CollectionWriter<>(createWriter(schema.getElementType()));
@@ -72,6 +72,5 @@ class AvroWriter<R extends IndexedRecord> extends JacksonWriter<R> {
         }
     }
     throw new RuntimeException("Unsupported Avro schema: " + schema);
-
   }
 }

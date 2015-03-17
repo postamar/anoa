@@ -7,37 +7,37 @@ import com.fasterxml.jackson.core.JsonToken;
 import java.io.IOException;
 import java.util.HashSet;
 
-class SetReader extends JacksonReader<HashSet<Object>> {
+class SetReader extends AbstractReader<HashSet<Object>> {
 
-  final JacksonReader<?> elementReader;
+  final AbstractReader<?> elementReader;
 
-  public SetReader(JacksonReader<?> elementReader) {
+  SetReader(AbstractReader<?> elementReader) {
     this.elementReader = elementReader;
   }
 
   @Override
-  public HashSet<Object> read(JsonParser jp) throws IOException {
-    if (jp.getCurrentToken() == JsonToken.START_ARRAY) {
+  protected HashSet<Object> read(JsonParser jacksonParser) throws IOException {
+    if (jacksonParser.getCurrentToken() == JsonToken.START_ARRAY) {
       HashSet<Object> result = new HashSet<>();
-      doArray(jp, p -> result.add(elementReader.read(p)));
+      doArray(jacksonParser, p -> result.add(elementReader.read(p)));
       return result;
     } else {
-      gobbleValue(jp);
+      gobbleValue(jacksonParser);
       return null;
     }
   }
 
   @Override
-  public HashSet<Object> readStrict(JsonParser jp) throws AnoaTypeException, IOException {
-    switch (jp.getCurrentToken()) {
+  protected HashSet<Object> readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+    switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;
       case START_ARRAY:
         HashSet<Object> result = new HashSet<>();
-        doArray(jp, p -> result.add(elementReader.readStrict(p)));
+        doArray(jacksonParser, p -> result.add(elementReader.readStrict(p)));
         return result;
       default:
-        throw new AnoaTypeException("Token is not '[': " + jp.getCurrentToken());
+        throw new AnoaTypeException("Token is not '[': " + jacksonParser.getCurrentToken());
     }
   }
 }

@@ -1,6 +1,6 @@
 package com.adgear.anoa.write;
 
-import com.adgear.anoa.factory.util.ReflectionUtils;
+import com.adgear.anoa.AnoaReflectionUtils;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import org.apache.thrift.TBase;
@@ -16,33 +16,33 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-class ThriftWriter<F extends TFieldIdEnum, T extends TBase<T,F>> extends JacksonWriter<T> {
+class ThriftWriter<F extends TFieldIdEnum, T extends TBase<T,F>> extends AbstractWriter<T> {
 
-  final private LinkedHashMap<F,JacksonWriter<Object>> fieldMap;
+  final private LinkedHashMap<F,AbstractWriter<Object>> fieldMap;
 
   @SuppressWarnings("unchecked")
   ThriftWriter(Class<T> thriftClass) {
     fieldMap = new LinkedHashMap<>();
-    ReflectionUtils.getThriftMetaDataMap(thriftClass).entrySet().stream()
+    AnoaReflectionUtils.getThriftMetaDataMap(thriftClass).entrySet().stream()
         .forEach(e -> fieldMap.put(
             (F) e.getKey(),
-            (JacksonWriter<Object>) createWriter(e.getValue().valueMetaData)));
+            (AbstractWriter<Object>) createWriter(e.getValue().valueMetaData)));
   }
 
   @Override
-  public void write(T t, JsonGenerator jsonGenerator) throws IOException {
-    jsonGenerator.writeStartObject();
-    for (Map.Entry<F,JacksonWriter<Object>> entry : fieldMap.entrySet()) {
+  protected void writeChecked(T t, JsonGenerator jacksonGenerator) throws IOException {
+    jacksonGenerator.writeStartObject();
+    for (Map.Entry<F,AbstractWriter<Object>> entry : fieldMap.entrySet()) {
       F f = entry.getKey();
       if (t.isSet(f)) {
-        jsonGenerator.writeFieldName(f.getFieldName());
-        entry.getValue().write(t.getFieldValue(f), jsonGenerator);
+        jacksonGenerator.writeFieldName(f.getFieldName());
+        entry.getValue().writeChecked(t.getFieldValue(f), jacksonGenerator);
       }
     }
-    jsonGenerator.writeEndObject();
+    jacksonGenerator.writeEndObject();
   }
 
-  static protected JacksonWriter<?> createWriter(FieldValueMetaData metaData) {
+  static protected AbstractWriter<?> createWriter(FieldValueMetaData metaData) {
     switch (metaData.type) {
       case TType.BOOL:
         return new BooleanWriter();

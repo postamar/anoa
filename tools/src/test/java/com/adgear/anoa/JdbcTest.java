@@ -1,13 +1,14 @@
 package com.adgear.anoa;
 
-import com.adgear.anoa.factory.AvroConsumers;
-import com.adgear.anoa.factory.AvroSpecificStreams;
-import com.adgear.anoa.factory.CsvObjects;
-import com.adgear.anoa.factory.JdbcStreams;
-import com.adgear.anoa.factory.util.WriteConsumer;
-import com.adgear.anoa.read.AnoaRead;
+import com.adgear.anoa.read.AvroDecoders;
+import com.adgear.anoa.read.AvroSpecificStreams;
+import com.adgear.anoa.read.CsvStreams;
+import com.adgear.anoa.read.JdbcStreams;
+import com.adgear.anoa.read.ThriftDecoders;
 import com.adgear.anoa.tools.runnable.DataTool;
 import com.adgear.anoa.tools.runnable.Format;
+import com.adgear.anoa.write.AvroConsumers;
+import com.adgear.anoa.write.WriteConsumer;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -61,17 +62,16 @@ public class JdbcTest {
 
   @Test
   public void testToThrift() throws Exception {
+    AnoaFactory<Throwable> f = AnoaFactory.passAlong();
     try (Connection connection = openDBConnection()) {
       try (Statement statement = connection.createStatement()) {
         try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {
-
-          List<Simple> simples = JdbcStreams.from(resultSet)
-              .map(AnoaRecord::of)
-              .map(AnoaFunction.of(TreeNode::traverse))
-              .map(AnoaRead.anoaFn(Simple.class, false))
+          List<Simple> simples = new JdbcStreams().from(f, resultSet)
+              .map(f.function(TreeNode::traverse))
+              .map(f.function(ThriftDecoders.jackson(Simple.class, false)))
               .peek(System.out::println)
-              .collect(AnoaCollector.toList())
-              .streamPresent()
+              .filter(Anoa::isPresent)
+              .map(Anoa::get)
               .collect(Collectors.toList());
 
           Assert.assertEquals(2, simples.size());
@@ -91,8 +91,7 @@ public class JdbcTest {
     try (Connection connection = openDBConnection()) {
       try (Statement statement = connection.createStatement()) {
         try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {
-          JdbcStreams.from(resultSet)
-              .forEach(System.out::println);
+          new JdbcStreams().from(resultSet).forEach(System.out::println);
         }
       }
     }
@@ -106,10 +105,10 @@ public class JdbcTest {
           Schema induced = JdbcStreams.induceSchema(resultSet.getMetaData());
 
           ByteArrayOutputStream baos = new ByteArrayOutputStream();
-          try (WriteConsumer<GenericRecord> consumer = AvroConsumers.batch(baos, induced)) {
-            JdbcStreams.from(resultSet)
+          try (WriteConsumer<GenericRecord, ?> consumer = AvroConsumers.batch(baos, induced)) {
+            new JdbcStreams().from(resultSet)
                 .map(ObjectNode::traverse)
-                .map(AnoaRead.fn(induced, false))
+                .map(AvroDecoders.jackson(induced, false))
                 .forEach(consumer);
           }
           Assert.assertEquals(2, AvroSpecificStreams.batch(
@@ -137,9 +136,9 @@ public class JdbcTest {
       bytes = baos.toByteArray();
     }
     System.out.println(new String(bytes));
-    Assert.assertEquals(2, CsvObjects.csvWithHeader().from(bytes)
+    Assert.assertEquals(2, CsvStreams.csvWithHeader().from(bytes)
         .map(TreeNode::traverse)
-        .map(AnoaRead.fn(com.adgear.avro.Simple.class, false))
+        .map(AvroDecoders.jackson(com.adgear.avro.Simple.class, false))
         .filter(x -> x != null)
         .count());
   }

@@ -1,7 +1,7 @@
 package com.adgear.anoa.read;
 
+import com.adgear.anoa.AnoaReflectionUtils;
 import com.adgear.anoa.AnoaTypeException;
-import com.adgear.anoa.factory.util.ReflectionUtils;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
@@ -22,12 +22,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-
-class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends JacksonReader<T> {
+class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends AbstractReader<T> {
 
   static protected class Field<F extends TFieldIdEnum> {
 
-    protected Field(F tFieldIdEnum, boolean isRequired, JacksonReader<?> reader) {
+    protected Field(F tFieldIdEnum, boolean isRequired, AbstractReader<?> reader) {
       this.tFieldIdEnum = tFieldIdEnum;
       this.isRequired = isRequired;
       this.reader = reader;
@@ -35,7 +34,7 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends Jackson
 
     final protected F tFieldIdEnum;
     final protected boolean isRequired;
-    final protected JacksonReader<?> reader;
+    final protected AbstractReader<?> reader;
   }
 
   final private Map<String,Optional<Field<F>>> fieldLookUp;
@@ -58,7 +57,7 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends Jackson
     fieldLookUp = new HashMap<>();
     int n = 0;
     for (Map.Entry<F,FieldMetaData> entry :
-        ReflectionUtils.getThriftMetaDataMap(thriftClass).entrySet()) {
+        AnoaReflectionUtils.getThriftMetaDataMap(thriftClass).entrySet()) {
       final boolean required = (entry.getValue().requirementType == TFieldRequirementType.REQUIRED);
       n += required ? 1 : 0;
       fieldLookUp.put(entry.getKey().getFieldName(), Optional.of(
@@ -68,10 +67,10 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends Jackson
   }
 
   @Override
-  public T read(JsonParser jp) throws IOException {
-    if (jp.getCurrentToken() == JsonToken.START_OBJECT) {
+  protected T read(JsonParser jacksonParser) throws IOException {
+    if (jacksonParser.getCurrentToken() == JsonToken.START_OBJECT) {
       final T result = newInstance();
-      doMap(jp, (fieldName, p) -> {
+      doMap(jacksonParser, (fieldName, p) -> {
         Optional<Field<F>> cacheValue = fieldLookUp.get(fieldName);
         if (cacheValue == null) {
           Optional<Map.Entry<String, Optional<Field<F>>>> found = fieldLookUp.entrySet().stream()
@@ -89,7 +88,7 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends Jackson
       });
       return result;
     } else {
-      gobbleValue(jp);
+      gobbleValue(jacksonParser);
       return null;
     }
   }
@@ -99,14 +98,14 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends Jackson
   }
 
   @Override
-  public T readStrict(JsonParser jp) throws AnoaTypeException, IOException {
-    switch (jp.getCurrentToken()) {
+  protected T readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+    switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;
       case START_OBJECT:
         final T result = newInstance();
         final Counter countRequired = new Counter();
-        doMap(jp, (fieldName, p) -> {
+        doMap(jacksonParser, (fieldName, p) -> {
           final Optional<Field<F>> cacheValue =
               fieldLookUp.computeIfAbsent(fieldName, __ -> Optional.<Field<F>>empty());
           if (cacheValue.isPresent()) {
@@ -129,7 +128,7 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends Jackson
         }
         return result;
       default:
-        throw new AnoaTypeException("Token is not '{': " + jp.getCurrentToken());
+        throw new AnoaTypeException("Token is not '{': " + jacksonParser.getCurrentToken());
     }
   }
 
@@ -138,7 +137,7 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends Jackson
     return (T) instance.deepCopy();
   }
 
-  static protected JacksonReader<?> createReader(FieldValueMetaData metaData) {
+  static protected AbstractReader<?> createReader(FieldValueMetaData metaData) {
     switch (metaData.type) {
       case TType.BOOL:
         return new BooleanReader();

@@ -5,24 +5,24 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import java.io.IOException;
 import java.util.Collection;
 
-class CollectionWriter<E> extends JacksonWriter<Collection<E>> {
+class CollectionWriter<E> extends AbstractWriter<Collection<E>> {
 
-  final JacksonWriter<E> elementWriter;
+  final AbstractWriter<E> elementWriter;
 
-  CollectionWriter(JacksonWriter<E> elementWriter) {
+  CollectionWriter(AbstractWriter<E> elementWriter) {
     this.elementWriter = elementWriter;
   }
 
   @Override
-  public void write(Collection<E> array, JsonGenerator jsonGenerator) throws IOException {
-    jsonGenerator.writeStartArray(array.size());
+  protected void writeChecked(Collection<E> array, JsonGenerator jacksonGenerator) throws IOException {
+    jacksonGenerator.writeStartArray(array.size());
     for (E element : array) {
       if (element == null) {
-        jsonGenerator.writeNull();
+        jacksonGenerator.writeNull();
       } else {
-        elementWriter.write(element, jsonGenerator);
+        elementWriter.writeChecked(element, jacksonGenerator);
       }
     }
-    jsonGenerator.writeEndArray();
+    jacksonGenerator.writeEndArray();
   }
 }

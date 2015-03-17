@@ -4,10 +4,10 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
 
-class DoubleWriter extends JacksonWriter<Double> {
+class DoubleWriter extends AbstractWriter<Double> {
 
   @Override
-  public void write(Double aDouble, JsonGenerator jsonGenerator) throws IOException {
-    jsonGenerator.writeNumber(aDouble);
+  protected void writeChecked(Double aDouble, JsonGenerator jacksonGenerator) throws IOException {
+    jacksonGenerator.writeNumber(aDouble);
   }
 }

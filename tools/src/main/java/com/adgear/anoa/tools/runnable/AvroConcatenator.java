@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * A Runnable for concatenating Avro record batches from multiple input streams.
+ * A Runnable for concatenating Avro record batches parser multiple input streams.
  */
 public class AvroConcatenator implements Runnable {
 

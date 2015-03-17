@@ -26,12 +26,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
+abstract class AvroReader<R extends IndexedRecord> extends AbstractReader<R> {
 
   static protected class Field {
 
     @SuppressWarnings("unchecked")
-    protected Field(Schema.Field field, Object defaultValue, JacksonReader<?> reader) {
+    protected Field(Schema.Field field, Object defaultValue, AbstractReader<?> reader) {
       this.pos = field.pos();
       this.schema = field.schema();
       this.reader = reader;
@@ -41,7 +41,7 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
     final protected int pos;
     final protected Schema schema;
     final protected Object defaultValue;
-    final protected JacksonReader<?> reader;
+    final protected AbstractReader<?> reader;
 
     final protected Object valueOrDefault(Object value) {
       return (value != null || defaultValue == null)
@@ -90,8 +90,8 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
   }
 
   @Override
-  public R read(JsonParser jp) throws IOException {
-    if (jp.getCurrentToken() == JsonToken.START_OBJECT) {
+  public R read(JsonParser jacksonParser) throws IOException {
+    if (jacksonParser.getCurrentToken() == JsonToken.START_OBJECT) {
       final R record;
       try {
         record = newInstance();
@@ -99,7 +99,7 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
         return null;
       }
       defaultValues.entrySet().stream().forEach(e -> record.put(e.getKey(), e.getValue()));
-      doMap(jp, (fieldName, p) -> {
+      doMap(jacksonParser, (fieldName, p) -> {
         Optional<Field> cacheValue = fieldLookUp.get(fieldName);
         if (cacheValue == null) {
           Optional<Map.Entry<String, Optional<Field>>> found = fieldLookUp.entrySet().stream()
@@ -117,14 +117,14 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
       });
       return record;
     } else {
-      gobbleValue(jp);
+      gobbleValue(jacksonParser);
       return null;
     }
   }
 
   @Override
-  public R readStrict(JsonParser jp) throws AnoaTypeException, IOException {
-    switch (jp.getCurrentToken()) {
+  public R readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+    switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;
       case START_OBJECT:
@@ -135,7 +135,7 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
           throw new AnoaTypeException(e);
         }
         defaultValues.entrySet().stream().forEach(e -> record.put(e.getKey(), e.getValue()));
-        doMap(jp, (fieldName, p) -> {
+        doMap(jacksonParser, (fieldName, p) -> {
           final Optional<Field> cacheValue =
               fieldLookUp.computeIfAbsent(fieldName, __ -> Optional.<Field>empty());
           if (cacheValue.isPresent()) {
@@ -148,11 +148,11 @@ abstract class AvroReader<R extends IndexedRecord> extends JacksonReader<R> {
         SpecificData.get().validate(record.getSchema(), record);
         return record;
       default:
-        throw new AnoaTypeException("Token is not '{': " + jp.getCurrentToken());
+        throw new AnoaTypeException("Token is not '{': " + jacksonParser.getCurrentToken());
     }  }
 
   @SuppressWarnings("unchecked")
-  static protected JacksonReader<?> createReader(Schema schema) {
+  static protected AbstractReader<?> createReader(Schema schema) {
     switch (schema.getType()) {
       case ARRAY:
         return new ListReader(createReader(schema.getElementType()));

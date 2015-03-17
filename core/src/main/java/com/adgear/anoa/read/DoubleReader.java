@@ -5,24 +5,24 @@ import com.fasterxml.jackson.core.JsonParser;
 
 import java.io.IOException;
 
-class DoubleReader extends JacksonReader<Double> {
+class DoubleReader extends AbstractReader<Double> {
 
   @Override
-  public Double read(JsonParser jp) throws IOException {
-    return jp.getValueAsDouble();
+  protected Double read(JsonParser jacksonParser) throws IOException {
+    return jacksonParser.getValueAsDouble();
   }
 
   @Override
-  public Double readStrict(JsonParser jp) throws AnoaTypeException, IOException {
-    switch (jp.getCurrentToken()) {
+  protected Double readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+    switch (jacksonParser.getCurrentToken()) {
       case VALUE_NUMBER_FLOAT:
-        return jp.getDoubleValue();
+        return jacksonParser.getDoubleValue();
       case VALUE_NUMBER_INT:
-        return jp.getValueAsDouble();
+        return jacksonParser.getValueAsDouble();
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaTypeException("Token is not number: " + jp.getCurrentToken());
+        throw new AnoaTypeException("Token is not number: " + jacksonParser.getCurrentToken());
     }
   }
 }

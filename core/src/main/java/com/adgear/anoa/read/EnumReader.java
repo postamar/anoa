@@ -8,14 +8,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
-class EnumReader extends JacksonReader<Enum> {
+class EnumReader extends AbstractReader<Enum> {
 
   final private Map<String,Enum> labelLookUp;
   final private Map<Integer,Enum> ordinalLookUp;
   final Class enumClass;
 
   @SuppressWarnings("unchecked")
-  public EnumReader(Class enumClass) {
+  EnumReader(Class enumClass) {
     this.enumClass = enumClass;
     labelLookUp = new HashMap<>();
     ordinalLookUp = new HashMap<>();
@@ -32,10 +32,10 @@ class EnumReader extends JacksonReader<Enum> {
   }
 
   @Override
-  public Enum read(JsonParser jp) throws IOException {
-    switch (jp.getCurrentToken()) {
+  protected Enum read(JsonParser jacksonParser) throws IOException {
+    switch (jacksonParser.getCurrentToken()) {
       case VALUE_STRING:
-        final String label = jp.getText();
+        final String label = jacksonParser.getText();
         Enum value = labelLookUp.get(label);
         if (value == null) {
           value = labelLookUp.get(label.toUpperCase());
@@ -45,19 +45,19 @@ class EnumReader extends JacksonReader<Enum> {
         }
         return value;
       case VALUE_NUMBER_INT:
-        return ordinalLookUp.get(jp.getIntValue());
+        return ordinalLookUp.get(jacksonParser.getIntValue());
       default:
-        gobbleValue(jp);
+        gobbleValue(jacksonParser);
         return null;
     }
   }
 
   @Override
-  public Enum readStrict(JsonParser jp) throws AnoaTypeException, IOException {
+  protected Enum readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
     Enum value;
-    switch (jp.getCurrentToken()) {
+    switch (jacksonParser.getCurrentToken()) {
       case VALUE_STRING:
-        final String label = jp.getText();
+        final String label = jacksonParser.getText();
         value = labelLookUp.get(label);
         if (value == null) {
           value = labelLookUp.get(label.toUpperCase());
@@ -66,19 +66,19 @@ class EnumReader extends JacksonReader<Enum> {
           }
         }
         if (value == null) {
-          throw new AnoaTypeException("Invalid label " + jp.getText() + " for " + enumClass);
+          throw new AnoaTypeException("Invalid label " + jacksonParser.getText() + " for " + enumClass);
         }
         return value;
       case VALUE_NUMBER_INT:
-        value = ordinalLookUp.get(jp.getIntValue());
+        value = ordinalLookUp.get(jacksonParser.getIntValue());
         if (value == null) {
-          throw new AnoaTypeException("Invalid ordinal " + jp.getText() + " for " + enumClass);
+          throw new AnoaTypeException("Invalid ordinal " + jacksonParser.getText() + " for " + enumClass);
         }
         return value;
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaTypeException("Token is not enum label or ordinal: " + jp.getCurrentToken());
+        throw new AnoaTypeException("Token is not enum label or ordinal: " + jacksonParser.getCurrentToken());
     }
   }
 }

@@ -1,0 +1,88 @@
+package com.adgear.anoa.read;
+
+import com.adgear.anoa.AnoaTypeException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+
+abstract class AbstractReader<R> {
+
+  final R read(JsonParser jacksonParser, Boolean strict) {
+    try {
+      return readChecked(jacksonParser, strict);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  final R readChecked(JsonParser jacksonParser, Boolean strict) throws IOException {
+    jacksonParser.nextToken();
+    return Boolean.TRUE.equals(strict) ? readStrict(jacksonParser) : read(jacksonParser);
+  }
+
+  abstract protected R read(JsonParser jacksonParser) throws IOException;
+
+  abstract protected R readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException;
+
+  static protected interface ValueConsumer<E extends Exception> {
+    public void accept(JsonParser jacksonParser) throws IOException, E;
+  }
+
+  static protected interface FieldValueConsumer<E extends Exception> {
+    public void accept(String fieldName, JsonParser jacksonParser) throws IOException, E;
+  }
+
+  static protected <E extends Exception> void doArray(JsonParser jacksonParser,
+                                                      ValueConsumer<E> valueConsumer)
+      throws IOException, E {
+    while (jacksonParser.nextToken() != JsonToken.END_ARRAY) {
+      switch (jacksonParser.getCurrentToken()) {
+        case END_OBJECT:
+        case FIELD_NAME:
+        case NOT_AVAILABLE:
+          throw new IOException("Expected object value, not "
+                                + jacksonParser.getCurrentToken());
+      }
+      valueConsumer.accept(jacksonParser);
+    }
+  }
+
+  static protected <E extends Exception> void doMap(JsonParser jacksonParser,
+                                                    FieldValueConsumer<E> fieldValueConsumer)
+      throws IOException, E {
+    while (jacksonParser.nextToken() != JsonToken.END_OBJECT) {
+      if (jacksonParser.getCurrentToken() != JsonToken.FIELD_NAME) {
+        throw new IOException("Expected object field name, not "
+                              + jacksonParser.getCurrentToken());
+      }
+      final String key = jacksonParser.getCurrentName();
+      switch (jacksonParser.nextToken()) {
+        case END_ARRAY:
+        case END_OBJECT:
+        case FIELD_NAME:
+        case NOT_AVAILABLE:
+          throw new IOException("Expected object value, not " + jacksonParser.getCurrentToken());
+      }
+      fieldValueConsumer.accept(key, jacksonParser);
+    }
+  }
+
+  static protected void gobbleValue(JsonParser jacksonParser) throws IOException {
+    switch (jacksonParser.getCurrentToken()) {
+      case START_ARRAY:
+        doArray(jacksonParser, AbstractReader::gobbleValue);
+        break;
+      case START_OBJECT:
+        doMap(jacksonParser, (k, p) -> gobbleValue(p));
+        break;
+      case END_ARRAY:
+      case END_OBJECT:
+      case NOT_AVAILABLE:
+      case FIELD_NAME:
+        throw new IOException("Expected START_ARRAY, START_OBJECT, or value, not "
+                              + jacksonParser.getCurrentToken());
+    }
+  }
+}

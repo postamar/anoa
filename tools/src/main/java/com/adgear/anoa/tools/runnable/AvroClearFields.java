@@ -1,11 +1,10 @@
 package com.adgear.anoa.tools.runnable;
 
-import com.adgear.anoa.AnoaRecord;
-import com.adgear.anoa.factory.AvroConsumers;
-import com.adgear.anoa.factory.AvroSpecificStreams;
-import com.adgear.anoa.factory.util.ReflectionUtils;
-import com.adgear.anoa.factory.util.WriteConsumer;
+import com.adgear.anoa.AnoaReflectionUtils;
+import com.adgear.anoa.read.AvroSpecificStreams;
 import com.adgear.anoa.tools.function.AnoaFieldNuller;
+import com.adgear.anoa.write.AvroConsumers;
+import com.adgear.anoa.write.WriteConsumer;
 
 import org.apache.avro.specific.SpecificRecord;
 
@@ -13,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
-import java.util.Optional;
 
 public class AvroClearFields<R extends SpecificRecord> implements Runnable {
 
@@ -34,12 +32,9 @@ public class AvroClearFields<R extends SpecificRecord> implements Runnable {
 
   @Override
   public void run() {
-    try (WriteConsumer<R> consumer = AvroConsumers.batch(outputStream, recordClass)) {
+    try (WriteConsumer<R, IOException> consumer = AvroConsumers.batch(outputStream, recordClass)) {
       AvroSpecificStreams.batch(inputStream, recordClass)
-          .map(AnoaRecord::of)
           .map(new AnoaFieldNuller<>(fields))
-          .map(AnoaRecord::asOptional)
-          .map(Optional::get)
           .forEach(consumer);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
@@ -47,7 +42,7 @@ public class AvroClearFields<R extends SpecificRecord> implements Runnable {
   }
 
   static public void main(String[] args) throws Exception {
-    new AvroClearFields<>(ReflectionUtils.getAvroClass(System.getProperty("recordClass")),
+    new AvroClearFields<>(AnoaReflectionUtils.getAvroClass(System.getProperty("recordClass")),
                           System.in,
                           System.out,
                           System.getProperty("fields").split(","))

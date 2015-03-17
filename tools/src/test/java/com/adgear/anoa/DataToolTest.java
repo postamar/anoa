@@ -1,7 +1,7 @@
 package com.adgear.anoa;
 
-import com.adgear.anoa.factory.AvroGenericStreams;
-import com.adgear.anoa.factory.CborObjects;
+import com.adgear.anoa.read.AvroGenericStreams;
+import com.adgear.anoa.read.CborStreams;
 import com.adgear.anoa.tools.runnable.DataTool;
 import com.adgear.anoa.tools.runnable.Format;
 
@@ -46,13 +46,12 @@ public class DataToolTest {
 
   @Test
   public void testJsonToAvro() {
+    AnoaFactory<Throwable> f = AnoaFactory.passAlong();
     Assert.assertEquals(
         946,
-        AvroGenericStreams.batch(
-            new ByteArrayInputStream(convert(schema, Format.JSON, Format.AVRO, bidreqs())))
-            .map(AnoaRecord::of)
-            .collect(AnoaCollector.toList())
-            .streamPresent()
+        AvroGenericStreams.batch(f, new ByteArrayInputStream(
+            convert(schema, Format.JSON, Format.AVRO, bidreqs())))
+            .filter(Anoa::isPresent)
             .count());
   }
 
@@ -60,7 +59,7 @@ public class DataToolTest {
   public void testJsonToThriftToCbor() {
     Assert.assertEquals(
         946,
-        new CborObjects()
+        new CborStreams()
             .from(convert(BidRequest.class,
                           Format.THRIFT_JSON,
                           Format.CBOR,
