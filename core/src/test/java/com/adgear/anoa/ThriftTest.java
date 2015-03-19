@@ -1,4 +1,4 @@
-package com.adgear.anoa.test;
+package com.adgear.anoa;
 
 import com.adgear.anoa.AnoaFactory;
 import com.adgear.anoa.read.ThriftDecoders;
@@ -22,15 +22,15 @@ public class ThriftTest {
   @Test
   public void test() throws Exception {
     final List<BidRequest> collected = new ArrayList<>();
-    AnoaFactory<Throwable> f = AnoaFactory.passAlong();
+    AnoaFactory<Throwable> anoaFactory = AnoaFactory.passAlong();
     try (InputStream inputStream = getClass().getResourceAsStream("/bidreqs.json")) {
       try (JsonParser jp = new JsonFactory(new ObjectMapper()).createParser(inputStream)) {
-        long total = ThriftStreams.jackson(f, jp, BidRequest.class, true)
-            .map(ThriftEncoders.binary(f))
-            .map(ThriftDecoders.binary(f, BidRequest::new))
-            .map(f.consumer(collected::add))
+        long total = ThriftStreams.jackson(anoaFactory, BidRequest.class, true, jp)
+            .map(ThriftEncoders.binary(anoaFactory))
+            .map(ThriftDecoders.binary(anoaFactory, BidRequest::new))
+            .map(anoaFactory.consumer(collected::add))
             .count();
-        Assert.assertEquals(946, total);
+        Assert.assertEquals(947, total);
       }
     }
     Assert.assertEquals(946, collected.stream().filter(BidRequest.class::isInstance).count());

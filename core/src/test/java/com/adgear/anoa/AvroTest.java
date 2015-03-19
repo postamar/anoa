@@ -1,4 +1,4 @@
-package com.adgear.anoa.test;
+package com.adgear.anoa;
 
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaFactory;
@@ -41,10 +41,9 @@ public class AvroTest {
       long total = treeNodeStream
           .map(f.function(TreeNode::traverse))
           .map(AvroDecoders.jackson(f, BidRequest.class, true))
-          .map(AvroEncoders.jackson(f, () -> new TokenBuffer(MAPPER, false), BidRequest.class))
+          .map(AvroEncoders.jackson(f, BidRequest.class, () -> new TokenBuffer(MAPPER, false)))
           .map(f.function(TokenBuffer::asParser))
           .map(f.functionChecked(JsonParser::readValueAsTree))
-          .peek(System.out::println)
           .filter(Anoa::isPresent)
           .count();
 
@@ -59,8 +58,8 @@ public class AvroTest {
     AnoaFactory<Throwable> f = AnoaFactory.passAlong();
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    try (WriteConsumer<BidRequest, ?> consumer = AvroConsumers.batch(baos, BidRequest.class)) {
-      long total = AvroSpecificStreams.jackson(f, jp, BidRequest.class, true)
+    try (WriteConsumer<BidRequest> consumer = AvroConsumers.batch(BidRequest.class, baos)) {
+      long total = AvroSpecificStreams.jackson(f, BidRequest.class, true, jp)
           .map(f.writeConsumer(consumer))
           .filter(Anoa::isPresent)
           .count();
@@ -68,7 +67,8 @@ public class AvroTest {
       Assert.assertEquals(946, total);
     }
 
-    Assert.assertEquals(946, AvroGenericStreams.batch(new ByteArrayInputStream(baos.toByteArray()),
-                                                      BidRequest.getClassSchema()).count());
+    Assert.assertEquals(946, AvroGenericStreams.batch(BidRequest.getClassSchema(), new ByteArrayInputStream(baos.toByteArray())
+    ).count());
   }
+
 }
