@@ -11,6 +11,10 @@
   </parent>
 
   <artifactId>anoa-tools</artifactId>
+  <description>
+    Additional functionality complementing the anoa-core module, requiring additional upstream
+    dependencies such as jackson-databind and various jackson dataformats.
+  </description>
 
   <dependencies>
     <dependency>
@@ -45,11 +49,6 @@
       <version>${project.version.jackson}</version>
     </dependency>
     <!-- tool dependencies -->
-    <dependency>
-      <groupId>io.dropwizard.metrics</groupId>
-      <artifactId>metrics-core</artifactId>
-      <version>3.1.0</version>
-    </dependency>
     <dependency>
       <groupId>net.sf.josql</groupId>
       <artifactId>josql</artifactId>

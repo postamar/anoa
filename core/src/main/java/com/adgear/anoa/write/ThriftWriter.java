@@ -16,9 +16,9 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-class ThriftWriter<F extends TFieldIdEnum, T extends TBase<T,F>> extends AbstractWriter<T> {
+class ThriftWriter<F extends TFieldIdEnum, T extends TBase<?, F>> extends AbstractWriter<T> {
 
-  final private LinkedHashMap<F,AbstractWriter<Object>> fieldMap;
+  final private LinkedHashMap<F, AbstractWriter<Object>> fieldMap;
 
   @SuppressWarnings("unchecked")
   ThriftWriter(Class<T> thriftClass) {

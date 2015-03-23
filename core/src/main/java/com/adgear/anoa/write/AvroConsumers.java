@@ -21,9 +21,9 @@ import java.io.UncheckedIOException;
 
 public class AvroConsumers {
 
-  static public @NonNull WriteConsumer<GenericRecord, IOException> batch(
-      @NonNull File file,
-      @NonNull Schema schema) {
+  static public @NonNull WriteConsumer<GenericRecord> batch(
+      @NonNull Schema schema,
+      @NonNull File file) {
     try {
       return new AvroBatchWriteConsumer<>(
           new DataFileWriter<GenericRecord>(new GenericDatumWriter<>(schema))
@@ -33,9 +33,9 @@ public class AvroConsumers {
     }
   }
 
-  static public <R extends SpecificRecord> @NonNull WriteConsumer<R, IOException> batch(
-      @NonNull File file,
-      @NonNull Class<R> recordClass) {
+  static public <R extends SpecificRecord> @NonNull WriteConsumer<R> batch(
+      @NonNull Class<R> recordClass,
+      @NonNull File file) {
     Schema schema = SpecificData.get().getSchema(recordClass);
     if (schema == null) {
       throw new IllegalArgumentException("No schema found for class " + recordClass);
@@ -48,9 +48,9 @@ public class AvroConsumers {
     }
   }
 
-  static public @NonNull WriteConsumer<GenericRecord, IOException> batch(
-      @NonNull OutputStream outputStream,
-      @NonNull Schema schema) {
+  static public @NonNull WriteConsumer<GenericRecord> batch(
+      @NonNull Schema schema,
+      @NonNull OutputStream outputStream) {
     try {
       return new AvroBatchWriteConsumer<>(
           new DataFileWriter<GenericRecord>(new GenericDatumWriter<>(schema))
@@ -60,9 +60,9 @@ public class AvroConsumers {
     }
   }
 
-  static public <R extends SpecificRecord> @NonNull WriteConsumer<R, IOException> batch(
-      @NonNull OutputStream outputStream,
-      @NonNull Class<R> recordClass) {
+  static public <R extends SpecificRecord> @NonNull WriteConsumer<R> batch(
+      @NonNull Class<R> recordClass,
+      @NonNull OutputStream outputStream) {
     Schema schema = SpecificData.get().getSchema(recordClass);
     if (schema == null) {
       throw new IllegalArgumentException("No schema found for class " + recordClass);
@@ -75,17 +75,17 @@ public class AvroConsumers {
     }
   }
 
-  static public @NonNull WriteConsumer<GenericRecord, IOException> binary(
-      @NonNull OutputStream outputStream,
-      @NonNull Schema schema) {
+  static public @NonNull WriteConsumer<GenericRecord> binary(
+      @NonNull Schema schema,
+      @NonNull OutputStream outputStream) {
     return new AvroWriteConsumer<>(
         new GenericDatumWriter<>(schema),
         EncoderFactory.get().binaryEncoder(new BufferedOutputStream(outputStream), null));
   }
 
-  static public <R extends SpecificRecord> @NonNull WriteConsumer<R, IOException> binary(
-      @NonNull OutputStream outputStream,
-      @NonNull Class<R> recordClass) {
+  static public <R extends SpecificRecord> @NonNull WriteConsumer<R> binary(
+      @NonNull Class<R> recordClass,
+      @NonNull OutputStream outputStream) {
     Schema schema = SpecificData.get().getSchema(recordClass);
     if (schema == null) {
       throw new IllegalArgumentException("No schema found for class " + recordClass);
@@ -95,9 +95,9 @@ public class AvroConsumers {
         EncoderFactory.get().binaryEncoder(new BufferedOutputStream(outputStream), null));
   }
 
-  static public @NonNull WriteConsumer<GenericRecord, IOException> json(
-      @NonNull OutputStream outputStream,
-      @NonNull Schema schema) {
+  static public @NonNull WriteConsumer<GenericRecord> json(
+      @NonNull Schema schema,
+      @NonNull OutputStream outputStream) {
     try {
       return new AvroWriteConsumer<>(
           new GenericDatumWriter<>(schema),
@@ -107,9 +107,9 @@ public class AvroConsumers {
     }
   }
 
-  static public <R extends SpecificRecord> @NonNull WriteConsumer<R, IOException> json(
-      @NonNull OutputStream outputStream,
-      @NonNull Class<R> recordClass) {
+  static public <R extends SpecificRecord> @NonNull WriteConsumer<R> json(
+      @NonNull Class<R> recordClass,
+      @NonNull OutputStream outputStream) {
     Schema schema = SpecificData.get().getSchema(recordClass);
     if (schema == null) {
       throw new IllegalArgumentException("No schema found for class " + recordClass);
@@ -123,16 +123,16 @@ public class AvroConsumers {
     }
   }
 
-  static public @NonNull WriteConsumer<GenericRecord, IOException> jackson(
-      @NonNull JsonGenerator jacksonGenerator,
-      @NonNull Schema schema) {
+  static public @NonNull WriteConsumer<GenericRecord> jackson(
+      @NonNull Schema schema,
+      @NonNull JsonGenerator jacksonGenerator) {
     return new JacksonWriteConsumer<>(jacksonGenerator, new AvroWriter<GenericRecord>(schema));
   }
 
   static public <R extends SpecificRecord>
-  @NonNull WriteConsumer<R, IOException> jackson(
-      @NonNull JsonGenerator jacksonGenerator,
-      @NonNull Class<R> recordClass) {
+  @NonNull WriteConsumer<R> jackson(
+      @NonNull Class<R> recordClass,
+      @NonNull JsonGenerator jacksonGenerator) {
     return new JacksonWriteConsumer<>(jacksonGenerator, new AvroWriter<>(recordClass));
   }
 }

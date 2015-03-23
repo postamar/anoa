@@ -12,7 +12,9 @@
 
   <artifactId>anoa-plugin</artifactId>
   <description>
-    Extends avro-maven-plugin (avro 1.7.4) for improved Java annotation and dependency handling.
+    A avro-maven-plugin extension (avro 1.7.6). Features better support dependency handling and
+    Java annotations in generated java code, also supports cross-compiling Avro schema to Thrift.
+    Caveat: will not support complex union types.
   </description>
   <packaging>maven-plugin</packaging>
 

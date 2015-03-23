@@ -1,7 +1,5 @@
 package com.adgear.anoa;
 
-import com.adgear.anoa.AnoaReflectionUtils;
-
 import org.junit.Assert;
 import org.junit.Test;
 

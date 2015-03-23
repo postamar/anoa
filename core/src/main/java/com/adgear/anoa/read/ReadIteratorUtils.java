@@ -7,26 +7,27 @@ import com.fasterxml.jackson.core.TreeNode;
 
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.IndexedRecord;
-import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
-import org.apache.avro.io.JsonDecoder;
 import org.apache.thrift.TBase;
 import org.apache.thrift.TException;
-import org.apache.thrift.TFieldIdEnum;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import org.jooq.lambda.Unchecked;
+import org.jooq.lambda.fi.util.function.CheckedSupplier;
+import org.jooq.lambda.tuple.Tuple;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -39,107 +40,106 @@ class ReadIteratorUtils {
     return StreamSupport.stream(spliterator, false);
   }
 
-  static <N extends TreeNode> ReadIterator<N> jackson(JsonParser jacksonParser) {
-    return new ReadIterator<>((Consumer<Boolean> setHasNext) -> (() -> {
+  static protected <X, M> ReadIterator<Anoa<X, M>> anoa(
+      AnoaFactory<M> anoaFactory,
+      Supplier<Boolean> eofClosure,
+      CheckedSupplier<X> supplier) {
+    Anoa<X, M> anoaInitial = anoaFactory.wrap(null);
+    UnaryOperator<Anoa<X, M>> anoaFn = ((Anoa<X, M> anoa) -> {
+      final X result;
       try {
-        final N tree = jacksonParser.readValueAsTree();
-        if (tree == null && jacksonParser.getCurrentToken() == null) {
-          setHasNext.accept(false);
-        }
-        return tree;
-      } catch (EOFException e) {
-        setHasNext.accept(false);
-        return null;
-      } catch (IOException e) {
-        setHasNext.accept(false);
-        throw new UncheckedIOException(e);
+        result = supplier.get();
+      } catch (Throwable e) {
+        return new Anoa<>(Stream.concat(anoa.meta(), anoaFactory.handler.apply(e, Tuple.tuple())));
       }
-    }), Unchecked.supplier(jacksonParser::isClosed));
+      return new Anoa<>(Optional.of(result), anoa.meta());
+    });
+    return new ReadIterator<>(
+        eofClosure,
+        (Consumer<Boolean> setHasNext) -> ((Anoa<X, M> anoa) -> {
+          if (anoa == null) {
+            return anoaFn.apply(anoaInitial);
+          } else if (anoa.isPresent()) {
+            return anoaFn.apply(anoa);
+          } else {
+            setHasNext.accept(false);
+            return null;
+          }
+        }));
+  }
+
+
+  static <N extends TreeNode> ReadIterator<N> jackson(JsonParser jacksonParser) {
+    return new ReadIterator<>(
+        Unchecked.supplier(jacksonParser::isClosed),
+        (Consumer<Boolean> setHasNext) -> (__ -> {
+          try {
+            final N tree = jacksonParser.readValueAsTree();
+            if (tree == null && jacksonParser.getCurrentToken() == null) {
+              setHasNext.accept(false);
+            }
+            return tree;
+          } catch (EOFException e) {
+            setHasNext.accept(false);
+            return null;
+          } catch (IOException e) {
+            setHasNext.accept(false);
+            throw new UncheckedIOException(e);
+          }
+        }));
   }
 
   static <N extends TreeNode, M> ReadIterator<Anoa<N, M>> jackson(AnoaFactory<M> anoaFactory,
                                                                   JsonParser jacksonParser) {
-    return new ReadIterator<>((Consumer<Boolean> setHasNext) -> anoaFactory.supplierChecked(() -> {
-      try {
-        final N tree = jacksonParser.readValueAsTree();
-        if (tree == null && jacksonParser.getCurrentToken() == null) {
-          setHasNext.accept(false);
-        }
-        return tree;
-      } catch (EOFException e) {
-        setHasNext.accept(false);
-        return null;
-      } catch (Throwable e) {
-        setHasNext.accept(false);
-        throw e;
-      }
-    }), Unchecked.supplier(jacksonParser::isClosed));
+    return anoa(
+        anoaFactory,
+        Unchecked.supplier(jacksonParser::isClosed),
+        () -> {
+          final N tree = jacksonParser.readValueAsTree();
+          if (tree == null && jacksonParser.getCurrentToken() == null) {
+            throw new IOException("JsonParser::readValueAsTree returned null.");
+          }
+          return tree;
+        });
   }
 
   static <R extends IndexedRecord> ReadIterator<R> avro(DataFileStream<R> dfs) {
-    return new ReadIterator<>((Consumer<Boolean> setHasNext) -> (() -> {
-      try {
-        return dfs.next(null);
-      } catch (IOException e) {
-        setHasNext.accept(false);
-        throw new UncheckedIOException(e);
-      } catch (Throwable e) {
-        setHasNext.accept(false);
-        throw e;
-      }
-    }), () -> !dfs.hasNext());
+    return new ReadIterator<>(
+        () -> !dfs.hasNext(),
+        (Consumer<Boolean> setHasNext) -> (__ -> {
+          try {
+            return dfs.next(null);
+          } catch (IOException e) {
+            setHasNext.accept(false);
+            throw new UncheckedIOException(e);
+          }
+        }));
   }
 
   static <R extends IndexedRecord, M> ReadIterator<Anoa<R, M>> avro(AnoaFactory<M> anoaFactory,
                                                                     DataFileStream<R> dfs) {
-    return new ReadIterator<>((Consumer<Boolean> setHasNext) -> anoaFactory.supplierChecked(() -> {
-      try {
-        return dfs.next(null);
-      } catch (Throwable e) {
-        setHasNext.accept(false);
-        throw e;
-      }
-    }), () -> !dfs.hasNext());
-  }
-
-  static <R extends IndexedRecord> ReadIterator<R> avro(DatumReader<R> reader,
-                                                        BinaryDecoder decoder) {
-    return avro(reader, decoder, Unchecked.supplier(decoder::isEnd));
-  }
-
-  static <R extends IndexedRecord, M> ReadIterator<Anoa<R, M>> avro(
-      AnoaFactory<M> anoaFactory,
-      DatumReader<R> reader,
-      BinaryDecoder decoder) {
-    return avro(anoaFactory, reader, decoder, Unchecked.supplier(decoder::isEnd));
-  }
-
-  static <R extends IndexedRecord> ReadIterator<R> avro(DatumReader<R> reader,
-                                                        JsonDecoder decoder) {
-    return avro(reader, decoder, () -> false);
-  }
-
-  static <R extends IndexedRecord, M> ReadIterator<Anoa<R, M>> avro(
-      AnoaFactory<M> anoaFactory,
-      DatumReader<R> reader,
-      JsonDecoder decoder) {
-    return avro(anoaFactory, reader, decoder, () -> false);
+    return anoa(
+        anoaFactory,
+        () -> !dfs.hasNext(),
+        () -> dfs.next(null));
   }
 
   static <R extends IndexedRecord> ReadIterator<R> avro(DatumReader<R> reader,
                                                         Decoder decoder,
                                                         Supplier<Boolean> eof) {
-    return new ReadIterator<>((Consumer<Boolean> setHasNext) -> (() -> {
-      try {
-        return reader.read(null, decoder);
-      } catch (EOFException e) {
-        setHasNext.accept(false);
-        return null;
-      } catch (IOException e) {
-        setHasNext.accept(false);
-        throw new UncheckedIOException(e);
-      }
-    }), eof);
+    return new ReadIterator<>(
+        eof,
+        (Consumer<Boolean> setHasNext) -> (__ -> {
+          try {
+            return reader.read(null, decoder);
+          } catch (EOFException e) {
+            setHasNext.accept(false);
+            return null;
+          } catch (IOException e) {
+            setHasNext.accept(false);
+            throw new UncheckedIOException(e);
+          }
+        }));
   }
 
   static <R extends IndexedRecord, M> ReadIterator<Anoa<R, M>> avro(
@@ -147,62 +147,46 @@ class ReadIteratorUtils {
       DatumReader<R> reader,
       Decoder decoder,
       Supplier<Boolean> eof) {
-    return new ReadIterator<>((Consumer<Boolean> setHasNext) -> anoaFactory.supplierChecked(() -> {
-      try {
-        return reader.read(null, decoder);
-      } catch (EOFException e) {
-        setHasNext.accept(false);
-        return null;
-      } catch (Throwable e) {
-        setHasNext.accept(false);
-        throw e;
-      }
-    }), eof);
+    return anoa(anoaFactory, eof, () -> reader.read(null, decoder));
   }
 
-  static <T extends TBase<T, ? extends TFieldIdEnum>> ReadIterator<T> thrift(
-      TTransport tTransport,
+  static <T extends TBase> ReadIterator<T> thrift(
       TProtocol tProtocol,
-      Supplier<T> tSupplier) {
-    return new ReadIterator<>((Consumer<Boolean> setHasNext) -> (() -> {
-      final T result = tSupplier.get();
-      try {
-        result.read(tProtocol);
-      } catch (TTransportException e) {
-        if (TTransportException.END_OF_FILE == e.getType()) {
-          setHasNext.accept(false);
-          return null;
-        } else {
-          throw new RuntimeException(e);
-        }
-      } catch (TException e) {
-        throw new RuntimeException(e);
-      }
-      return result;
-    }), () -> !tTransport.isOpen());
+      Supplier<T> supplier) {
+    final TTransport tTransport = tProtocol.getTransport();
+    return new ReadIterator<>(
+        () -> !tTransport.isOpen(),
+        (Consumer<Boolean> setHasNext) -> (__ -> {
+          final T record = supplier.get();
+          try {
+            record.read(tProtocol);
+          } catch (TTransportException e) {
+            setHasNext.accept(false);
+            if (TTransportException.END_OF_FILE == e.getType()) {
+              return null;
+            } else {
+              throw new RuntimeException(e);
+            }
+          } catch (TException e) {
+            setHasNext.accept(false);
+            throw new RuntimeException(e);
+          }
+          return record;
+        }));
   }
 
-  static <T extends TBase<T, ? extends TFieldIdEnum>, M> ReadIterator<Anoa<T, M>> thrift(
+  static <T extends TBase, M> ReadIterator<Anoa<T, M>> thrift(
       AnoaFactory<M> anoaFactory,
-      TTransport tTransport,
       TProtocol tProtocol,
-      Supplier<T> tSupplier) {
-    return new ReadIterator<>((Consumer<Boolean> setHasNext) -> anoaFactory.supplierChecked(() -> {
-      final T result = tSupplier.get();
-      try {
-        result.read(tProtocol);
-      } catch (TTransportException e) {
-        setHasNext.accept(false);
-        if (TTransportException.END_OF_FILE == e.getType()) {
-          return null;
-        } else {
-          throw e;
-        }
-      } catch (Throwable e) {
-        setHasNext.accept(false);
-        throw e;
-      }
-      return result;
-    }), () -> !tTransport.isOpen());
+      Supplier<T> supplier) {
+    final TTransport tTransport = tProtocol.getTransport();
+    return anoa(
+        anoaFactory,
+        () -> !tTransport.isOpen(),
+        () -> {
+          final T record = supplier.get();
+          record.read(tProtocol);
+          return record;
+        });
   }
 }

@@ -134,7 +134,7 @@ public class JacksonStreams<
   }
 
   public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaFactory<M> anoaFactory,
-                                          @NonNull InputStream inputStream) {
+                                              @NonNull InputStream inputStream) {
     return from(anoaFactory, parser(inputStream));
   }
 

@@ -4,9 +4,8 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.IndexedRecord;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 
-class AvroBatchWriteConsumer<R extends IndexedRecord> implements WriteConsumer<R, IOException> {
+class AvroBatchWriteConsumer<R extends IndexedRecord> implements WriteConsumer<R> {
 
   final DataFileWriter<R> dataFileWriter;
 
@@ -17,15 +16,6 @@ class AvroBatchWriteConsumer<R extends IndexedRecord> implements WriteConsumer<R
   @Override
   public void acceptChecked(R record) throws IOException {
     dataFileWriter.append(record);
-  }
-
-  @Override
-  public void accept(R record) {
-    try {
-      acceptChecked(record);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
   }
 
   @Override

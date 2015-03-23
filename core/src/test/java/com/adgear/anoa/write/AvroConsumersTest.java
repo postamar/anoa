@@ -4,8 +4,6 @@ package com.adgear.anoa.write;
 import com.adgear.anoa.BidReqs;
 import com.adgear.anoa.read.AvroGenericStreams;
 import com.adgear.anoa.read.AvroSpecificStreams;
-import com.adgear.anoa.write.AvroConsumers;
-import com.adgear.anoa.write.WriteConsumer;
 import com.adgear.avro.openrtb.BidRequest;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 

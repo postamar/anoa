@@ -5,9 +5,8 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 
-class AvroWriteConsumer<R extends IndexedRecord> implements WriteConsumer<R, IOException> {
+class AvroWriteConsumer<R extends IndexedRecord> implements WriteConsumer<R> {
 
   final DatumWriter<R> writer;
   final Encoder encoder;
@@ -20,15 +19,6 @@ class AvroWriteConsumer<R extends IndexedRecord> implements WriteConsumer<R, IOE
   @Override
   public void acceptChecked(R record) throws IOException {
     writer.write(record, encoder);
-  }
-
-  @Override
-  public void accept(R record) {
-    try {
-      acceptChecked(record);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
   }
 
   @Override

@@ -33,8 +33,8 @@ public class AvroGrep<R extends SpecificRecord> implements Runnable {
   @Override
   public void run() {
     AnoaSqlWhereFilter<R> predicate = new AnoaSqlWhereFilter<>(recordClass, filterExpression);
-    try (WriteConsumer<R, IOException> consumer = AvroConsumers.batch(outputStream, recordClass)) {
-      AvroSpecificStreams.batch(inputStream, recordClass)
+    try (WriteConsumer<R> consumer = AvroConsumers.batch(recordClass, outputStream)) {
+      AvroSpecificStreams.batch(recordClass, inputStream)
           .filter(predicate)
           .forEach(consumer);
     } catch (IOException e) {

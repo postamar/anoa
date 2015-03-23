@@ -11,6 +11,10 @@
   </parent>
 
   <artifactId>anoa-test</artifactId>
+  <description>
+    Test module for other Anoa modules, which exposes complex records (OpenRTB bid requests) through
+    utility classes for use in unit tests within other Anoa modules (anoa-core, for instance).
+  </description>
 
   <build>
     <!-- plugins for test phase -->
@@ -50,6 +54,21 @@
   </build>
 
   <dependencies>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>${project.version.jackson}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${project.version.jackson}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jooq</groupId>
+      <artifactId>jool</artifactId>
+      <version>${project.version.jool}</version>
+    </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>

@@ -5,8 +5,6 @@ import checkers.nullness.quals.NonNull;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import org.apache.thrift.TBase;
-import org.apache.thrift.TException;
-import org.apache.thrift.TFieldIdEnum;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.protocol.TJSONProtocol;
@@ -21,14 +19,12 @@ import java.io.UncheckedIOException;
 
 public class ThriftConsumers {
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>>
-  @NonNull WriteConsumer<T, TException> compact(
+  static public <T extends TBase> @NonNull WriteConsumer<T> compact(
       @NonNull OutputStream outputStream) {
     return compact(new TIOStreamTransport(new BufferedOutputStream(outputStream)));
   }
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>>
-  @NonNull WriteConsumer<T, TException> compact(
+  static public <T extends TBase> @NonNull WriteConsumer<T> compact(
       @NonNull String fileName,
       @NonNull boolean readOnly) {
     try {
@@ -38,20 +34,17 @@ public class ThriftConsumers {
     }
   }
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>>
-  @NonNull WriteConsumer<T, TException> compact(
+  static public <T extends TBase> @NonNull WriteConsumer<T> compact(
       @NonNull TTransport tTransport) {
     return new ThriftWriteConsumer<>(tTransport, TCompactProtocol::new);
   }
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>>
-  @NonNull WriteConsumer<T, TException> binary(
+  static public <T extends TBase> @NonNull WriteConsumer<T> binary(
       @NonNull OutputStream outputStream) {
     return binary(new TIOStreamTransport(new BufferedOutputStream(outputStream)));
   }
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>>
-  @NonNull WriteConsumer<T, TException> binary(
+  static public <T extends TBase> @NonNull WriteConsumer<T> binary(
       @NonNull String fileName,
       @NonNull boolean readOnly) {
     try {
@@ -61,20 +54,17 @@ public class ThriftConsumers {
     }
   }
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>>
-  @NonNull WriteConsumer<T, TException> binary(
+  static public <T extends TBase> @NonNull WriteConsumer<T> binary(
       @NonNull TTransport tTransport) {
     return new ThriftWriteConsumer<>(tTransport, TBinaryProtocol::new);
   }
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>>
-  @NonNull WriteConsumer<T, TException> json(
+  static public <T extends TBase> @NonNull WriteConsumer<T> json(
       @NonNull OutputStream outputStream) {
     return json(new TIOStreamTransport(new BufferedOutputStream(outputStream)));
   }
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>>
-  @NonNull WriteConsumer<T, TException> json(
+  static public <T extends TBase> @NonNull WriteConsumer<T> json(
       @NonNull String fileName,
       @NonNull boolean readOnly) {
     try {
@@ -84,16 +74,14 @@ public class ThriftConsumers {
     }
   }
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>>
-  @NonNull WriteConsumer<T, TException> json(
+  static public <T extends TBase> @NonNull WriteConsumer<T> json(
       @NonNull TTransport tTransport) {
     return new ThriftWriteConsumer<>(tTransport, TJSONProtocol::new);
   }
 
-  static public <F extends TFieldIdEnum, T extends TBase<T, F>>
-  @NonNull WriteConsumer<T, IOException> jackson(
-      @NonNull JsonGenerator jacksonGenerator,
-      @NonNull Class<T> recordClass) {
+  static public <T extends TBase> @NonNull WriteConsumer<T> jackson(
+      @NonNull Class<T> recordClass,
+      @NonNull JsonGenerator jacksonGenerator) {
     return new JacksonWriteConsumer<>(jacksonGenerator, new ThriftWriter<>(recordClass));
   }
 }

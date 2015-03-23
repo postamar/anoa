@@ -9,8 +9,7 @@ import org.apache.thrift.transport.TTransport;
 import java.io.IOException;
 import java.util.function.Function;
 
-class ThriftWriteConsumer<T extends TBase<T, ? extends TFieldIdEnum>>
-    implements WriteConsumer<T, TException> {
+class ThriftWriteConsumer<T extends TBase<T, ? extends TFieldIdEnum>> implements WriteConsumer<T> {
 
   final TTransport tTransport;
   final TProtocol tProtocol;
@@ -36,16 +35,11 @@ class ThriftWriteConsumer<T extends TBase<T, ? extends TFieldIdEnum>>
   }
 
   @Override
-  public void acceptChecked(T record) throws TException {
-    record.write(tProtocol);
-  }
-
-  @Override
-  public void accept(T record) {
+  public void acceptChecked(T record) throws IOException {
     try {
-      acceptChecked(record);
+      record.write(tProtocol);
     } catch (TException e) {
-      throw new RuntimeException(e);
+      throw new IOException(e);
     }
   }
 }

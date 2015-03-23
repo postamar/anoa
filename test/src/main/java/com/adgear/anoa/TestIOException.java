@@ -4,10 +4,10 @@ import java.io.IOException;
 
 public class TestIOException extends IOException {
 
-  final public long index;
+  public final long index;
 
   public TestIOException(long index) {
-    super("read failed at index " + index);
+    super("Exception raised when reading byte " + index);
     this.index = index;
   }
 }

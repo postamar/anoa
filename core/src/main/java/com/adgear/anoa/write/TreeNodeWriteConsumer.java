@@ -4,10 +4,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.TreeNode;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 
-class TreeNodeWriteConsumer<N extends TreeNode>
-    implements WriteConsumer<N, IOException> {
+class TreeNodeWriteConsumer<N extends TreeNode> implements WriteConsumer<N> {
 
   final JsonGenerator jacksonGenerator;
 
@@ -18,15 +16,6 @@ class TreeNodeWriteConsumer<N extends TreeNode>
   @Override
   public void acceptChecked(N treeNode) throws IOException {
     jacksonGenerator.writeTree(treeNode);
-  }
-
-  @Override
-  public void accept(N treeNode) {
-    try {
-      acceptChecked(treeNode);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
   }
 
   @Override

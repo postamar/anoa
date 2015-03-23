@@ -1,8 +1,5 @@
 package com.adgear.anoa;
 
-import com.adgear.anoa.BidReqs;
-import com.adgear.anoa.TestIOException;
-
 import org.junit.Assert;
 import org.junit.Test;
 

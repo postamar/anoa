@@ -1,7 +1,5 @@
 package com.adgear.anoa;
 
-import com.adgear.anoa.Anoa;
-import com.adgear.anoa.AnoaFactory;
 import com.adgear.anoa.read.AvroDecoders;
 import com.adgear.anoa.read.AvroGenericStreams;
 import com.adgear.anoa.read.AvroSpecificStreams;

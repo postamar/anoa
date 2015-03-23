@@ -29,7 +29,6 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.thrift.TBase;
-import org.apache.thrift.TException;
 import org.apache.thrift.TFieldIdEnum;
 import org.jooq.lambda.Unchecked;
 
@@ -163,19 +162,19 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T, F>> implements 
   public void runAvro(Stream<GenericRecord> stream) {
     switch (outFormat.category) {
       case AVRO:
-        final Supplier<WriteConsumer<GenericRecord, IOException>> avroSupplier;
+        final Supplier<WriteConsumer<GenericRecord>> avroSupplier;
         switch (outFormat) {
           case AVRO_BINARY:
-            avroSupplier = () -> AvroConsumers.binary(out, avroSchema);
+            avroSupplier = () -> AvroConsumers.binary(avroSchema, out);
             break;
           case AVRO_JSON:
-            avroSupplier = () -> AvroConsumers.json(out, avroSchema);
+            avroSupplier = () -> AvroConsumers.json(avroSchema, out);
             break;
           default:
-            avroSupplier = () -> AvroConsumers.batch(out, avroSchema);
+            avroSupplier = () -> AvroConsumers.batch(avroSchema, out);
             break;
         }
-        try (WriteConsumer<GenericRecord, IOException> writeConsumer = avroSupplier.get()) {
+        try (WriteConsumer<GenericRecord> writeConsumer = avroSupplier.get()) {
           stream.sequential().forEach(writeConsumer);
         } catch (IOException e) {
           throw new UncheckedIOException(e);
@@ -211,8 +210,8 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T, F>> implements 
             throw new IllegalArgumentException("Unsupported output format " + outFormat);
         }
         try (JsonGenerator generator = jacksonConsumers.generator(out)) {
-          try (WriteConsumer<GenericRecord, IOException> consumer =
-                   AvroConsumers.jackson(generator, avroSchema)) {
+          try (WriteConsumer<GenericRecord> consumer =
+                   AvroConsumers.jackson(avroSchema, generator)) {
             stream.sequential().forEach(consumer);
           }
         } catch (IOException e) {
@@ -227,7 +226,7 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T, F>> implements 
   public void runThrift(Stream<T> stream) {
     switch (outFormat.category) {
       case THRIFT:
-        final Supplier<WriteConsumer<T, TException>> thriftSupplier;
+        final Supplier<WriteConsumer<T>> thriftSupplier;
         switch (outFormat) {
           case THRIFT_COMPACT:
             thriftSupplier = () -> ThriftConsumers.compact(out);
@@ -238,7 +237,7 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T, F>> implements 
           default:
             thriftSupplier = () -> ThriftConsumers.binary(out);
         }
-        try (WriteConsumer<T, TException> writeConsumer = thriftSupplier.get()) {
+        try (WriteConsumer<T> writeConsumer = thriftSupplier.get()) {
           stream.sequential().forEach(writeConsumer);
         } catch (IOException e) {
           throw new UncheckedIOException(e);
@@ -274,8 +273,7 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T, F>> implements 
             throw new IllegalArgumentException("Unsupported output format " + outFormat);
         }
         try (JsonGenerator generator = jacksonConsumers.generator(out)) {
-          try (WriteConsumer<T, IOException> consumer =
-                   ThriftConsumers.jackson(generator, thriftClass)) {
+          try (WriteConsumer<T> consumer = ThriftConsumers.jackson(thriftClass, generator)) {
             stream.sequential().forEach(consumer);
           }
         } catch (IOException e) {
@@ -309,7 +307,7 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T, F>> implements 
       default:
         throw new IllegalArgumentException("Unsupported output format " + outFormat);
     }
-    try (WriteConsumer<ObjectNode, IOException> writeConsumer = supplier.get().to(out)) {
+    try (WriteConsumer<ObjectNode> writeConsumer = supplier.get().to(out)) {
       stream.sequential().forEach(writeConsumer);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
@@ -329,10 +327,10 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T, F>> implements 
         }
         return;
       case AVRO_BINARY:
-        runAvro(AvroGenericStreams.binary(in, declaredAvroSchema));
+        runAvro(AvroGenericStreams.binary(declaredAvroSchema, in));
         return;
       case AVRO_JSON:
-        runAvro(AvroGenericStreams.json(in, declaredAvroSchema));
+        runAvro(AvroGenericStreams.json(declaredAvroSchema, in));
         return;
       case CBOR:
         runJackson(new CborStreams().from(in));

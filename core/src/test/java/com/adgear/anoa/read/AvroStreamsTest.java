@@ -3,8 +3,6 @@ package com.adgear.anoa.read;
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaFactory;
 import com.adgear.anoa.BidReqs;
-import com.adgear.anoa.read.AvroGenericStreams;
-import com.adgear.anoa.read.AvroSpecificStreams;
 
 import org.junit.Test;
 

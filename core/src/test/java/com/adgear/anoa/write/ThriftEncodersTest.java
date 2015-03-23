@@ -4,7 +4,6 @@ import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaFactory;
 import com.adgear.anoa.BidReqs;
 import com.adgear.anoa.read.ThriftDecoders;
-import com.adgear.anoa.write.ThriftEncoders;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.TokenBuffer;

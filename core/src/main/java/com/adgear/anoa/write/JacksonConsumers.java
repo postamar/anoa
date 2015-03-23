@@ -69,19 +69,19 @@ public class JacksonConsumers<
     return generator;
   }
 
-  public @NonNull WriteConsumer<N, IOException> to(@NonNull G generator) {
+  public @NonNull WriteConsumer<N> to(@NonNull G generator) {
     return new TreeNodeWriteConsumer<>(generator);
   }
 
-  public @NonNull WriteConsumer<N, IOException> to(@NonNull Writer writer) {
+  public @NonNull WriteConsumer<N> to(@NonNull Writer writer) {
     return to(generator(writer));
   }
 
-  public @NonNull WriteConsumer<N, IOException> to(@NonNull OutputStream outputStream) {
+  public @NonNull WriteConsumer<N> to(@NonNull OutputStream outputStream) {
     return to(generator(outputStream));
   }
 
-  public @NonNull WriteConsumer<N, IOException> to(@NonNull File file) {
+  public @NonNull WriteConsumer<N> to(@NonNull File file) {
     return to(generator(file));
   }
 

@@ -32,8 +32,8 @@ public class AvroClearFields<R extends SpecificRecord> implements Runnable {
 
   @Override
   public void run() {
-    try (WriteConsumer<R, IOException> consumer = AvroConsumers.batch(outputStream, recordClass)) {
-      AvroSpecificStreams.batch(inputStream, recordClass)
+    try (WriteConsumer<R> consumer = AvroConsumers.batch(recordClass, outputStream)) {
+      AvroSpecificStreams.batch(recordClass, inputStream)
           .map(new AnoaFieldNuller<>(fields))
           .forEach(consumer);
     } catch (IOException e) {

@@ -1,6 +1,5 @@
 package com.adgear.anoa;
 
-import com.adgear.anoa.AnoaFactory;
 import com.adgear.anoa.read.ThriftDecoders;
 import com.adgear.anoa.read.ThriftStreams;
 import com.adgear.anoa.write.ThriftEncoders;
@@ -30,10 +29,10 @@ public class ThriftTest {
             .map(ThriftDecoders.binary(anoaFactory, BidRequest::new))
             .map(anoaFactory.consumer(collected::add))
             .count();
-        Assert.assertEquals(947, total);
+        Assert.assertEquals(BidReqs.n + 1, total);
       }
     }
-    Assert.assertEquals(946, collected.stream().filter(BidRequest.class::isInstance).count());
+    Assert.assertEquals(BidReqs.n, collected.stream().filter(BidRequest.class::isInstance).count());
     collected.stream().forEach(Assert::assertNotNull);
   }
 }

@@ -53,8 +53,8 @@ public class JacksonTest {
     csvParser.setSchema(CsvSchema.builder().setUseHeader(true).build());
 
     try (CsvGenerator tsvGenerator = new CsvConsumers(schema).generator(outputStream)) {
-      AvroSpecificStreams.jackson(csvParser, Simple.class, false)
-          .map(AvroEncoders.jackson(() -> tsvGenerator, Simple.class))
+      AvroSpecificStreams.jackson(Simple.class, false, csvParser)
+          .map(AvroEncoders.jackson(Simple.class, () -> tsvGenerator))
           .forEach(Unchecked.consumer(CsvGenerator::flush));
     }
 
@@ -76,9 +76,9 @@ public class JacksonTest {
     {
       JsonConsumers jsonConsumers = new JsonConsumers();
       JsonStreams jsonStreams = new JsonStreams();
-      try (WriteConsumer<ObjectNode, ?> writeConsumer = jsonConsumers.to(baos)) {
+      try (WriteConsumer<ObjectNode> writeConsumer = jsonConsumers.to(baos)) {
         writeConsumer.accept(jsonStreams.parser(
-            AvroEncoders.jackson(jsonConsumers::generator, Simple.class).apply(simple))
+            AvroEncoders.jackson(Simple.class, jsonConsumers::generator).apply(simple))
                                  .readValueAsTree());
       }
       System.out.println(baos);
@@ -88,7 +88,7 @@ public class JacksonTest {
 
     {
       try (CBORGenerator cborGenerator = new CborConsumers().generator(baos)) {
-        AvroConsumers.jackson(cborGenerator, Simple.class).accept(simple);
+        AvroConsumers.jackson(Simple.class, cborGenerator).accept(simple);
       }
       System.out.println(baos);
       Assert.assertEquals(simple, readFn.apply(new CborStreams().parser(baos.toByteArray())));
@@ -97,7 +97,7 @@ public class JacksonTest {
 
     {
       try (SmileGenerator smileGenerator = new SmileConsumers().generator(baos)) {
-        AvroConsumers.jackson(smileGenerator, Simple.class).accept(simple);
+        AvroConsumers.jackson(Simple.class, smileGenerator).accept(simple);
       }
       System.out.println(baos);
       Assert.assertEquals(simple, readFn.apply(new SmileStreams().parser(baos.toByteArray())));
@@ -115,7 +115,7 @@ public class JacksonTest {
 
     {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      try (WriteConsumer<ObjectNode, ?> writeConsumer = new CborConsumers().to(baos)) {
+      try (WriteConsumer<ObjectNode> writeConsumer = new CborConsumers().to(baos)) {
         list.stream().forEach(writeConsumer);
       }
       ListAssert.assertEquals(list, new CborStreams()
@@ -125,7 +125,7 @@ public class JacksonTest {
 
     {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      try (WriteConsumer<ObjectNode, ?> writeConsumer = new SmileConsumers().to(baos)) {
+      try (WriteConsumer<ObjectNode> writeConsumer = new SmileConsumers().to(baos)) {
         list.stream().forEach(writeConsumer);
       }
       ListAssert.assertEquals(list, new SmileStreams()
@@ -135,7 +135,7 @@ public class JacksonTest {
 
     {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      try (WriteConsumer<ObjectNode, ?> writeConsumer = new JsonConsumers().to(baos)) {
+      try (WriteConsumer<ObjectNode> writeConsumer = new JsonConsumers().to(baos)) {
         list.stream().forEach(writeConsumer);
       }
       ListAssert.assertEquals(list, new JsonStreams()

@@ -3,7 +3,6 @@ package com.adgear.anoa.read;
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaFactory;
 import com.adgear.anoa.BidReqs;
-import com.adgear.anoa.read.ThriftStreams;
 
 import org.junit.Assert;
 import org.junit.Test;

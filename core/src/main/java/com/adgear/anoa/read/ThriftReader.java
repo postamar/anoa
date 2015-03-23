@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-class ThriftReader<F extends TFieldIdEnum, T extends TBase<T,F>> extends AbstractReader<T> {
+class ThriftReader<F extends TFieldIdEnum, T extends TBase<?, F>> extends AbstractReader<T> {
 
   static protected class Field<F extends TFieldIdEnum> {
 

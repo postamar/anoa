@@ -27,7 +27,6 @@ import java.util.stream.Stream;
 public class AnoaFactory<M> {
 
   static public interface Handler<M> extends BiFunction<Throwable, Tuple, Stream<M>> {
-
   }
 
   final public Handler<M> handler;
@@ -49,7 +48,6 @@ public class AnoaFactory<M> {
       @NonNull Function<Throwable, M> handler) {
     return new AnoaFactory<>((throwable, __) -> Stream.of(handler.apply(throwable)));
   }
-
 
   public <T> @NonNull Supplier<Anoa<T, M>> supplier(@NonNull Supplier<? extends T> supplier) {
     Objects.requireNonNull(supplier);
@@ -211,7 +209,7 @@ public class AnoaFactory<M> {
   }
 
   public <T> @NonNull UnaryOperator<Anoa<T, M>> writeConsumer(
-      @NonNull WriteConsumer<T, ?> writeConsumer) {
+      @NonNull WriteConsumer<T> writeConsumer) {
     Objects.requireNonNull(writeConsumer);
     return (Anoa<T, M> tWrapped) -> {
       if (tWrapped.isPresent()) {
@@ -292,5 +290,4 @@ public class AnoaFactory<M> {
   public <T> @NonNull Anoa<T, M> wrap(@Nullable T value) {
     return new Anoa<>(Optional.ofNullable(value), Stream.<M>empty());
   }
-
 }

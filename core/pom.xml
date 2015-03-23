@@ -11,6 +11,13 @@
   </parent>
 
   <artifactId>anoa-core</artifactId>
+  <description>
+    Core classes for Anoa library, which aims to be a safe, convenient and fast record
+    de/serialization wrapper for the Avro, Thrift and Jackson libraries, using the functional idioms
+    of Java 8.
+
+    The anoa-core module tries to keep upstream dependencies to a minimum.
+  </description>
 
   <dependencies>
     <dependency>
@@ -21,7 +28,7 @@
     <dependency>
       <groupId>org.jooq</groupId>
       <artifactId>jool</artifactId>
-      <version>0.9.6</version>
+      <version>${project.version.jool}</version>
     </dependency>
     <!-- test dependencies -->
     <dependency>

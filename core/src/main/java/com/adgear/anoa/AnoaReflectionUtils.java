@@ -26,7 +26,7 @@ public class AnoaReflectionUtils {
 
 
   @SuppressWarnings("unchecked")
-  static public <F extends TFieldIdEnum, T extends TBase<T, F>> Class<T> getThriftClass(
+  static public <T extends TBase> Class<T> getThriftClass(
       String className) throws ClassNotFoundException{
     if (className == null) {
       throw new ClassNotFoundException("Class name must not be null.");
@@ -39,8 +39,8 @@ public class AnoaReflectionUtils {
   }
 
   @SuppressWarnings("unchecked")
-  public static <F extends TFieldIdEnum, T extends TBase<T, F>>
-  LinkedHashMap<F, FieldMetaData> getThriftMetaDataMap(Class<T> thriftClass) {
+  public static <F extends TFieldIdEnum>
+  LinkedHashMap<F, FieldMetaData> getThriftMetaDataMap(Class<? extends TBase<?,F>> thriftClass) {
     LinkedHashMap<F, FieldMetaData> result = new LinkedHashMap<>();
     ((Map<F, FieldMetaData>) FieldMetaData.getStructMetaDataMap(thriftClass)).entrySet().stream()
         .sorted(comparator)

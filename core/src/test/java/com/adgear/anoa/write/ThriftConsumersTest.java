@@ -2,8 +2,6 @@ package com.adgear.anoa.write;
 
 import com.adgear.anoa.BidReqs;
 import com.adgear.anoa.read.ThriftStreams;
-import com.adgear.anoa.write.ThriftConsumers;
-import com.adgear.anoa.write.WriteConsumer;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 import org.junit.Test;

@@ -105,15 +105,15 @@ public class JdbcTest {
           Schema induced = JdbcStreams.induceSchema(resultSet.getMetaData());
 
           ByteArrayOutputStream baos = new ByteArrayOutputStream();
-          try (WriteConsumer<GenericRecord, ?> consumer = AvroConsumers.batch(baos, induced)) {
+          try (WriteConsumer<GenericRecord> consumer = AvroConsumers.batch(induced, baos)) {
             new JdbcStreams().from(resultSet)
                 .map(ObjectNode::traverse)
                 .map(AvroDecoders.jackson(induced, false))
                 .forEach(consumer);
           }
           Assert.assertEquals(2, AvroSpecificStreams.batch(
-              new ByteArrayInputStream(baos.toByteArray()),
-              com.adgear.avro.Simple.class).count());
+              com.adgear.avro.Simple.class,
+              new ByteArrayInputStream(baos.toByteArray())).count());
         }
       }
     }
@@ -159,8 +159,8 @@ public class JdbcTest {
       bytes = baos.toByteArray();
     }
     System.out.println(new String(bytes));
-    Assert.assertEquals(2, AvroSpecificStreams.json(new ByteArrayInputStream(bytes),
-                                                    com.adgear.avro.Simple.class)
+    Assert.assertEquals(2, AvroSpecificStreams.json(com.adgear.avro.Simple.class,
+                                                    new ByteArrayInputStream(bytes))
         .filter(x -> x != null)
         .count());
   }

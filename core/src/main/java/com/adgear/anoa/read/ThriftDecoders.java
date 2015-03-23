@@ -20,69 +20,75 @@ import java.util.function.Supplier;
 
 public class ThriftDecoders {
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>> @NonNull Function<byte[], T> compact(
+  static public <T extends TBase> @NonNull Function<byte[], T> compact(
       @NonNull Supplier<T> supplier) {
     return fn(supplier, TCompactProtocol::new);
   }
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>, M>
+  static public <T extends TBase, M>
   @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> compact(
       @NonNull AnoaFactory<M> anoaFactory,
       @NonNull Supplier<T> supplier) {
     return fn(anoaFactory, supplier, TCompactProtocol::new);
   }
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>> @NonNull Function<byte[], T> binary(
+  static public <T extends TBase> @NonNull Function<byte[], T> binary(
       @NonNull Supplier<T> supplier) {
     return fn(supplier, TBinaryProtocol::new);
   }
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>, M>
+  static public <T extends TBase, M>
   @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> binary(
       @NonNull AnoaFactory<M> anoaFactory,
       @NonNull Supplier<T> supplier) {
     return fn(anoaFactory, supplier, TBinaryProtocol::new);
   }
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>> @NonNull Function<byte[], T> json(
+  static public <T extends TBase> @NonNull Function<byte[], T> json(
       @NonNull Supplier<T> supplier) {
     return fn(supplier, TJSONProtocol::new);
   }
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>, M>
+  static public <T extends TBase, M>
   @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> json(
       @NonNull AnoaFactory<M> anoaFactory,
       @NonNull Supplier<T> supplier) {
     return fn(anoaFactory, supplier, TJSONProtocol::new);
   }
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>> @NonNull Function<byte[], T> fn(
+  static public <T extends TBase> @NonNull Function<byte[], T> fn(
       @NonNull Supplier<T> supplier,
       @NonNull Function<TTransport, TProtocol> protocolFactory) {
     final TMemoryInputTransport tTransport = new TMemoryInputTransport();
     final TProtocol tProtocol = protocolFactory.apply(tTransport);
-    final ReadIterator<T> readIterator = ReadIteratorUtils.thrift(tTransport, tProtocol, supplier);
+    final ReadIterator<T> readIterator = ReadIteratorUtils.thrift(tProtocol, supplier);
     return (byte[] bytes) -> {
       tTransport.reset(bytes);
-      return readIterator.next();
+      return readIterator.hasNext() ? readIterator.next() : null;
     };
   }
 
-  static public <T extends TBase<T, ? extends TFieldIdEnum>, M>
-  @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> fn(
+  static public <T extends TBase, M> @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> fn(
       @NonNull AnoaFactory<M> anoaFactory,
       @NonNull Supplier<T> supplier,
       @NonNull Function<TTransport, TProtocol> protocolFactory) {
     final TMemoryInputTransport tTransport = new TMemoryInputTransport();
     final TProtocol tProtocol = protocolFactory.apply(tTransport);
-    final ReadIterator<T> readIterator = ReadIteratorUtils.thrift(tTransport, tProtocol, supplier);
-    return anoaFactory.function((byte[] bytes) -> {
-      tTransport.reset(bytes);
-      return readIterator.next();
-    });
+    final ReadIterator<Anoa<T, M>> readIterator = ReadIteratorUtils.thrift(anoaFactory,
+                                                                           tProtocol,
+                                                                           supplier);
+    return (Anoa<byte[], M> bytesWrapped) -> {
+      if (bytesWrapped.isPresent()) {
+        readIterator.reset();
+        tTransport.reset(bytesWrapped.get());
+        return readIterator.next();
+      } else {
+        return new Anoa<>(bytesWrapped.meta());
+      }
+    };
   }
 
-  static public <P extends JsonParser, F extends TFieldIdEnum, T extends TBase<T, F>>
+  static public <P extends JsonParser, F extends TFieldIdEnum, T extends TBase<?, F>>
   @NonNull Function<P, T> jackson(
       @NonNull Class<T> recordClass,
       boolean strict) {
@@ -90,7 +96,7 @@ public class ThriftDecoders {
     return (P jp) -> reader.read(jp, strict);
   }
 
-  static public <P extends JsonParser, F extends TFieldIdEnum, T extends TBase<T, F>, M>
+  static public <P extends JsonParser, F extends TFieldIdEnum, T extends TBase<?, F>, M>
   @NonNull Function<Anoa<P, M>, Anoa<T, M>> jackson(
       @NonNull AnoaFactory<M> anoaFactory,
       @NonNull Class<T> recordClass,

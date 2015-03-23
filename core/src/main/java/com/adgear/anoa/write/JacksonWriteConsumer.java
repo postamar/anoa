@@ -3,9 +3,8 @@ package com.adgear.anoa.write;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 
-class JacksonWriteConsumer<T> implements WriteConsumer<T, IOException> {
+class JacksonWriteConsumer<T> implements WriteConsumer<T> {
 
   final JsonGenerator jacksonGenerator;
   final AbstractWriter<T> writer;
@@ -18,15 +17,6 @@ class JacksonWriteConsumer<T> implements WriteConsumer<T, IOException> {
   @Override
   public void acceptChecked(T record) throws IOException{
     writer.writeChecked(record, jacksonGenerator);
-  }
-
-  @Override
-  public void accept(T record) {
-    try {
-      acceptChecked(record);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
   }
 
   @Override

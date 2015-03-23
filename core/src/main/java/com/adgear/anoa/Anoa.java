@@ -3,23 +3,23 @@ package com.adgear.anoa;
 import checkers.nullness.quals.NonNull;
 import checkers.nullness.quals.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Optional;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public final class Anoa<T, M> {
 
   final private Optional<T> value;
-  final private Stream<M> meta;
+  final private ArrayList<M> meta;
 
   public Anoa() {
-    this(Optional.<T>empty(), Stream.<M>empty());
+    this(Optional.<T>empty(), new ArrayList<M>());
   }
 
   public Anoa(Stream<M> meta) {
@@ -27,67 +27,88 @@ public final class Anoa<T, M> {
   }
 
   public Anoa(Optional<T> value) {
-    this(value, Stream.<M>empty());
+    this(value, new ArrayList<M>());
   }
 
   public Anoa(Optional<T> value, Stream<M> meta) {
+    this.value = value;
+    this.meta = meta.collect(Collectors.toCollection(ArrayList::new));
+  }
+
+  private Anoa(Optional<T> value, ArrayList<M> meta) {
     this.value = value;
     this.meta = meta;
   }
 
   /**
-   * Returns a stream of metadata elements decorating this {@code AnoaOptional}
+   * Returns a stream of metadata elements decorating this {@code Anoa}
    *
-   * @return a stream of metadata elements decorating this {@code AnoaOptional}
+   * @return a stream of metadata elements decorating this {@code Anoa}
    */
   public @NonNull Stream<@NonNull M> meta() {
-    return meta;
+    return meta.stream();
   }
 
   /**
-   * Decorates this {@code AnoaOptional} with metadata element
+   * Decorates this {@code Anoa} with metadata element
    *
    * @param metadata a metadata element
    */
   public Anoa<T, M> decorate(@NonNull M metadata) {
-    return decorate(Stream.of(metadata));
+    meta.add(metadata);
+    return this;
   }
 
   /**
-   * Decorates this {@code AnoaOptional} with metadata elements
+   * Decorates this {@code Anoa} with metadata elements
    *
    * @param metadata an stream for metadata elements
    */
   public Anoa<T, M> decorate(@NonNull Stream<@NonNull M> metadata) {
-    return new Anoa<>(value, Stream.concat(meta, metadata));
+    metadata.forEach(meta::add);
+    return this;
   }
 
   /**
-   * Decorates this {@code AnoaOptional} with metadata elements
+   * Decorates this {@code Anoa} with metadata elements
    *
    * @param metadata an iterable for metadata elements
    */
   public Anoa<T, M> decorate(@NonNull Iterable<@NonNull M> metadata) {
-    final Spliterator<M> spliterator = Spliterators.spliteratorUnknownSize(
-        metadata.iterator(),
-        Spliterator.NONNULL | Spliterator.ORDERED);
-    return new Anoa<>(value, StreamSupport.stream(spliterator, false));
+    if (metadata instanceof Collection) {
+      meta.addAll((Collection<M>) metadata);
+    } else {
+      for (M element : metadata) {
+        meta.add(element);
+      }
+    }
+    return this;
   }
 
   /**
-   * Returns the value held in this {@code AnoaOptional}
+   * Returns the value held in this {@code Anoa}
    *
-   * @return the value held by this {@code AnoaOptional}
+   * @return the value held by this {@code Anoa}
    */
   public Optional<T> asOptional() {
     return value;
   }
 
+
   /**
-   * If a value is present in this {@code AnoaOptional}, returns the value, otherwise throws {@code
+   * Returns the value held in this {@code Anoa} in a stream, if exists
+   *
+   * @return a stream containing the value held by this {@code Anoa}, if exists
+   */
+  public Stream<T> asStream() {
+    return value.isPresent() ? Stream.of(value.get()) : Stream.<T>empty();
+  }
+
+  /**
+   * If a value is present in this {@code Anoa}, returns the value, otherwise throws {@code
    * NoSuchElementException}.
    *
-   * @return the non-null value held by this {@code AnoaOptional}
+   * @return the non-null value held by this {@code Anoa}
    * @throws java.util.NoSuchElementException if there is no value present
    * @see Anoa#isPresent()
    */
@@ -116,34 +137,34 @@ public final class Anoa<T, M> {
 
   /**
    * If a value is present, and the value matches the given predicate, return an {@code
-   * AnoaOptional} describing the value, otherwise return an empty {@code AnoaOptional}.
+   * Anoa} describing the value, otherwise return an empty {@code Anoa}.
    *
    * @param predicate a predicate to apply to the value, if present
-   * @return an {@code AnoaOptional} describing the value of this {@code AnoaOptional} if a value is
-   * present and the value matches the given predicate, otherwise an empty {@code AnoaOptional}
+   * @return an {@code Anoa} describing the value of this {@code Anoa} if a value is
+   * present and the value matches the given predicate, otherwise an empty {@code Anoa}
    * @throws NullPointerException if the predicate is null
    */
   public Anoa<T, M> filter(Predicate<? super T> predicate) {
     if (value.isPresent()) {
-      return predicate.test(value.get()) ? this : new Anoa<>(meta);
+      return predicate.test(value.get()) ? this : new Anoa<>(Optional.empty(), meta);
     } else {
       return this;
     }
   }
 
   @SuppressWarnings("unchecked")
-  <T, M> Anoa<T, M> unsafeCast() {
-    return (Anoa<T, M>) this;
+  <T_, M_> Anoa<T_, M_> unsafeCast() {
+    return (Anoa<T_, M_>) this;
   }
 
   /**
-   * If a value is present, apply the provided {@code AnoaOptional}-bearing mapping function to it,
-   * return that result, otherwise return an empty {@code AnoaOptional}.
+   * If a value is present, apply the provided {@code Anoa}-bearing mapping function to it,
+   * return that result, otherwise return an empty {@code Anoa}.
    *
-   * @param <U>    The type parameter to the {@code AnoaOptional} returned by
+   * @param <U>    The type parameter to the {@code Anoa} returned by
    * @param mapper a mapping function to apply to the value, if present
-   * @return the result of applying an {@code AnoaOptional}-bearing mapping function to the value of
-   * this {@code AnoaOptional}, if a value is present, otherwise an empty {@code AnoaOptional}
+   * @return the result of applying an {@code Anoa}-bearing mapping function to the value of
+   * this {@code Anoa}, if a value is present, otherwise an empty {@code Anoa}
    * @throws NullPointerException if the mapping function is null or returns a null result
    */
   public <U> Anoa<U, M> map(Function<? super T, ? extends U> mapper) {
@@ -155,19 +176,20 @@ public final class Anoa<T, M> {
   }
 
   /**
-   * If a value is present, apply the provided {@code AnoaOptional}-bearing mapping function to it,
-   * return that result, otherwise return an empty {@code AnoaOptional}.
+   * If a value is present, apply the provided {@code Anoa}-bearing mapping function to it,
+   * return that result, otherwise return an empty {@code Anoa}.
    *
-   * @param <U>    The type parameter to the {@code AnoaOptional} returned by
+   * @param <U>    The type parameter to the {@code Anoa} returned by
    * @param mapper a mapping function to apply to the value, if present
-   * @return the result of applying an {@code AnoaOptional}-bearing mapping function to the value of
-   * this {@code AnoaOptional}, if a value is present, otherwise an empty {@code AnoaOptional}
+   * @return the result of applying an {@code Anoa}-bearing mapping function to the value of
+   * this {@code Anoa}, if a value is present, otherwise an empty {@code Anoa}
    * @throws NullPointerException if the mapping function is null or returns a null result
    */
   public <U> Anoa<U, M> flatMap(Function<? super T, Anoa<U, M>> mapper) {
     if (value.isPresent()) {
       final Anoa<U, M> mapperResult = mapper.apply(value.get());
-      return new Anoa<>(mapperResult.value, Stream.concat(meta, mapperResult.meta));
+      meta.addAll(mapperResult.meta);
+      return new Anoa<>(mapperResult.value, meta);
     } else {
       return unsafeCast();
     }
@@ -212,16 +234,6 @@ public final class Anoa<T, M> {
   @Override
   public String toString() {
     return value.isPresent() ? ("Anoa(" + value.get() + ")") : "Anoa~empty";
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    return super.equals(obj);
-  }
-
-  @Override
-  public int hashCode() {
-    return super.hashCode();
   }
 }
 
