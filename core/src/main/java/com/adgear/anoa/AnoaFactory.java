@@ -24,26 +24,53 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+/**
+ * Utility class for generating 'safe' variants of functions which use a provided exception handler.
+ *
+ * @param <M> Metadata type for decorating {@code Anoa} instances with.
+ */
 public class AnoaFactory<M> {
 
+  /**
+   * Type for Anoa exception handlers.
+   *
+   * @param <M> Metadata type for decorating {@code Anoa} instances with.
+   */
   static public interface Handler<M> extends BiFunction<Throwable, Tuple, Stream<M>> {
   }
 
+  /**
+   * this instance's exception handler
+   */
   final public Handler<M> handler;
 
+  /**
+   * @param handler The exception handler to use with this instance.
+   */
   public AnoaFactory(Handler<M> handler) {
     Objects.requireNonNull(handler);
     this.handler = handler;
   }
 
+  /**
+   * @return An {@code AnoaFactory} in which exceptions are handled by doing nothing.
+   */
   static public @NonNull AnoaFactory<?> noOp() {
     return new AnoaFactory<>((throwable, __) -> Stream.empty());
   }
 
+  /**
+   * @return An {@code AnoaFactory} in which exceptions are handled by passing them along as
+   * {@code Anoa} metadata.
+   */
   static public @NonNull AnoaFactory<Throwable> passAlong() {
     return new AnoaFactory<>((throwable, __) -> Stream.of(throwable));
   }
 
+  /**
+   * @return An {@code AnoaFactory} in which exceptions are handled by applying a function to the
+   * exception object and passing the result along as {@code Anoa} metadata.
+   */
   static public <M> @NonNull AnoaFactory<M> mapThrowable(
       @NonNull Function<Throwable, M> handler) {
     return new AnoaFactory<>((throwable, __) -> Stream.of(handler.apply(throwable)));
@@ -287,6 +314,12 @@ public class AnoaFactory<M> {
     };
   }
 
+  /**
+   *
+   * @param value Value to be wrapped (may be null)
+   * @param <T> Value type
+   * @return The value wrapped in an instance of {@code Anoa}
+   */
   public <T> @NonNull Anoa<T, M> wrap(@Nullable T value) {
     return new Anoa<>(Optional.ofNullable(value), Stream.<M>empty());
   }

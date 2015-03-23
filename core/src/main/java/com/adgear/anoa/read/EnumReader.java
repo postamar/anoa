@@ -1,6 +1,6 @@
 package com.adgear.anoa.read;
 
-import com.adgear.anoa.AnoaTypeException;
+import com.adgear.anoa.AnoaJacksonTypeException;
 import com.fasterxml.jackson.core.JsonParser;
 
 import java.io.IOException;
@@ -53,7 +53,7 @@ class EnumReader extends AbstractReader<Enum> {
   }
 
   @Override
-  protected Enum readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+  protected Enum readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
     Enum value;
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_STRING:
@@ -66,19 +66,19 @@ class EnumReader extends AbstractReader<Enum> {
           }
         }
         if (value == null) {
-          throw new AnoaTypeException("Invalid label " + jacksonParser.getText() + " for " + enumClass);
+          throw new AnoaJacksonTypeException("Invalid label " + jacksonParser.getText() + " for " + enumClass);
         }
         return value;
       case VALUE_NUMBER_INT:
         value = ordinalLookUp.get(jacksonParser.getIntValue());
         if (value == null) {
-          throw new AnoaTypeException("Invalid ordinal " + jacksonParser.getText() + " for " + enumClass);
+          throw new AnoaJacksonTypeException("Invalid ordinal " + jacksonParser.getText() + " for " + enumClass);
         }
         return value;
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaTypeException("Token is not enum label or ordinal: " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException("Token is not enum label or ordinal: " + jacksonParser.getCurrentToken());
     }
   }
 }

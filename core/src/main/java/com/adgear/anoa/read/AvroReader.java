@@ -1,6 +1,6 @@
 package com.adgear.anoa.read;
 
-import com.adgear.anoa.AnoaTypeException;
+import com.adgear.anoa.AnoaJacksonTypeException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
@@ -123,7 +123,7 @@ abstract class AvroReader<R extends IndexedRecord> extends AbstractReader<R> {
   }
 
   @Override
-  public R readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+  public R readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;
@@ -132,7 +132,7 @@ abstract class AvroReader<R extends IndexedRecord> extends AbstractReader<R> {
         try {
           record = newInstance();
         } catch (Exception e) {
-          throw new AnoaTypeException(e);
+          throw new AnoaJacksonTypeException(e);
         }
         defaultValues.entrySet().stream().forEach(e -> record.put(e.getKey(), e.getValue()));
         doMap(jacksonParser, (fieldName, p) -> {
@@ -148,7 +148,7 @@ abstract class AvroReader<R extends IndexedRecord> extends AbstractReader<R> {
         SpecificData.get().validate(record.getSchema(), record);
         return record;
       default:
-        throw new AnoaTypeException("Token is not '{': " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException("Token is not '{': " + jacksonParser.getCurrentToken());
     }  }
 
   @SuppressWarnings("unchecked")

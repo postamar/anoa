@@ -1,7 +1,7 @@
 package com.adgear.anoa.read;
 
+import com.adgear.anoa.AnoaJacksonTypeException;
 import com.adgear.anoa.AnoaReflectionUtils;
-import com.adgear.anoa.AnoaTypeException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
@@ -98,7 +98,7 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<?, F>> extends Abstra
   }
 
   @Override
-  protected T readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+  protected T readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;
@@ -121,14 +121,14 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<?, F>> extends Abstra
         if (countRequired.n < nRequired) {
           for (Optional<Field<F>> cacheValue : fieldLookUp.values()) {
             if (!result.isSet(cacheValue.get().tFieldIdEnum)) {
-              throw new AnoaTypeException("Required field not set: "
+              throw new AnoaJacksonTypeException("Required field not set: "
                                           + cacheValue.get().tFieldIdEnum.getFieldName());
             }
           }
         }
         return result;
       default:
-        throw new AnoaTypeException("Token is not '{': " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException("Token is not '{': " + jacksonParser.getCurrentToken());
     }
   }
 

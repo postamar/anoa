@@ -1,6 +1,6 @@
 package com.adgear.anoa.read;
 
-import com.adgear.anoa.AnoaTypeException;
+import com.adgear.anoa.AnoaJacksonTypeException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
@@ -28,7 +28,7 @@ class ListReader extends AbstractReader<ArrayList<Object>> {
   }
 
   @Override
-  protected ArrayList<Object> readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+  protected ArrayList<Object> readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;
@@ -37,7 +37,7 @@ class ListReader extends AbstractReader<ArrayList<Object>> {
         doArray(jacksonParser, p -> result.add(elementReader.readStrict(p)));
         return result;
       default:
-        throw new AnoaTypeException("Token is not '[': " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException("Token is not '[': " + jacksonParser.getCurrentToken());
     }
   }
 }

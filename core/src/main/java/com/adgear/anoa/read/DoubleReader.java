@@ -1,6 +1,6 @@
 package com.adgear.anoa.read;
 
-import com.adgear.anoa.AnoaTypeException;
+import com.adgear.anoa.AnoaJacksonTypeException;
 import com.fasterxml.jackson.core.JsonParser;
 
 import java.io.IOException;
@@ -13,7 +13,7 @@ class DoubleReader extends AbstractReader<Double> {
   }
 
   @Override
-  protected Double readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+  protected Double readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_NUMBER_FLOAT:
         return jacksonParser.getDoubleValue();
@@ -22,7 +22,7 @@ class DoubleReader extends AbstractReader<Double> {
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaTypeException("Token is not number: " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException("Token is not number: " + jacksonParser.getCurrentToken());
     }
   }
 }

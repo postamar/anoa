@@ -1,6 +1,6 @@
 package com.adgear.anoa.read;
 
-import com.adgear.anoa.AnoaTypeException;
+import com.adgear.anoa.AnoaJacksonTypeException;
 import com.fasterxml.jackson.core.JsonParser;
 
 import java.io.IOException;
@@ -25,14 +25,14 @@ class StringReader extends AbstractReader<String> {
   }
 
   @Override
-  protected String readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+  protected String readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_STRING:
         return jacksonParser.getText();
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaTypeException("Token is not string: " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException("Token is not string: " + jacksonParser.getCurrentToken());
     }
   }
 }

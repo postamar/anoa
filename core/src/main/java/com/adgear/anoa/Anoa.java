@@ -18,18 +18,30 @@ public final class Anoa<T, M> {
   final private Optional<T> value;
   final private ArrayList<M> meta;
 
+  /**
+   * Constructs empty {@code Anoa}.
+   */
   public Anoa() {
     this(Optional.<T>empty(), new ArrayList<M>());
   }
 
+  /**
+   * Constructs empty {@code Anoa} with metadata.
+   */
   public Anoa(Stream<M> meta) {
     this(Optional.<T>empty(), meta);
   }
 
+  /**
+   * Constructs {@code Anoa} from {@code Optional}.
+   */
   public Anoa(Optional<T> value) {
     this(value, new ArrayList<M>());
   }
 
+  /**
+   * Constructs {@code Anoa} from {@code Optional} with metadata.
+   */
   public Anoa(Optional<T> value, Stream<M> meta) {
     this.value = value;
     this.meta = meta.collect(Collectors.toCollection(ArrayList::new));

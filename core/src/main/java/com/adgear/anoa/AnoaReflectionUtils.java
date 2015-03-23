@@ -9,8 +9,14 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Utility class for properly-typed reflection methods.
+ */
 public class AnoaReflectionUtils {
 
+  /**
+   * @param className Avro SpecificRecord qualified class name
+   */
   @SuppressWarnings("unchecked")
   static public Class<? extends SpecificRecord> getAvroClass(String className)
       throws ClassNotFoundException {
@@ -24,7 +30,9 @@ public class AnoaReflectionUtils {
     return (Class<? extends SpecificRecord>) recordClass;
   }
 
-
+  /**
+   * @param className Thrift qualified class name
+   */
   @SuppressWarnings("unchecked")
   static public <T extends TBase> Class<T> getThriftClass(
       String className) throws ClassNotFoundException{
@@ -38,6 +46,11 @@ public class AnoaReflectionUtils {
     return (Class<T>) recordClass;
   }
 
+  /**
+   * @param thriftClass the Thrift class
+   * @param <F> Field enum type
+   * @return An ordered map with field enum and field metadata for this class
+   */
   @SuppressWarnings("unchecked")
   public static <F extends TFieldIdEnum>
   LinkedHashMap<F, FieldMetaData> getThriftMetaDataMap(Class<? extends TBase<?,F>> thriftClass) {

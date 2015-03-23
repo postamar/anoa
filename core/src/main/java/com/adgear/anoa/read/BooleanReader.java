@@ -1,6 +1,6 @@
 package com.adgear.anoa.read;
 
-import com.adgear.anoa.AnoaTypeException;
+import com.adgear.anoa.AnoaJacksonTypeException;
 import com.fasterxml.jackson.core.JsonParser;
 
 import java.io.IOException;
@@ -13,7 +13,7 @@ class BooleanReader extends AbstractReader<Boolean> {
   }
 
   @Override
-  protected Boolean readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+  protected Boolean readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_TRUE:
         return true;
@@ -22,7 +22,7 @@ class BooleanReader extends AbstractReader<Boolean> {
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaTypeException("Token is not boolean: " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException("Token is not boolean: " + jacksonParser.getCurrentToken());
     }
   }
 }

@@ -18,6 +18,20 @@ import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.util.Optional;
 
+/**
+ * Utility class for generating {@code WriteConsumer} instances to write Jackson
+ * {@link com.fasterxml.jackson.core.TreeNode} instances.
+ *
+ * Intended to be used as a base class, subclasses should wrap appropriate Jackson databinding types
+ * together; see the anoa-tools module for examples.
+ *
+ * @param <N> Record type
+ * @param <C> Mapper type
+ * @param <F> Factory type
+ * @param <S> Schema type
+ * @param <G> JsonGenerator type
+ *
+ */
 public class JacksonConsumers<
     N extends TreeNode,
     C extends ObjectCodec,
@@ -25,10 +39,26 @@ public class JacksonConsumers<
     S extends FormatSchema,
     G extends JsonGenerator> {
 
+  /**
+   * The object mapper used by this instance
+   */
   final public C objectCodec;
+
+  /**
+   * The factory used by this instance
+   */
   final public F factory;
+
+  /**
+   * The format schema used by this instance, if present
+   */
   final public Optional<S> schema;
 
+  /**
+   *
+   * @param objectCodec Jackson object mapper instance
+   * @param schema Jackson format schema (optional)
+   */
   @SuppressWarnings("unchecked")
   public JacksonConsumers(@NonNull C objectCodec, @NonNull Optional<S> schema) {
     this.objectCodec = objectCodec;
@@ -49,7 +79,8 @@ public class JacksonConsumers<
   @SuppressWarnings("unchecked")
   public @NonNull G generator(@NonNull OutputStream outputStream) {
     try {
-      return with((G) factory.createGenerator(new BufferedOutputStream(outputStream), JsonEncoding.UTF8));
+      return with((G) factory.createGenerator(new BufferedOutputStream(outputStream),
+                                              JsonEncoding.UTF8));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -64,6 +95,10 @@ public class JacksonConsumers<
     }
   }
 
+  /**
+   * @param generator
+   * @return the same generator, with the format schema set
+   */
   public @NonNull G with(@NonNull G generator) {
     schema.ifPresent(generator::setSchema);
     return generator;

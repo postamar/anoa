@@ -1,6 +1,6 @@
 package com.adgear.anoa.read;
 
-import com.adgear.anoa.AnoaTypeException;
+import com.adgear.anoa.AnoaJacksonTypeException;
 import com.fasterxml.jackson.core.JsonParser;
 
 import org.apache.avro.Schema;
@@ -30,7 +30,7 @@ abstract class AvroFixedReader<F extends GenericData.Fixed> extends AbstractRead
   }
 
   @Override
-  protected F readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+  protected F readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
     final byte[] array = byteArrayReader.readStrict(jacksonParser);
     if (array == null) {
       return null;

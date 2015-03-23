@@ -1,6 +1,6 @@
 package com.adgear.anoa.read;
 
-import com.adgear.anoa.AnoaTypeException;
+import com.adgear.anoa.AnoaJacksonTypeException;
 import com.fasterxml.jackson.core.JsonParser;
 
 import java.io.IOException;
@@ -17,7 +17,7 @@ class ByteBufferReader extends AbstractReader<ByteBuffer> {
   }
 
   @Override
-  protected ByteBuffer readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+  protected ByteBuffer readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
     final byte[] array = byteArrayReader.readStrict(jacksonParser);
     return (array == null) ? null : ByteBuffer.wrap(array);
   }

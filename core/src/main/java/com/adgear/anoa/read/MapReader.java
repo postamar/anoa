@@ -1,6 +1,6 @@
 package com.adgear.anoa.read;
 
-import com.adgear.anoa.AnoaTypeException;
+import com.adgear.anoa.AnoaJacksonTypeException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
@@ -28,7 +28,8 @@ class MapReader extends AbstractReader<HashMap<String,Object>> {
   }
 
   @Override
-  protected HashMap<String, Object> readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException {
+  protected HashMap<String, Object> readStrict(JsonParser jacksonParser) throws
+                                                                         AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;
@@ -37,7 +38,7 @@ class MapReader extends AbstractReader<HashMap<String,Object>> {
         doMap(jacksonParser, (k, p) -> result.put(k, valueElementReader.readStrict(p)));
         return result;
       default:
-        throw new AnoaTypeException("Token is not '{': " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException("Token is not '{': " + jacksonParser.getCurrentToken());
     }
   }
 }

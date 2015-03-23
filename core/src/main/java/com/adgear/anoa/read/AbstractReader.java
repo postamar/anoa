@@ -1,6 +1,6 @@
 package com.adgear.anoa.read;
 
-import com.adgear.anoa.AnoaTypeException;
+import com.adgear.anoa.AnoaJacksonTypeException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
@@ -24,7 +24,7 @@ abstract class AbstractReader<R> {
 
   abstract protected R read(JsonParser jacksonParser) throws IOException;
 
-  abstract protected R readStrict(JsonParser jacksonParser) throws AnoaTypeException, IOException;
+  abstract protected R readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException;
 
   static protected interface ValueConsumer<E extends Exception> {
     public void accept(JsonParser jacksonParser) throws IOException, E;
