@@ -66,7 +66,7 @@ public class JdbcTest {
     try (Connection connection = openDBConnection()) {
       try (Statement statement = connection.createStatement()) {
         try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {
-          List<Simple> simples = new JdbcStreams().from(f, resultSet)
+          List<Simple> simples = new JdbcStreams().resultSet(f, resultSet)
               .map(f.function(TreeNode::traverse))
               .map(f.function(ThriftDecoders.jackson(Simple.class, false)))
               .peek(System.out::println)
@@ -91,7 +91,7 @@ public class JdbcTest {
     try (Connection connection = openDBConnection()) {
       try (Statement statement = connection.createStatement()) {
         try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {
-          new JdbcStreams().from(resultSet).forEach(System.out::println);
+          new JdbcStreams().resultSet(resultSet).forEach(System.out::println);
         }
       }
     }
@@ -106,7 +106,7 @@ public class JdbcTest {
 
           ByteArrayOutputStream baos = new ByteArrayOutputStream();
           try (WriteConsumer<GenericRecord> consumer = AvroConsumers.batch(induced, baos)) {
-            new JdbcStreams().from(resultSet)
+            new JdbcStreams().resultSet(resultSet)
                 .map(ObjectNode::traverse)
                 .map(AvroDecoders.jackson(induced, false))
                 .forEach(consumer);

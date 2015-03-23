@@ -8,26 +8,29 @@ import java.lang.reflect.Field;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-
+/**
+ * A UnaryOperator implementation which sets specified object properties to null.
+ *
+ * @param <T> Value type
+ */
 public class AnoaFieldNuller<T> implements UnaryOperator<T> {
 
   final protected String[] fields;
 
-  public Stream<String> getFields() {
-    return Stream.of(fields);
-  }
-
+  /**
+   * @param fields the field names to set to null, according to this object
+   */
   public AnoaFieldNuller(@NonNull String... fields) {
     this.fields = fields;
   }
 
-  public @NonNull T apply(@NonNull T object) {
-    try {
-      return applyChecked(object);
-    } catch (NoSuchFieldException | IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
+  /**
+   * @return the field names to set to null, according to this object
+   */
+  public Stream<String> getFields() {
+    return Stream.of(fields);
   }
+
 
   public @NonNull T applyChecked(@NonNull T object)
       throws NoSuchFieldException, IllegalAccessException {
@@ -36,6 +39,14 @@ public class AnoaFieldNuller<T> implements UnaryOperator<T> {
       wrapper.field.set(wrapper.object, null);
     }
     return object;
+  }
+
+  public @NonNull T apply(@NonNull T object) {
+    try {
+      return applyChecked(object);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public @NonNull CheckedUnaryOperator<T> asChecked() {

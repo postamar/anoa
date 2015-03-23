@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.fasterxml.jackson.dataformat.smile.SmileParser;
 
+/**
+ * Utility class for streaming Jackson records from SMILE serializations.
+ */
 public class SmileStreams extends JacksonStreamsBase<
     ObjectMapper,
     SmileFactory,

@@ -27,19 +27,35 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+/**
+ * Utility class for streaming Jackson records from a JDBC result set.
+ */
 public class JdbcStreams {
 
+  /**
+   * Create with default object mapper
+   */
   public JdbcStreams() {
     this(new ObjectMapper());
   }
 
+  /**
+   * @param objectCodec Object mapper to use
+   */
   public JdbcStreams(ObjectCodec objectCodec) {
     this.objectCodec = objectCodec;
   }
 
+  /**
+   * Object mapper used by this instance
+   */
   final public ObjectCodec objectCodec;
 
-  public @NonNull Stream<ObjectNode> from(@NonNull ResultSet resultSet) {
+  /**
+   * @param resultSet the JDBC result set to scan
+   * @return A stream of Jackson records which map to the result set rows.
+   */
+  public @NonNull Stream<ObjectNode> resultSet(@NonNull ResultSet resultSet) {
     final Function<ResultSet, ObjectNode> fn;
     try {
       fn = Unchecked.function(rowFn(resultSet.getMetaData()));
@@ -49,7 +65,14 @@ public class JdbcStreams {
     return SQL.seq(resultSet, fn);
   }
 
-  public <M> @NonNull Stream<Anoa<ObjectNode, M>> from(
+  /**
+   *
+   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param resultSet the JDBC result set to scan
+   * @param <M> Metadata type
+   * @return A stream of Jackson records which map to the result set rows.
+   */
+  public <M> @NonNull Stream<Anoa<ObjectNode, M>> resultSet(
       @NonNull AnoaFactory<M> anoaFactory,
       @NonNull ResultSet resultSet) {
     final CheckedFunction<ResultSet, ObjectNode> fn;
@@ -88,6 +111,11 @@ public class JdbcStreams {
     };
   }
 
+  /**
+   * @param rsmd JDBC Result Set metadata
+   * @return equivalent Avro Schema
+   * @throws SQLException
+   */
   static public @NonNull Schema induceSchema(@NonNull ResultSetMetaData rsmd) throws SQLException {
     List<Schema.Field> fields = IntStream.range(1, rsmd.getColumnCount() + 1)
         .mapToObj(Unchecked.intFunction(c -> {

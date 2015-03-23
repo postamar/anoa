@@ -8,6 +8,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
+/**
+ * Utility class for writing Jackson records in the JSON format.
+ */
 public class JsonConsumers extends JacksonConsumersBase<
       ObjectMapper,
       JsonFactory,

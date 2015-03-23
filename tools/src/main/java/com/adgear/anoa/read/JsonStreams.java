@@ -15,6 +15,9 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.function.Function;
 
+/**
+ * Utility class for streaming Jackson records from JSON serializations.
+ */
 public class JsonStreams extends JacksonStreamsBase<
     ObjectMapper,
     JsonFactory,
@@ -29,6 +32,9 @@ public class JsonStreams extends JacksonStreamsBase<
     return tokenBuffer.asParser(objectCodec);
   }
 
+  /**
+   * @return Object-mapping function appliable to TokenBuffer instances
+   */
   public Function<TokenBuffer, ObjectNode> tokenBuffer() {
     return (TokenBuffer tb) -> {
       try {
@@ -39,6 +45,11 @@ public class JsonStreams extends JacksonStreamsBase<
     };
   }
 
+  /**
+   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param <M> Metadata type
+   * @return Object-mapping function appliable to TokenBuffer instances
+   */
   public <M> @NonNull Function<Anoa<TokenBuffer, M>, Anoa<ObjectNode, M>> tokenBuffer(
       @NonNull AnoaFactory<M> anoaFactory) {
     return anoaFactory.functionChecked((TokenBuffer tb) -> parser(tb).readValueAsTree());

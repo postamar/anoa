@@ -360,7 +360,7 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T, F>> implements 
             if (avroSchema == null) {
               avroSchema = JdbcStreams.induceSchema(resultSet.getMetaData());
             }
-            runAvro(new JdbcStreams().from(resultSet)
+            runAvro(new JdbcStreams().resultSet(resultSet)
                         .map(ObjectNode::traverse)
                         .map(AvroDecoders.jackson(avroSchema, false)));
           }

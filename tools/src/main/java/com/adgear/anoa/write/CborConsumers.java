@@ -5,7 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import com.fasterxml.jackson.dataformat.cbor.CBORGenerator;
 
-public class CborConsumers extends JacksonConsumersBase<ObjectMapper,
+/**
+ * Utility class for writing Jackson records in the CBOR format.
+ */
+public class CborConsumers extends JacksonConsumersBase<
+    ObjectMapper,
     CBORFactory,
     FormatSchema,
     CBORGenerator> {
