@@ -1,0 +1,30 @@
+/**
+
+requires:
+  com.adgear.avro.BrowserType;
+  com.adgear.avro.Simple;
+  com.adgear.avro.Composite;
+  com.adgear.avro.UUID;
+*/
+
+record Nested {
+
+  /** [1] required id */
+  @thrift("short") int id;
+
+  /** [2] */
+  union {null, com.adgear.avro.UUID} uuid;
+
+  /** [3] browser (default = IE) */
+  com.adgear.avro.BrowserType browser = "IE";
+
+  /** [10] */
+  @thrift("set") union {null, array<com.adgear.avro.Simple>} simple_set = null;
+
+  /** [20] */
+  union {null, int} count = null;
+
+  /** [30] */
+  map<com.adgear.avro.BrowserType> other = {};
+
+}

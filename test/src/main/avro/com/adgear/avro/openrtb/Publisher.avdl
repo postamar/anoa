@@ -1,0 +1,21 @@
+/**
+3.3.8 Publisher Object
+The publisher object itself and all of its parameters are optional, so default values are not provided. If an optional parameter is not specified, it should be considered unknown.
+
+*/
+
+record Publisher {
+
+  /** [1] Publisher ID on the exchange. */
+  union {null, string} id = null;
+
+  /** [2] Publisher name (may be masked at publisher’s request).*/
+  union {null, string} name = null;
+
+  /** [3] Array of IAB content categories for the publisher. See Table 6.1 Content Categories.*/
+  union {null, array<string>} cat = null;
+
+  /** [4] Publisher’s highest level domain name, for example “foopub.com”.*/
+  union {null, string} domain = null;
+
+}
