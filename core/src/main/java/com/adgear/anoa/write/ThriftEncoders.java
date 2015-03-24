@@ -3,7 +3,7 @@ package com.adgear.anoa.write;
 import checkers.nullness.quals.NonNull;
 
 import com.adgear.anoa.Anoa;
-import com.adgear.anoa.AnoaFactory;
+import com.adgear.anoa.AnoaHandler;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import org.apache.thrift.TBase;
@@ -34,14 +34,14 @@ public class ThriftEncoders {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param <T> Thrift record type
    * @param <M> Metadata type
    * @return A function for serializing Thrift records as compact binary blobs.
    */
   static public <T extends TBase, M> @NonNull Function<Anoa<T, M>, Anoa<byte[], M>> compact(
-      @NonNull AnoaFactory<M> anoaFactory) {
-    return fn(anoaFactory, TCompactProtocol::new);
+      @NonNull AnoaHandler<M> anoaHandler) {
+    return fn(anoaHandler, TCompactProtocol::new);
   }
 
   /**
@@ -53,14 +53,14 @@ public class ThriftEncoders {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param <T> Thrift record type
    * @param <M> Metadata type
    * @return A function for serializing Thrift records as standard binary blobs.
    */
   static public <T extends TBase, M> @NonNull Function<Anoa<T, M>, Anoa<byte[], M>> binary(
-      @NonNull AnoaFactory<M> anoaFactory) {
-    return fn(anoaFactory, TBinaryProtocol::new);
+      @NonNull AnoaHandler<M> anoaHandler) {
+    return fn(anoaHandler, TBinaryProtocol::new);
   }
 
   /**
@@ -72,14 +72,14 @@ public class ThriftEncoders {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param <T> Thrift record type
    * @param <M> Metadata type
    * @return A function for serializing Thrift records in Thrift JSON format.
    */
   static public <T extends TBase, M> @NonNull Function<Anoa<T, M>, Anoa<byte[], M>> json(
-      @NonNull AnoaFactory<M> anoaFactory) {
-    return fn(anoaFactory, TJSONProtocol::new);
+      @NonNull AnoaHandler<M> anoaHandler) {
+    return fn(anoaHandler, TJSONProtocol::new);
   }
 
   static <T extends TBase> @NonNull Function<T, byte[]> fn(
@@ -98,11 +98,11 @@ public class ThriftEncoders {
   }
 
   static <T extends TBase, M> @NonNull Function<Anoa<T, M>, Anoa<byte[], M>> fn(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Function<TTransport, TProtocol> protocolFactory) {
     TMemoryOutputTransport tTransport = new TMemoryOutputTransport();
     TProtocol tProtocol = protocolFactory.apply(tTransport);
-    return anoaFactory.functionChecked((T record) -> {
+    return anoaHandler.functionChecked((T record) -> {
       tTransport.baos.reset();
       record.write(tProtocol);
       return tTransport.baos.toByteArray();
@@ -131,7 +131,7 @@ public class ThriftEncoders {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Thrift record class object
    * @param supplier called for each new record serialization
    * @param <F> Thrift record field enum type
@@ -143,11 +143,11 @@ public class ThriftEncoders {
    */
   static public <F extends TFieldIdEnum, T extends TBase<?, F>, G extends JsonGenerator, M>
   @NonNull Function<Anoa<T, M>, Anoa<G, M>> jackson(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Class<T> recordClass,
       @NonNull Supplier<G> supplier) {
     ThriftWriter<F, T> thriftWriter = new ThriftWriter<>(recordClass);
-    return anoaFactory.functionChecked((T record) -> {
+    return anoaHandler.functionChecked((T record) -> {
       G jg = supplier.get();
       thriftWriter.writeChecked(record, jg);
       return jg;

@@ -46,7 +46,7 @@ public class DataToolTest {
 
   @Test
   public void testJsonToAvro() {
-    AnoaFactory<Throwable> f = AnoaFactory.passAlong();
+    AnoaHandler<Throwable> f = AnoaHandler.passAlong();
     Assert.assertEquals(
         946,
         AvroStreams.batch(f, new ByteArrayInputStream(

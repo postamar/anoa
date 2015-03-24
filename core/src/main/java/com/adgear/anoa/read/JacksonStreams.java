@@ -3,7 +3,7 @@ package com.adgear.anoa.read;
 import checkers.nullness.quals.NonNull;
 
 import com.adgear.anoa.Anoa;
-import com.adgear.anoa.AnoaFactory;
+import com.adgear.anoa.AnoaHandler;
 import com.fasterxml.jackson.core.FormatSchema;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -159,38 +159,38 @@ public class JacksonStreams<
     return from(parser(url));
   }
 
-  public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaFactory<M> anoaFactory,
+  public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaHandler<M> anoaHandler,
                                               @NonNull P parser) {
-    return ReadIteratorUtils.<N, M>jackson(anoaFactory, parser).stream();
+    return ReadIteratorUtils.<N, M>jackson(anoaHandler, parser).stream();
   }
 
-  public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaFactory<M> anoaFactory,
+  public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaHandler<M> anoaHandler,
                                               @NonNull InputStream inputStream) {
-    return from(anoaFactory, parser(inputStream));
+    return from(anoaHandler, parser(inputStream));
   }
 
-  public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaFactory<M> anoaFactory,
+  public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaHandler<M> anoaHandler,
                                               @NonNull Reader reader) {
-    return from(anoaFactory, parser(reader));
+    return from(anoaHandler, parser(reader));
   }
 
-  public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaFactory<M> anoaFactory,
+  public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaHandler<M> anoaHandler,
                                               @NonNull byte[] bytes) {
-    return from(anoaFactory, parser(bytes));
+    return from(anoaHandler, parser(bytes));
   }
 
-  public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaFactory<M> anoaFactory,
+  public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaHandler<M> anoaHandler,
                                               @NonNull String string) {
-    return from(anoaFactory, parser(string));
+    return from(anoaHandler, parser(string));
   }
 
-  public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaFactory<M> anoaFactory,
+  public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaHandler<M> anoaHandler,
                                               @NonNull File file) {
-    return from(anoaFactory, parser(file));
+    return from(anoaHandler, parser(file));
   }
 
-  public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaFactory<M> anoaFactory,
+  public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaHandler<M> anoaHandler,
                                               @NonNull URL url) {
-    return from(anoaFactory, parser(url));
+    return from(anoaHandler, parser(url));
   }
 }

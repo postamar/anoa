@@ -4,7 +4,7 @@ import checkers.nullness.quals.NonNull;
 import checkers.nullness.quals.Nullable;
 
 import com.adgear.anoa.Anoa;
-import com.adgear.anoa.AnoaFactory;
+import com.adgear.anoa.AnoaHandler;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.TreeNode;
 
@@ -44,16 +44,16 @@ public class AvroStreams {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param schema Avro record schema
    * @param inputStream data source
    * @param <M> Metadata type
    */
   static public <M> @NonNull Stream<Anoa<GenericRecord, M>> binary(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Schema schema,
       @NonNull InputStream inputStream) {
-    return binary(anoaFactory, new GenericDatumReader<>(schema), inputStream);
+    return binary(anoaHandler, new GenericDatumReader<>(schema), inputStream);
   }
 
   /**
@@ -69,18 +69,18 @@ public class AvroStreams {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param writer Avro schema with which the record was originally serialized 
    * @param reader Avro schema to use for deserialization
    * @param inputStream data source
    * @param <M> Metadata type
    */
   static public <M> @NonNull Stream<Anoa<GenericRecord, M>> binary(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Schema writer,
       @NonNull Schema reader,
       @NonNull InputStream inputStream) {
-    return binary(anoaFactory, new GenericDatumReader<>(writer, reader), inputStream);
+    return binary(anoaHandler, new GenericDatumReader<>(writer, reader), inputStream);
   }
 
   /**
@@ -95,17 +95,17 @@ public class AvroStreams {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Avro SpecificRecord class object
    * @param inputStream data source
    * @param <R> Avro SpecificData record type
    * @param <M> Metadata type
    */
   static public <R extends SpecificRecord, M> @NonNull Stream<Anoa<R, M>> binary(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Class<R> recordClass,
       @NonNull InputStream inputStream) {
-    return binary(anoaFactory, new SpecificDatumReader<>(recordClass), inputStream);
+    return binary(anoaHandler, new SpecificDatumReader<>(recordClass), inputStream);
   }
 
   static <R extends IndexedRecord> @NonNull Stream<R> binary(
@@ -116,11 +116,11 @@ public class AvroStreams {
   }
 
   static <R extends IndexedRecord, M> @NonNull Stream<Anoa<R, M>> binary(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull GenericDatumReader<R> reader,
       @NonNull InputStream inputStream) {
     final BinaryDecoder d = DecoderFactory.get().binaryDecoder(inputStream, null);
-    return ReadIteratorUtils.avro(anoaFactory, reader, d, Unchecked.supplier(d::isEnd)).stream();
+    return ReadIteratorUtils.avro(anoaHandler, reader, d, Unchecked.supplier(d::isEnd)).stream();
   }
 
   /**
@@ -134,16 +134,16 @@ public class AvroStreams {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param schema Avro record schema
    * @param inputStream data source
    * @param <M> Metadata type
    */
   static public <M> @NonNull Stream<Anoa<GenericRecord, M>> json(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Schema schema,
       @NonNull InputStream inputStream) {
-    return json(anoaFactory, new GenericDatumReader<>(schema), inputStream);
+    return json(anoaHandler, new GenericDatumReader<>(schema), inputStream);
   }
 
   /**
@@ -159,18 +159,18 @@ public class AvroStreams {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param writer Avro schema with which the record was originally serialized 
    * @param reader Avro schema to use for deserialization
    * @param inputStream data source
    * @param <M> Metadata type
    */
   static public <M> @NonNull Stream<Anoa<GenericRecord, M>> json(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Schema writer,
       @NonNull Schema reader,
       @NonNull InputStream inputStream) {
-    return json(anoaFactory, new GenericDatumReader<>(writer, reader), inputStream);
+    return json(anoaHandler, new GenericDatumReader<>(writer, reader), inputStream);
   }
 
   /**
@@ -185,17 +185,17 @@ public class AvroStreams {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Avro SpecificRecord class object
    * @param inputStream data source
    * @param <R> Avro SpecificData record type
    * @param <M> Metadata type
    */
   static public <R extends SpecificRecord, M> @NonNull Stream<Anoa<R, M>> json(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Class<R> recordClass,
       @NonNull InputStream inputStream) {
-    return json(anoaFactory, new SpecificDatumReader<>(recordClass), inputStream);
+    return json(anoaHandler, new SpecificDatumReader<>(recordClass), inputStream);
   }
 
   static <R extends IndexedRecord> @NonNull Stream<R> json(
@@ -211,7 +211,7 @@ public class AvroStreams {
   }
 
   static <R extends IndexedRecord, M> @NonNull Stream<Anoa<R, M>> json(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull GenericDatumReader<R> reader,
       @NonNull InputStream inputStream) {
     final JsonDecoder decoder;
@@ -220,7 +220,7 @@ public class AvroStreams {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-    return ReadIteratorUtils.avro(anoaFactory, reader, decoder, () -> false).stream();
+    return ReadIteratorUtils.avro(anoaHandler, reader, decoder, () -> false).stream();
   }
 
   /**
@@ -236,15 +236,15 @@ public class AvroStreams {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param inputStream data source
    * @param <M> Metadata type
    */
   static public <M> @NonNull Stream<Anoa<GenericRecord, M>> batch(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull InputStream inputStream) {
     try {
-      return batch(anoaFactory, new DataFileStream<>(inputStream, new GenericDatumReader<>()));
+      return batch(anoaHandler, new DataFileStream<>(inputStream, new GenericDatumReader<>()));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -263,15 +263,15 @@ public class AvroStreams {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param file data source
    * @param <M> Metadata type
    */
   static public <M> @NonNull Stream<Anoa<GenericRecord, M>> batch(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull File file) {
     try {
-      return batch(anoaFactory, new DataFileReader<>(file, new GenericDatumReader<>()));
+      return batch(anoaHandler, new DataFileReader<>(file, new GenericDatumReader<>()));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -292,17 +292,17 @@ public class AvroStreams {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param schema Avro record schema
    * @param inputStream data source
    * @param <M> Metadata type
    */
   static public <M> @NonNull Stream<Anoa<GenericRecord, M>> batch(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @Nullable Schema schema,
       @NonNull InputStream inputStream) {
     try {
-      return batch(anoaFactory,
+      return batch(anoaHandler,
                    new DataFileStream<>(inputStream, new GenericDatumReader<>(schema)));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
@@ -324,17 +324,17 @@ public class AvroStreams {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param schema Avro record schema
    * @param file data source
    * @param <M> Metadata type
    */
   static public <M> @NonNull Stream<Anoa<GenericRecord, M>> batch(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @Nullable Schema schema,
       @NonNull File file) {
     try {
-      return batch(anoaFactory, new DataFileReader<>(file, new GenericDatumReader<>(schema)));
+      return batch(anoaHandler, new DataFileReader<>(file, new GenericDatumReader<>(schema)));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -358,14 +358,14 @@ public class AvroStreams {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Avro SpecificRecord class object
    * @param inputStream data source
    * @param <R> Avro SpecificData record type
    * @param <M> Metadata type
    */
   static public <R extends SpecificRecord, M> @NonNull Stream<Anoa<R, M>> batch(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Class<R> recordClass,
       @NonNull InputStream inputStream) {
     final DataFileStream<R> dataFileStream;
@@ -374,7 +374,7 @@ public class AvroStreams {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-    return batch(anoaFactory, dataFileStream);
+    return batch(anoaHandler, dataFileStream);
   }
 
 
@@ -394,18 +394,18 @@ public class AvroStreams {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Avro SpecificRecord class object
    * @param file data source
    * @param <R> Avro SpecificData record type
    * @param <M> Metadata type
    */
   static public <R extends SpecificRecord, M> @NonNull Stream<Anoa<R, M>> batch(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Class<R> recordClass,
       @NonNull File file) {
     try {
-      return batch(anoaFactory, new DataFileReader<>(file, new SpecificDatumReader<>(recordClass)));
+      return batch(anoaHandler, new DataFileReader<>(file, new SpecificDatumReader<>(recordClass)));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -421,15 +421,15 @@ public class AvroStreams {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param dataFileStream data source
    * @param <R> Avro record type
    * @param <M> Metadata type
    */
   static public <R extends IndexedRecord, M> @NonNull Stream<Anoa<R, M>> batch(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull DataFileStream<R> dataFileStream) {
-    return ReadIteratorUtils.avro(anoaFactory, dataFileStream).stream();
+    return ReadIteratorUtils.avro(anoaHandler, dataFileStream).stream();
   }
 
   /**
@@ -447,20 +447,20 @@ public class AvroStreams {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param schema Avro record schema
    * @param strict enable strict type checking
    * @param jacksonParser JsonParser instance from which to read
    * @param <M> Metadata type
    */
   static public <M> @NonNull Stream<Anoa<GenericRecord, M>> jackson(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Schema schema,
       boolean strict,
       @NonNull JsonParser jacksonParser) {
-    return ReadIteratorUtils.jackson(anoaFactory, jacksonParser).stream()
-        .map(anoaFactory.function(TreeNode::traverse))
-        .map(AvroDecoders.jackson(anoaFactory, schema, strict));
+    return ReadIteratorUtils.jackson(anoaHandler, jacksonParser).stream()
+        .map(anoaHandler.function(TreeNode::traverse))
+        .map(AvroDecoders.jackson(anoaHandler, schema, strict));
   }
 
   /**
@@ -479,7 +479,7 @@ public class AvroStreams {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Avro SpecificRecord class object
    * @param strict enable strict type checking
    * @param jacksonParser JsonParser instance from which to read
@@ -487,12 +487,12 @@ public class AvroStreams {
    * @param <M> Metadata type
    */
   static public <R extends SpecificRecord, M> @NonNull Stream<Anoa<R, M>> jackson(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Class<R> recordClass,
       boolean strict,
       @NonNull JsonParser jacksonParser) {
-    return ReadIteratorUtils.jackson(anoaFactory, jacksonParser).stream()
-        .map(anoaFactory.function(TreeNode::traverse))
-        .map(AvroDecoders.jackson(anoaFactory, recordClass, strict));
+    return ReadIteratorUtils.jackson(anoaHandler, jacksonParser).stream()
+        .map(anoaHandler.function(TreeNode::traverse))
+        .map(AvroDecoders.jackson(anoaHandler, recordClass, strict));
   }
 }

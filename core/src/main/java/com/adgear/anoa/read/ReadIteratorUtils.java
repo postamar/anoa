@@ -1,7 +1,7 @@
 package com.adgear.anoa.read;
 
 import com.adgear.anoa.Anoa;
-import com.adgear.anoa.AnoaFactory;
+import com.adgear.anoa.AnoaHandler;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.TreeNode;
 
@@ -41,16 +41,16 @@ class ReadIteratorUtils {
   }
 
   static protected <X, M> ReadIterator<Anoa<X, M>> anoa(
-      AnoaFactory<M> anoaFactory,
+      AnoaHandler<M> anoaHandler,
       Supplier<Boolean> eofClosure,
       CheckedSupplier<X> supplier) {
-    Anoa<X, M> anoaInitial = anoaFactory.wrap(null);
+    Anoa<X, M> anoaInitial = anoaHandler.wrap(null);
     UnaryOperator<Anoa<X, M>> anoaFn = ((Anoa<X, M> anoa) -> {
       final X result;
       try {
         result = supplier.get();
       } catch (Throwable e) {
-        return new Anoa<>(Stream.concat(anoa.meta(), anoaFactory.handler.apply(e, Tuple.tuple())));
+        return new Anoa<>(Stream.concat(anoa.meta(), anoaHandler.biFn.apply(e, Tuple.tuple())));
       }
       return new Anoa<>(Optional.of(result), anoa.meta());
     });
@@ -89,10 +89,10 @@ class ReadIteratorUtils {
         }));
   }
 
-  static <N extends TreeNode, M> ReadIterator<Anoa<N, M>> jackson(AnoaFactory<M> anoaFactory,
+  static <N extends TreeNode, M> ReadIterator<Anoa<N, M>> jackson(AnoaHandler<M> anoaHandler,
                                                                   JsonParser jacksonParser) {
     return anoa(
-        anoaFactory,
+        anoaHandler,
         Unchecked.supplier(jacksonParser::isClosed),
         () -> {
           final N tree = jacksonParser.readValueAsTree();
@@ -116,10 +116,10 @@ class ReadIteratorUtils {
         }));
   }
 
-  static <R extends IndexedRecord, M> ReadIterator<Anoa<R, M>> avro(AnoaFactory<M> anoaFactory,
+  static <R extends IndexedRecord, M> ReadIterator<Anoa<R, M>> avro(AnoaHandler<M> anoaHandler,
                                                                     DataFileStream<R> dfs) {
     return anoa(
-        anoaFactory,
+        anoaHandler,
         () -> !dfs.hasNext(),
         () -> dfs.next(null));
   }
@@ -143,11 +143,11 @@ class ReadIteratorUtils {
   }
 
   static <R extends IndexedRecord, M> ReadIterator<Anoa<R, M>> avro(
-      AnoaFactory<M> anoaFactory,
+      AnoaHandler<M> anoaHandler,
       DatumReader<R> reader,
       Decoder decoder,
       Supplier<Boolean> eof) {
-    return anoa(anoaFactory, eof, () -> reader.read(null, decoder));
+    return anoa(anoaHandler, eof, () -> reader.read(null, decoder));
   }
 
   static <T extends TBase> ReadIterator<T> thrift(
@@ -176,12 +176,12 @@ class ReadIteratorUtils {
   }
 
   static <T extends TBase, M> ReadIterator<Anoa<T, M>> thrift(
-      AnoaFactory<M> anoaFactory,
+      AnoaHandler<M> anoaHandler,
       TProtocol tProtocol,
       Supplier<T> supplier) {
     final TTransport tTransport = tProtocol.getTransport();
     return anoa(
-        anoaFactory,
+        anoaHandler,
         () -> !tTransport.isOpen(),
         () -> {
           final T record = supplier.get();

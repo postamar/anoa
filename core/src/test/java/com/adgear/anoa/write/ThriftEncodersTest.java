@@ -1,7 +1,7 @@
 package com.adgear.anoa.write;
 
 import com.adgear.anoa.Anoa;
-import com.adgear.anoa.AnoaFactory;
+import com.adgear.anoa.AnoaHandler;
 import com.adgear.anoa.BidReqs;
 import com.adgear.anoa.read.ThriftDecoders;
 import com.fasterxml.jackson.core.JsonParser;
@@ -45,15 +45,15 @@ public class ThriftEncodersTest {
                                   .map(Unchecked.function(JsonParser::readValueAsTree)));
   }
 
-  final public AnoaFactory<Throwable> anoaFactory = AnoaFactory.passAlong();
+  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.passAlong();
 
   @Test
   public void testAnoaBinary() {
     BidReqs.assertThriftObjects(
         BidReqs.thrift()
-            .map(anoaFactory::<BidRequest>wrap)
-            .map(ThriftEncoders.binary(anoaFactory))
-            .map(ThriftDecoders.binary(anoaFactory, BidRequest::new))
+            .map(anoaHandler::<BidRequest>wrap)
+            .map(ThriftEncoders.binary(anoaHandler))
+            .map(ThriftDecoders.binary(anoaHandler, BidRequest::new))
             .flatMap(Anoa::asStream));
   }
 
@@ -61,9 +61,9 @@ public class ThriftEncodersTest {
   public void testAnoaCompact() {
     BidReqs.assertThriftObjects(
         BidReqs.thrift()
-            .map(anoaFactory::<BidRequest>wrap)
-            .map(ThriftEncoders.compact(anoaFactory))
-            .map(ThriftDecoders.compact(anoaFactory, BidRequest::new))
+            .map(anoaHandler::<BidRequest>wrap)
+            .map(ThriftEncoders.compact(anoaHandler))
+            .map(ThriftDecoders.compact(anoaHandler, BidRequest::new))
             .flatMap(Anoa::asStream));
   }
 
@@ -71,9 +71,9 @@ public class ThriftEncodersTest {
   public void testAnoaJson() {
     BidReqs.assertThriftObjects(
         BidReqs.thrift()
-            .map(anoaFactory::<BidRequest>wrap)
-            .map(ThriftEncoders.json(anoaFactory))
-            .map(ThriftDecoders.json(anoaFactory, BidRequest::new))
+            .map(anoaHandler::<BidRequest>wrap)
+            .map(ThriftEncoders.json(anoaHandler))
+            .map(ThriftDecoders.json(anoaHandler, BidRequest::new))
             .flatMap(Anoa::asStream));
   }
 
@@ -81,12 +81,12 @@ public class ThriftEncodersTest {
   public void testAnoaJackson() {
     BidReqs.assertJsonObjects(
         BidReqs.thrift()
-            .map(anoaFactory::<BidRequest>wrap)
-            .map(ThriftEncoders.jackson(anoaFactory,
+            .map(anoaHandler::<BidRequest>wrap)
+            .map(ThriftEncoders.jackson(anoaHandler,
                                         BidReqs.thriftClass,
                                         () -> new TokenBuffer(BidReqs.objectMapper, false)))
-            .map(anoaFactory.function(TokenBuffer::asParser))
-            .map(anoaFactory.functionChecked(JsonParser::<ObjectNode>readValueAsTree))
+            .map(anoaHandler.function(TokenBuffer::asParser))
+            .map(anoaHandler.functionChecked(JsonParser::<ObjectNode>readValueAsTree))
             .flatMap(Anoa::asStream));
   }
 }

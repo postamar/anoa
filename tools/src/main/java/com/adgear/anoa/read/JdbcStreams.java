@@ -3,7 +3,7 @@ package com.adgear.anoa.read;
 import checkers.nullness.quals.NonNull;
 
 import com.adgear.anoa.Anoa;
-import com.adgear.anoa.AnoaFactory;
+import com.adgear.anoa.AnoaHandler;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -67,13 +67,13 @@ public class JdbcStreams {
 
   /**
    *
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param resultSet the JDBC result set to scan
    * @param <M> Metadata type
    * @return A stream of Jackson records which map to the result set rows.
    */
   public <M> @NonNull Stream<Anoa<ObjectNode, M>> resultSet(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull ResultSet resultSet) {
     final CheckedFunction<ResultSet, ObjectNode> fn;
     try {
@@ -86,9 +86,9 @@ public class JdbcStreams {
       try {
         objectNode = fn.apply(rs);
       } catch (Throwable throwable) {
-        return new Anoa<>(anoaFactory.handler.apply(throwable, Tuple.tuple(rs)));
+        return new Anoa<>(anoaHandler.biFn.apply(throwable, Tuple.tuple(rs)));
       }
-      return anoaFactory.wrap(objectNode);
+      return anoaHandler.wrap(objectNode);
     });
   }
 

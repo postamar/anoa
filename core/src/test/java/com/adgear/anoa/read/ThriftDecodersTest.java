@@ -1,7 +1,7 @@
 package com.adgear.anoa.read;
 
 import com.adgear.anoa.Anoa;
-import com.adgear.anoa.AnoaFactory;
+import com.adgear.anoa.AnoaHandler;
 import com.adgear.anoa.BidReqs;
 import com.fasterxml.jackson.core.TreeNode;
 
@@ -41,14 +41,14 @@ public class ThriftDecodersTest {
             .map(ThriftDecoders.jackson(BidReqs.thriftClass, true)));
   }
 
-  final public AnoaFactory<Throwable> anoaFactory = AnoaFactory.passAlong();
+  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.passAlong();
 
   @Test
   public void testAnoaBinary() {
     BidReqs.assertThriftObjects(
         BidReqs.thriftBinary()
-            .map(anoaFactory::<byte[]>wrap)
-            .map(ThriftDecoders.binary(anoaFactory, BidReqs.thriftSupplier))
+            .map(anoaHandler::<byte[]>wrap)
+            .map(ThriftDecoders.binary(anoaHandler, BidReqs.thriftSupplier))
             .map(Anoa::get));
   }
 
@@ -56,8 +56,8 @@ public class ThriftDecodersTest {
   public void testAnoaCompact() {
     BidReqs.assertThriftObjects(
         BidReqs.thriftCompact()
-            .map(anoaFactory::<byte[]>wrap)
-            .map(ThriftDecoders.compact(anoaFactory, BidReqs.thriftSupplier))
+            .map(anoaHandler::<byte[]>wrap)
+            .map(ThriftDecoders.compact(anoaHandler, BidReqs.thriftSupplier))
             .map(Anoa::get));
   }
 
@@ -65,8 +65,8 @@ public class ThriftDecodersTest {
   public void testAnoaJson() {
     BidReqs.assertThriftObjects(
         BidReqs.thriftJson()
-            .map(anoaFactory::<byte[]>wrap)
-            .map(ThriftDecoders.json(anoaFactory, BidReqs.thriftSupplier))
+            .map(anoaHandler::<byte[]>wrap)
+            .map(ThriftDecoders.json(anoaHandler, BidReqs.thriftSupplier))
             .map(Anoa::get));
   }
 
@@ -75,17 +75,17 @@ public class ThriftDecodersTest {
   public void testAnoaJackson() {
     BidReqs.assertThriftObjects(
         BidReqs.jsonObjects()
-            .map(anoaFactory::<TreeNode>wrap)
-            .map(anoaFactory.function(TreeNode::traverse))
-            .map(ThriftDecoders.jackson(anoaFactory, BidReqs.thriftClass, true))
+            .map(anoaHandler::<TreeNode>wrap)
+            .map(anoaHandler.function(TreeNode::traverse))
+            .map(ThriftDecoders.jackson(anoaHandler, BidReqs.thriftClass, true))
             .map(Anoa::get));
   }
 
   @Test
   public void testAnoaBroken() {
     Map<String, List<Throwable>> metaMap = BidReqs.thriftBinary()
-        .map(anoaFactory::<byte[]>wrap)
-        .map(ThriftDecoders.compact(anoaFactory, BidReqs.thriftSupplier))
+        .map(anoaHandler::<byte[]>wrap)
+        .map(ThriftDecoders.compact(anoaHandler, BidReqs.thriftSupplier))
         .peek(a -> Assert.assertFalse(a.isPresent()))
         .flatMap(Anoa::meta)
         .collect(Collectors.groupingBy(Throwable::toString));
