@@ -5,10 +5,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <properties>
-    <project.version.avro>1.7.4</project.version.avro>
-    <project.version.thrift>0.9.1</project.version.thrift>
-    <project.version.jackson>2.1.4</project.version.jackson>
-    <project.version.msgpack>0.6.8</project.version.msgpack>
+    <project.version.avro>1.7.6</project.version.avro>
+    <project.version.thrift>0.9.2</project.version.thrift>
+    <project.version.jackson>2.5.0</project.version.jackson>
+    <project.version.jool>0.9.6</project.version.jool>
   </properties>
 
   <parent>
@@ -17,13 +17,22 @@
     <version>9</version>
   </parent>
 
+  <modules>
+    <module>plugin</module>
+    <module>test</module>
+    <module>core</module>
+    <module>tools</module>
+  </modules>
+
   <groupId>com.adgear</groupId>
   <artifactId>anoa</artifactId>
-  <version>1.0.5</version>
+  <version>2.0.0-alpha-01</version>
+  <packaging>pom</packaging>
 
   <name>Anoa</name>
   <description>
-    A Java 1.7 library for robust record iteration, loosely centered on the Apache Avro system.
+    Anoa v2.x aims to be a safe, convenient and fast record de/serialization wrapper for the Avro,
+    Thrift and Jackson libraries, using the functional idioms of Java 8.
   </description>
 
   <inceptionYear>2013</inceptionYear>
@@ -91,71 +100,9 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.1</version>
         <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
+          <source>1.8</source>
+          <target>1.8</target>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>avro-maven-plugin</artifactId>
-        <version>1.7.4</version>
-        <executions>
-          <execution>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>schema</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.thrift.tools</groupId>
-        <artifactId>maven-thrift-plugin</artifactId>
-        <version>0.1.10</version>
-        <configuration>
-          <thriftTestSourceRoot>${project.basedir}/src/test/thrift</thriftTestSourceRoot>
-        </configuration>
-        <executions>
-          <execution>
-            <id>thrift-test-sources</id>
-            <phase>generate-test-sources</phase>
-            <goals>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>sql-maven-plugin</artifactId>
-        <version>1.5</version>
-        <dependencies>
-          <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>1.3.172</version>
-          </dependency>
-        </dependencies>
-        <configuration>
-          <driver>org.h2.Driver</driver>
-          <url>jdbc:h2:file:${project.basedir}/target/db/testdb</url>
-          <username>usertest</username>
-          <password>pwtest</password>
-          <autocommit>false</autocommit>
-          <skip>${maven.test.skip}</skip>
-          <srcFiles>
-            <srcFile>src/test/resources/create_test_db.sql</srcFile>
-          </srcFiles>
-        </configuration>
-        <executions>
-          <execution>
-            <id>create-db</id>
-            <phase>process-test-resources</phase>
-            <goals>
-              <goal>execute</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -176,7 +123,6 @@
     </plugins>
   </build>
 
-
   <dependencies>
     <dependency>
       <groupId>org.apache.avro</groupId>
@@ -195,89 +141,21 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>${project.version.jackson}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-      <version>${project.version.jackson}</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>1.8</version>
-    </dependency>
-    <dependency>
-      <groupId>net.sf.supercsv</groupId>
-      <artifactId>super-csv</artifactId>
-      <version>2.1.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.msgpack</groupId>
-      <artifactId>msgpack</artifactId>
-      <version>${project.version.msgpack}</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.thrift</groupId>
       <artifactId>libthrift</artifactId>
       <version>${project.version.thrift}</version>
     </dependency>
     <dependency>
-      <groupId>net.sf.josql</groupId>
-      <artifactId>josql</artifactId>
-      <version>2.2</version>
-    </dependency>
-    <!-- test dependencies -->
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>14.0</version>
-      <scope>test</scope>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.6</version>
     </dependency>
     <dependency>
-      <groupId>com.h2database</groupId>
-      <artifactId>h2</artifactId>
-      <version>1.3.172</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.gentlyweb</groupId>
-      <artifactId>gentlyweb-utils</artifactId>
-      <version>1.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.11</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.carrotsearch</groupId>
-      <artifactId>junit-benchmarks</artifactId>
-      <version>0.4.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <version>1.0.13</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.0.13</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <version>1.12.6</version>
-      <scope>test</scope>
+      <groupId>edu.washington.cs.types.checker</groupId>
+      <artifactId>checker-framework</artifactId>
+      <version>1.7.5</version>
     </dependency>
   </dependencies>
+
 </project>
 

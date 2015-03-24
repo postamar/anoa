@@ -1,0 +1,52 @@
+/**
+3.3.5 Site Object
+A site object should be included if the ad supported content is part of a website (as opposed to an application). A bid request must not contain both a site object and an app object.
+The site object itself and all of its parameters are optional, so default values are not provided. If an optional parameter is not specified, it should be considered unknown. At a minimum, it’s useful to provide a page URL or a site ID, but this is not strictly required.
+
+requires:
+ com.adgear.avro.openrtb.Publisher
+ com.adgear.avro.openrtb.Content
+*/
+
+record Site {
+
+  /** [01] Site ID on the exchange.*/
+  union {null, string} id = null;
+
+  /** [02] Site name (may be masked at publisher’s request).*/
+  union {null, string} name = null;
+
+  /** [03] Domain of the site, used for advertiser side blocking. For example, “foo.com”.*/
+  union {null, string} domain = null;
+
+  /** [04] Array of IAB content categories for the overall site. See Table 6.1 Content Categories.*/
+  union {null, array<string>} cat = null;
+
+  /** [05] Array of IAB content categories for the current subsection of the site. See Table 6.1 Content Categories.*/
+  union {null, array<string>} sectioncat = null;
+
+  /** [06] Array of IAB content categories for the current page. See Table 6.1 Content Categories.*/
+  union {null, array<string>} pagecat = null;
+
+  /** [07] URL of the page where the impression will be shown.*/
+  union {null, string} page = null;
+
+  /** [08] Specifies whether the site has a privacy policy. “1” means there is a policy. “0” means there is not.*/
+  union {null, int} privacypolicy = null;
+
+  /** [09] Referrer URL that caused navigation to the current page.*/
+  union {null, string} ref = null;
+
+  /** [10] Search string that caused navigation to the current page.*/
+  union {null, string} search = null;
+
+  /** [11] See Publisher Object.*/
+  union {null, com.adgear.avro.openrtb.Publisher} publisher = null;
+
+  /** [12] See Content Object.*/
+  union {null, com.adgear.avro.openrtb.Content} content = null;
+
+  /** [13] List of keywords describing this site in a comma separated string.*/
+  union {null, string} keywords = null;
+
+}
