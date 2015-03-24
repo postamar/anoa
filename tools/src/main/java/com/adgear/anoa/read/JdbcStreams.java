@@ -133,7 +133,7 @@ public class JdbcStreams {
           return f;
         }))
         .collect(Collectors.toList());
-    Schema avroSchema = Schema.createRecord("jdbc_" + DigestUtils.sha1Hex(fields.toString()),
+    Schema avroSchema = Schema.createRecord("jdbc_" + DigestUtils.md5Hex(fields.toString()),
                                             "induced from JDBC ResultSetMetaData",
                                             "com.adgear.avro.induced",
                                             false);
