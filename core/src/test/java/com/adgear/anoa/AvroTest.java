@@ -29,7 +29,7 @@ public class AvroTest {
 
   @Test
   public void test() throws Exception {
-    AnoaFactory<Throwable> f = AnoaFactory.passAlong();
+    AnoaHandler<Throwable> f = AnoaHandler.passAlong();
     try (InputStream inputStream = getClass().getResourceAsStream("/bidreqs.json")) {
       Stream<Anoa<TreeNode, Throwable>> treeNodeStream =
           new JacksonStreams<>(new ObjectMapper(), Optional.<FormatSchema>empty())
@@ -52,7 +52,7 @@ public class AvroTest {
   public void testFile() throws Exception {
     JsonParser jp = MAPPER.getFactory()
         .createParser(getClass().getResourceAsStream("/bidreqs.json"));
-    AnoaFactory<Throwable> f = AnoaFactory.passAlong();
+    AnoaHandler<Throwable> f = AnoaHandler.passAlong();
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try (WriteConsumer<BidRequest> consumer = AvroConsumers.batch(BidRequest.class, baos)) {

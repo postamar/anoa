@@ -1,7 +1,7 @@
 package com.adgear.anoa.read;
 
 import com.adgear.anoa.Anoa;
-import com.adgear.anoa.AnoaFactory;
+import com.adgear.anoa.AnoaHandler;
 import com.adgear.anoa.BidReqs;
 
 import org.junit.Assert;
@@ -73,13 +73,13 @@ public class ThriftStreamsTest {
         .forEach(Assert::assertNotNull);
   }
 
-  final public AnoaFactory<String> anoaFactory = new AnoaFactory<>(
+  final public AnoaHandler<String> anoaHandler = new AnoaHandler<>(
       (t, __) -> Stream.of(t.toString()));
 
   @Test
   public void testAnoaBinary() {
     List<Anoa<BidRequest, String>> anoas =
-        ThriftStreams.binary(anoaFactory,
+        ThriftStreams.binary(anoaHandler,
                              BidReqs.thriftSupplier,
                              BidReqs.thriftBinary(12345))
             .collect(Collectors.toList());
@@ -95,7 +95,7 @@ public class ThriftStreamsTest {
   @Test
   public void testAnoaCompact() {
     List<Anoa<BidRequest, String>> anoas =
-        ThriftStreams.compact(anoaFactory,
+        ThriftStreams.compact(anoaHandler,
                               BidReqs.thriftSupplier,
                               BidReqs.thriftCompact(12345))
             .collect(Collectors.toList());
@@ -111,7 +111,7 @@ public class ThriftStreamsTest {
   @Test
   public void testAnoaJson() {
     List<Anoa<BidRequest, String>> anoas =
-        ThriftStreams.json(anoaFactory,
+        ThriftStreams.json(anoaHandler,
                            BidReqs.thriftSupplier,
                            BidReqs.thriftJson(12345))
             .collect(Collectors.toList());
@@ -128,7 +128,7 @@ public class ThriftStreamsTest {
   @Test
   public void testAnoaJackson() {
     List<Anoa<BidRequest, String>> anoas =
-        ThriftStreams.jackson(anoaFactory,
+        ThriftStreams.jackson(anoaHandler,
                               BidReqs.thriftClass,
                               true,
                               BidReqs.jsonParser(12345))
@@ -145,7 +145,7 @@ public class ThriftStreamsTest {
   @Test
   public void testAnoaBroken() {
     List<Anoa<BidRequest, String>> anoas =
-        ThriftStreams.compact(anoaFactory,
+        ThriftStreams.compact(anoaHandler,
                               BidReqs.thriftSupplier,
                               BidReqs.thriftBinary(-1))
             .collect(Collectors.toList());

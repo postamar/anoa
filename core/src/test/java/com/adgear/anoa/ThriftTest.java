@@ -21,13 +21,13 @@ public class ThriftTest {
   @Test
   public void test() throws Exception {
     final List<BidRequest> collected = new ArrayList<>();
-    AnoaFactory<Throwable> anoaFactory = AnoaFactory.passAlong();
+    AnoaHandler<Throwable> anoaHandler = AnoaHandler.passAlong();
     try (InputStream inputStream = getClass().getResourceAsStream("/bidreqs.json")) {
       try (JsonParser jp = new JsonFactory(new ObjectMapper()).createParser(inputStream)) {
-        long total = ThriftStreams.jackson(anoaFactory, BidRequest.class, true, jp)
-            .map(ThriftEncoders.binary(anoaFactory))
-            .map(ThriftDecoders.binary(anoaFactory, BidRequest::new))
-            .map(anoaFactory.consumer(collected::add))
+        long total = ThriftStreams.jackson(anoaHandler, BidRequest.class, true, jp)
+            .map(ThriftEncoders.binary(anoaHandler))
+            .map(ThriftDecoders.binary(anoaHandler, BidRequest::new))
+            .map(anoaHandler.consumer(collected::add))
             .count();
         Assert.assertEquals(BidReqs.n + 1, total);
       }

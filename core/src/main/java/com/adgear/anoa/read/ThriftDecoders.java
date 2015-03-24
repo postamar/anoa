@@ -3,7 +3,7 @@ package com.adgear.anoa.read;
 import checkers.nullness.quals.NonNull;
 
 import com.adgear.anoa.Anoa;
-import com.adgear.anoa.AnoaFactory;
+import com.adgear.anoa.AnoaHandler;
 import com.fasterxml.jackson.core.JsonParser;
 
 import org.apache.thrift.TBase;
@@ -35,7 +35,7 @@ public class ThriftDecoders {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param supplier provides the returned Thrift record instances
    * @param <T> Thrift record type
    * @param <M> Metadata type 
@@ -43,9 +43,9 @@ public class ThriftDecoders {
    */
   static public <T extends TBase, M>
   @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> compact(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Supplier<T> supplier) {
-    return fn(anoaFactory, supplier, TCompactProtocol::new);
+    return fn(anoaHandler, supplier, TCompactProtocol::new);
   }
 
   /**
@@ -59,7 +59,7 @@ public class ThriftDecoders {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param supplier provides the returned Thrift record instances
    * @param <T> Thrift record type
    * @param <M> Metadata type
@@ -67,9 +67,9 @@ public class ThriftDecoders {
    */
   static public <T extends TBase, M>
   @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> binary(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Supplier<T> supplier) {
-    return fn(anoaFactory, supplier, TBinaryProtocol::new);
+    return fn(anoaHandler, supplier, TBinaryProtocol::new);
   }
 
   /**
@@ -83,7 +83,7 @@ public class ThriftDecoders {
   }
 
   /**
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param supplier provides the returned Thrift record instances
    * @param <T> Thrift record type
    * @param <M> Metadata type
@@ -91,9 +91,9 @@ public class ThriftDecoders {
    */
   static public <T extends TBase, M>
   @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> json(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Supplier<T> supplier) {
-    return fn(anoaFactory, supplier, TJSONProtocol::new);
+    return fn(anoaHandler, supplier, TJSONProtocol::new);
   }
 
   static <T extends TBase> @NonNull Function<byte[], T> fn(
@@ -109,12 +109,12 @@ public class ThriftDecoders {
   }
 
   static <T extends TBase, M> @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> fn(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Supplier<T> supplier,
       @NonNull Function<TTransport, TProtocol> protocolFactory) {
     final TMemoryInputTransport tTransport = new TMemoryInputTransport();
     final TProtocol tProtocol = protocolFactory.apply(tTransport);
-    final ReadIterator<Anoa<T, M>> readIterator = ReadIteratorUtils.thrift(anoaFactory,
+    final ReadIterator<Anoa<T, M>> readIterator = ReadIteratorUtils.thrift(anoaHandler,
                                                                            tProtocol,
                                                                            supplier);
     return (Anoa<byte[], M> bytesWrapped) -> {
@@ -145,7 +145,7 @@ public class ThriftDecoders {
   }
 
   /** 
-   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Thrift record class object
    * @param strict enable strict type checking
    * @param <P> Jackson JsonParser type
@@ -156,10 +156,10 @@ public class ThriftDecoders {
    */
   static public <P extends JsonParser, F extends TFieldIdEnum, T extends TBase<?, F>, M>
   @NonNull Function<Anoa<P, M>, Anoa<T, M>> jackson(
-      @NonNull AnoaFactory<M> anoaFactory,
+      @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Class<T> recordClass,
       boolean strict) {
     final ThriftReader<F, T> reader = new ThriftReader<>(recordClass);
-    return anoaFactory.functionChecked((P jp) -> reader.readChecked(jp, strict));
+    return anoaHandler.functionChecked((P jp) -> reader.readChecked(jp, strict));
   }
 }

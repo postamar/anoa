@@ -1,7 +1,7 @@
 package com.adgear.anoa.write;
 
 import com.adgear.anoa.Anoa;
-import com.adgear.anoa.AnoaFactory;
+import com.adgear.anoa.AnoaHandler;
 import com.adgear.anoa.BidReqs;
 import com.adgear.anoa.read.AvroDecoders;
 import com.adgear.avro.openrtb.BidRequest;
@@ -55,22 +55,22 @@ public class AvroEncodersTest {
             .map(AvroDecoders.jackson(BidReqs.avroSchema, true)));
   }
 
-  final public AnoaFactory<Throwable> anoaFactory = AnoaFactory.passAlong();
+  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.passAlong();
 
   @Test
   public void testAnoaBinary() {
     BidReqs.assertAvroGenerics(
         BidReqs.avroGeneric()
-            .map(anoaFactory::<GenericRecord>wrap)
-            .map(AvroEncoders.binary(anoaFactory, BidReqs.avroSchema))
-            .map(AvroDecoders.binary(anoaFactory, BidReqs.avroSchema, null))
+            .map(anoaHandler::<GenericRecord>wrap)
+            .map(AvroEncoders.binary(anoaHandler, BidReqs.avroSchema))
+            .map(AvroDecoders.binary(anoaHandler, BidReqs.avroSchema, null))
             .flatMap(Anoa::asStream));
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
-            .map(anoaFactory::<BidRequest>wrap)
-            .map(AvroEncoders.binary(anoaFactory, BidReqs.avroClass))
-            .map(AvroDecoders.binary(anoaFactory, BidReqs.avroSchema, null))
+            .map(anoaHandler::<BidRequest>wrap)
+            .map(AvroEncoders.binary(anoaHandler, BidReqs.avroClass))
+            .map(AvroDecoders.binary(anoaHandler, BidReqs.avroSchema, null))
             .flatMap(Anoa::asStream));
   }
 
@@ -79,16 +79,16 @@ public class AvroEncodersTest {
   public void testAnoaJson() {
     BidReqs.assertAvroGenerics(
         BidReqs.avroGeneric()
-            .map(anoaFactory::<GenericRecord>wrap)
-            .map(AvroEncoders.json(anoaFactory, BidReqs.avroSchema))
-            .map(AvroDecoders.json(anoaFactory, BidReqs.avroSchema, null))
+            .map(anoaHandler::<GenericRecord>wrap)
+            .map(AvroEncoders.json(anoaHandler, BidReqs.avroSchema))
+            .map(AvroDecoders.json(anoaHandler, BidReqs.avroSchema, null))
             .flatMap(Anoa::asStream));
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
-            .map(anoaFactory::<BidRequest>wrap)
-            .map(AvroEncoders.json(anoaFactory, BidReqs.avroClass))
-            .map(AvroDecoders.json(anoaFactory, BidReqs.avroSchema, null))
+            .map(anoaHandler::<BidRequest>wrap)
+            .map(AvroEncoders.json(anoaHandler, BidReqs.avroClass))
+            .map(AvroDecoders.json(anoaHandler, BidReqs.avroSchema, null))
             .flatMap(Anoa::asStream));
   }
 
@@ -96,21 +96,21 @@ public class AvroEncodersTest {
   public void testAnoaJackson() {
     BidReqs.assertAvroGenerics(
         BidReqs.avroGeneric()
-            .map(anoaFactory::<GenericRecord>wrap)
-            .map(AvroEncoders.jackson(anoaFactory,
+            .map(anoaHandler::<GenericRecord>wrap)
+            .map(AvroEncoders.jackson(anoaHandler,
                                       BidReqs.avroSchema,
                                       () -> new TokenBuffer(BidReqs.objectMapper, false)))
-            .map(anoaFactory.function(TokenBuffer::asParser))
+            .map(anoaHandler.function(TokenBuffer::asParser))
             .flatMap(Anoa::asStream)
             .map(AvroDecoders.jackson(BidReqs.avroSchema, true)));
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
-            .map(anoaFactory::<BidRequest>wrap)
-            .map(AvroEncoders.jackson(anoaFactory,
+            .map(anoaHandler::<BidRequest>wrap)
+            .map(AvroEncoders.jackson(anoaHandler,
                                       BidReqs.avroClass,
                                       () -> new TokenBuffer(BidReqs.objectMapper, false)))
-            .map(anoaFactory.function(TokenBuffer::asParser))
+            .map(anoaHandler.function(TokenBuffer::asParser))
             .flatMap(Anoa::asStream)
             .map(AvroDecoders.jackson(BidReqs.avroSchema, true)));
   }

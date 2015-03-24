@@ -29,51 +29,43 @@ import java.util.stream.Stream;
  *
  * @param <M> Metadata type for decorating {@code Anoa} instances with.
  */
-public class AnoaFactory<M> {
-
-  /**
-   * Type for Anoa exception handlers.
-   *
-   * @param <M> Metadata type for decorating {@code Anoa} instances with.
-   */
-  static public interface Handler<M> extends BiFunction<Throwable, Tuple, Stream<M>> {
-  }
+public class AnoaHandler<M> {
 
   /**
    * this instance's exception handler
    */
-  final public Handler<M> handler;
+  final public BiFunction<Throwable, Tuple, Stream<M>> biFn;
 
   /**
-   * @param handler The exception handler to use with this instance.
+   * @param biFn The exception handler to use with this instance.
    */
-  public AnoaFactory(Handler<M> handler) {
-    Objects.requireNonNull(handler);
-    this.handler = handler;
+  public AnoaHandler(BiFunction<Throwable, Tuple, Stream<M>> biFn) {
+    Objects.requireNonNull(biFn);
+    this.biFn = biFn;
   }
 
   /**
-   * @return An {@code AnoaFactory} in which exceptions are handled by doing nothing.
+   * @return An {@code AnoaHandler} in which exceptions are handled by doing nothing.
    */
-  static public @NonNull AnoaFactory<?> noOp() {
-    return new AnoaFactory<>((throwable, __) -> Stream.empty());
+  static public @NonNull AnoaHandler<?> noOp() {
+    return new AnoaHandler<>((throwable, __) -> Stream.empty());
   }
 
   /**
-   * @return An {@code AnoaFactory} in which exceptions are handled by passing them along as
+   * @return An {@code AnoaHandler} in which exceptions are handled by passing them along as
    * {@code Anoa} metadata.
    */
-  static public @NonNull AnoaFactory<Throwable> passAlong() {
-    return new AnoaFactory<>((throwable, __) -> Stream.of(throwable));
+  static public @NonNull AnoaHandler<Throwable> passAlong() {
+    return new AnoaHandler<>((throwable, __) -> Stream.of(throwable));
   }
 
   /**
-   * @return An {@code AnoaFactory} in which exceptions are handled by applying a function to the
+   * @return An {@code AnoaHandler} in which exceptions are handled by applying a function to the
    * exception object and passing the result along as {@code Anoa} metadata.
    */
-  static public <M> @NonNull AnoaFactory<M> mapThrowable(
+  static public <M> @NonNull AnoaHandler<M> mapThrowable(
       @NonNull Function<Throwable, M> handler) {
-    return new AnoaFactory<>((throwable, __) -> Stream.of(handler.apply(throwable)));
+    return new AnoaHandler<>((throwable, __) -> Stream.of(handler.apply(throwable)));
   }
 
   public <T> @NonNull Supplier<Anoa<T, M>> supplier(@NonNull Supplier<? extends T> supplier) {
@@ -83,7 +75,7 @@ public class AnoaFactory<M> {
       try {
         result = supplier.get();
       } catch (Throwable throwable) {
-        return new Anoa<>(handler.apply(throwable, Tuple.tuple()));
+        return new Anoa<>(biFn.apply(throwable, Tuple.tuple()));
       }
       return wrap(result);
     };
@@ -97,7 +89,7 @@ public class AnoaFactory<M> {
       try {
         result = supplier.get();
       } catch (Throwable throwable) {
-        return new Anoa<>(handler.apply(throwable, Tuple.tuple()));
+        return new Anoa<>(biFn.apply(throwable, Tuple.tuple()));
       }
       return wrap(result);
     };
@@ -113,7 +105,7 @@ public class AnoaFactory<M> {
         try {
           result = function.apply(u);
         } catch (Throwable throwable) {
-          return new Anoa<>(handler.apply(throwable, Tuple.tuple(u)));
+          return new Anoa<>(biFn.apply(throwable, Tuple.tuple(u)));
         }
         return wrap(result);
       } else {
@@ -132,7 +124,7 @@ public class AnoaFactory<M> {
         try {
           result = function.apply(u);
         } catch (Throwable throwable) {
-          return new Anoa<>(handler.apply(throwable, Tuple.tuple(u)));
+          return new Anoa<>(biFn.apply(throwable, Tuple.tuple(u)));
         }
         return wrap(result);
       } else {
@@ -151,7 +143,7 @@ public class AnoaFactory<M> {
         try {
           result = biFunction.apply(u, v);
         } catch (Throwable throwable) {
-          return new Anoa<>(handler.apply(throwable, Tuple.tuple(u, v)));
+          return new Anoa<>(biFn.apply(throwable, Tuple.tuple(u, v)));
         }
         return new Anoa<>(Optional.ofNullable(result), uWrapped.meta());
       } else {
@@ -170,7 +162,7 @@ public class AnoaFactory<M> {
         try {
           result = biFunction.apply(u, v);
         } catch (Throwable throwable) {
-          return new Anoa<>(handler.apply(throwable, Tuple.tuple(u, v)));
+          return new Anoa<>(biFn.apply(throwable, Tuple.tuple(u, v)));
         }
         return new Anoa<>(Optional.ofNullable(result), uWrapped.meta());
       } else {
@@ -197,7 +189,7 @@ public class AnoaFactory<M> {
         try {
           testResult = predicate.test(t);
         } catch (Throwable throwable) {
-          return new Anoa<>(handler.apply(throwable, Tuple.tuple(t)));
+          return new Anoa<>(biFn.apply(throwable, Tuple.tuple(t)));
         }
         return new Anoa<>(testResult ? tWrapped.asOptional() : Optional.<T>empty(),
                           (testResult ? pass : fail).apply(tWrapped.meta()));
@@ -225,7 +217,7 @@ public class AnoaFactory<M> {
         try {
           testResult = predicate.test(t);
         } catch (Throwable throwable) {
-          return new Anoa<>(handler.apply(throwable, Tuple.tuple(t)));
+          return new Anoa<>(biFn.apply(throwable, Tuple.tuple(t)));
         }
         return new Anoa<>(testResult ? tWrapped.asOptional() : Optional.<T>empty(),
                           (testResult ? pass : fail).apply(tWrapped.meta()));
@@ -244,7 +236,7 @@ public class AnoaFactory<M> {
         try {
           writeConsumer.acceptChecked(t);
         } catch (Throwable throwable) {
-          return new Anoa<>(handler.apply(throwable, Tuple.tuple(t)));
+          return new Anoa<>(biFn.apply(throwable, Tuple.tuple(t)));
         }
       }
       return tWrapped;
@@ -259,7 +251,7 @@ public class AnoaFactory<M> {
         try {
           consumer.accept(t);
         } catch (Throwable throwable) {
-          return new Anoa<>(handler.apply(throwable, Tuple.tuple(t)));
+          return new Anoa<>(biFn.apply(throwable, Tuple.tuple(t)));
         }
       }
       return tWrapped;
@@ -275,7 +267,7 @@ public class AnoaFactory<M> {
         try {
           consumer.accept(t);
         } catch (Throwable throwable) {
-          return new Anoa<>(handler.apply(throwable, Tuple.tuple(t)));
+          return new Anoa<>(biFn.apply(throwable, Tuple.tuple(t)));
         }
       }
       return tWrapped;
@@ -291,7 +283,7 @@ public class AnoaFactory<M> {
         try {
           biConsumer.accept(t, u);
         } catch (Throwable throwable) {
-          return new Anoa<>(handler.apply(throwable, Tuple.tuple(t, u)));
+          return new Anoa<>(biFn.apply(throwable, Tuple.tuple(t, u)));
         }
       }
       return tWrapped;
@@ -307,7 +299,7 @@ public class AnoaFactory<M> {
         try {
           biConsumer.accept(t, u);
         } catch (Throwable throwable) {
-          return new Anoa<>(handler.apply(throwable, Tuple.tuple(t, u)));
+          return new Anoa<>(biFn.apply(throwable, Tuple.tuple(t, u)));
         }
       }
       return tWrapped;

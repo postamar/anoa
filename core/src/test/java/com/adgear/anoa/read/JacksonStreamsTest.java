@@ -1,7 +1,7 @@
 package com.adgear.anoa.read;
 
 import com.adgear.anoa.Anoa;
-import com.adgear.anoa.AnoaFactory;
+import com.adgear.anoa.AnoaHandler;
 import com.adgear.anoa.BidReqs;
 import com.fasterxml.jackson.core.FormatSchema;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -36,9 +36,9 @@ public class JacksonStreamsTest {
 
   @Test
   public void testAnoaObjects() {
-    AnoaFactory<Throwable> anoaFactory = AnoaFactory.passAlong();
+    AnoaHandler<Throwable> anoaHandler = AnoaHandler.passAlong();
     List<Anoa<ObjectNode, Throwable>> list = build()
-        .from(anoaFactory, BidReqs.jsonBytes(-1))
+        .from(anoaHandler, BidReqs.jsonBytes(-1))
         .collect(Collectors.toList());
     Assert.assertEquals(BidReqs.n + 1, list.size());
     BidReqs.assertJsonObjects(list.stream().flatMap(Anoa::asStream));
