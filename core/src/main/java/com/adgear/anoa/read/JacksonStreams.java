@@ -21,6 +21,19 @@ import java.net.URL;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ * Utility class for deserializing Jackson {@link com.fasterxml.jackson.core.TreeNode} instances as
+ * a {@link java.util.stream.Stream}.
+ *
+ * Intended to be used as a base class, subclasses should wrap appropriate Jackson databinding types
+ * together; see the anoa-tools module for examples.
+ *
+ * @param <N> Record type
+ * @param <C> Mapper type
+ * @param <F> Factory type
+ * @param <S> Schema type
+ * @param <P> Parser type
+ */
 public class JacksonStreams<
     N extends TreeNode,
     C extends ObjectCodec,
@@ -28,10 +41,25 @@ public class JacksonStreams<
     S extends FormatSchema,
     P extends JsonParser> {
 
+  /**
+   * The object mapper used by this instance
+   */
   final public C objectCodec;
+
+  /**
+   * The factory used by this instance
+   */
   final public F factory;
+
+  /**
+   * The (optional) format schema used by this instance
+   */
   final public Optional<S> schema;
 
+  /**
+   * @param objectCodec Jackson object mapper instance
+   * @param schema Jackson format schema (optional)
+   */
   @SuppressWarnings("unchecked")
   public JacksonStreams(@NonNull C objectCodec, @NonNull Optional<S> schema) {
     this.objectCodec = objectCodec;
@@ -94,6 +122,9 @@ public class JacksonStreams<
     }
   }
 
+  /**
+   * @return the parser passed as argument, after setting the current object mapper and schema
+   */
   public @NonNull P with(@NonNull P parser) {
     parser.setCodec(objectCodec);
     schema.ifPresent(parser::setSchema);

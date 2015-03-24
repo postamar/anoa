@@ -23,7 +23,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Utility class for generating serializing functions for Avro records. Unless specified otherwise,
+ * Utility class for generating functions for serializing Avro records. Unless specified otherwise,
  * the functions should not be deemed thread-safe.
  */
 public class AvroEncoders {

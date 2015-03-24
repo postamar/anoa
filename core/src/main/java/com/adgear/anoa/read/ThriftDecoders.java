@@ -18,13 +18,29 @@ import org.apache.thrift.transport.TTransport;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * Utility class for generating functions for deserializing Thrift records. Unless specified
+ * otherwise, the functions should not be deemed thread-safe.
+ */
 public class ThriftDecoders {
 
+  /** 
+   * @param supplier provides the returned Thrift record instances
+   * @param <T> Thrift record type 
+   * @return A function which deserializes a Thrift record from its compact binary encoding
+   */
   static public <T extends TBase> @NonNull Function<byte[], T> compact(
       @NonNull Supplier<T> supplier) {
     return fn(supplier, TCompactProtocol::new);
   }
 
+  /**
+   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param supplier provides the returned Thrift record instances
+   * @param <T> Thrift record type
+   * @param <M> Metadata type 
+   * @return A function which deserializes a Thrift record from its compact binary encoding 
+   */
   static public <T extends TBase, M>
   @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> compact(
       @NonNull AnoaFactory<M> anoaFactory,
@@ -32,11 +48,23 @@ public class ThriftDecoders {
     return fn(anoaFactory, supplier, TCompactProtocol::new);
   }
 
+  /**
+   * @param supplier provides the returned Thrift record instances
+   * @param <T> Thrift record type
+   * @return A function which deserializes a Thrift record from its standard binary encoding
+   */
   static public <T extends TBase> @NonNull Function<byte[], T> binary(
       @NonNull Supplier<T> supplier) {
     return fn(supplier, TBinaryProtocol::new);
   }
 
+  /**
+   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param supplier provides the returned Thrift record instances
+   * @param <T> Thrift record type
+   * @param <M> Metadata type
+   * @return A function which deserializes a Thrift record from its standard binary encoding
+   */
   static public <T extends TBase, M>
   @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> binary(
       @NonNull AnoaFactory<M> anoaFactory,
@@ -44,11 +72,23 @@ public class ThriftDecoders {
     return fn(anoaFactory, supplier, TBinaryProtocol::new);
   }
 
+  /**
+   * @param supplier provides the returned Thrift record instances
+   * @param <T> Thrift record type
+   * @return A function which deserializes a Thrift record from its Thrift JSON encoding
+   */
   static public <T extends TBase> @NonNull Function<byte[], T> json(
       @NonNull Supplier<T> supplier) {
     return fn(supplier, TJSONProtocol::new);
   }
 
+  /**
+   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param supplier provides the returned Thrift record instances
+   * @param <T> Thrift record type
+   * @param <M> Metadata type
+   * @return A function which deserializes a Thrift record from its Thrift JSON encoding
+   */
   static public <T extends TBase, M>
   @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> json(
       @NonNull AnoaFactory<M> anoaFactory,
@@ -56,7 +96,7 @@ public class ThriftDecoders {
     return fn(anoaFactory, supplier, TJSONProtocol::new);
   }
 
-  static public <T extends TBase> @NonNull Function<byte[], T> fn(
+  static <T extends TBase> @NonNull Function<byte[], T> fn(
       @NonNull Supplier<T> supplier,
       @NonNull Function<TTransport, TProtocol> protocolFactory) {
     final TMemoryInputTransport tTransport = new TMemoryInputTransport();
@@ -68,7 +108,7 @@ public class ThriftDecoders {
     };
   }
 
-  static public <T extends TBase, M> @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> fn(
+  static <T extends TBase, M> @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> fn(
       @NonNull AnoaFactory<M> anoaFactory,
       @NonNull Supplier<T> supplier,
       @NonNull Function<TTransport, TProtocol> protocolFactory) {
@@ -88,6 +128,14 @@ public class ThriftDecoders {
     };
   }
 
+  /** 
+   * @param recordClass Thrift record class object
+   * @param strict enable strict type checking
+   * @param <P> Jackson JsonParser type
+   * @param <F> Thrift record field type
+   * @param <T> Thrift record type
+   * @return A function which reads a Thrift record from a JsonParser, in its 'natural' encoding.
+   */
   static public <P extends JsonParser, F extends TFieldIdEnum, T extends TBase<?, F>>
   @NonNull Function<P, T> jackson(
       @NonNull Class<T> recordClass,
@@ -96,6 +144,16 @@ public class ThriftDecoders {
     return (P jp) -> reader.read(jp, strict);
   }
 
+  /** 
+   * @param anoaFactory {@code AnoaFactory} instance to use for exception handling
+   * @param recordClass Thrift record class object
+   * @param strict enable strict type checking
+   * @param <P> Jackson JsonParser type
+   * @param <F> Thrift record field type
+   * @param <T> Thrift record type
+   * @param <M> Metadata type
+   * @return A function which reads a Thrift record from a JsonParser, in its 'natural' encoding.
+   */
   static public <P extends JsonParser, F extends TFieldIdEnum, T extends TBase<?, F>, M>
   @NonNull Function<Anoa<P, M>, Anoa<T, M>> jackson(
       @NonNull AnoaFactory<M> anoaFactory,

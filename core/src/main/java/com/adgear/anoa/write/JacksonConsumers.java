@@ -29,7 +29,7 @@ import java.util.Optional;
  * @param <C> Mapper type
  * @param <F> Factory type
  * @param <S> Schema type
- * @param <G> JsonGenerator type
+ * @param <G> Generator type
  *
  */
 public class JacksonConsumers<
@@ -50,7 +50,7 @@ public class JacksonConsumers<
   final public F factory;
 
   /**
-   * The format schema used by this instance, if present
+   * The (optional) format schema used by this instance
    */
   final public Optional<S> schema;
 
@@ -96,8 +96,7 @@ public class JacksonConsumers<
   }
 
   /**
-   * @param generator
-   * @return the same generator, with the format schema set
+   * @return the generator passed as argument, after setting the current format schema
    */
   public @NonNull G with(@NonNull G generator) {
     schema.ifPresent(generator::setSchema);

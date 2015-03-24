@@ -2,7 +2,7 @@ package com.adgear.anoa.tools.runnable;
 
 import com.adgear.anoa.AnoaReflectionUtils;
 import com.adgear.anoa.read.AvroDecoders;
-import com.adgear.anoa.read.AvroGenericStreams;
+import com.adgear.anoa.read.AvroStreams;
 import com.adgear.anoa.read.CborStreams;
 import com.adgear.anoa.read.CsvStreams;
 import com.adgear.anoa.read.JdbcStreams;
@@ -51,7 +51,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class DataTool<F extends TFieldIdEnum, T extends TBase<T, F>> implements Runnable {
+public class DataTool<F extends TFieldIdEnum, T extends TBase<?, F>> implements Runnable {
 
   final private Schema declaredAvroSchema;
   final private Class<T> thriftClass;
@@ -321,16 +321,16 @@ public class DataTool<F extends TFieldIdEnum, T extends TBase<T, F>> implements 
         GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(declaredAvroSchema);
         try (DataFileStream<GenericRecord> it = new DataFileStream<>(in, reader)) {
           avroSchema = reader.getSchema();
-          runAvro(AvroGenericStreams.batch(it));
+          runAvro(AvroStreams.batch(it));
         } catch (IOException e) {
           throw new UncheckedIOException(e);
         }
         return;
       case AVRO_BINARY:
-        runAvro(AvroGenericStreams.binary(declaredAvroSchema, in));
+        runAvro(AvroStreams.binary(declaredAvroSchema, in));
         return;
       case AVRO_JSON:
-        runAvro(AvroGenericStreams.json(declaredAvroSchema, in));
+        runAvro(AvroStreams.json(declaredAvroSchema, in));
         return;
       case CBOR:
         runJackson(new CborStreams().from(in));

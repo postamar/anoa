@@ -7,7 +7,6 @@ import com.adgear.anoa.read.AvroDecoders;
 import com.adgear.avro.openrtb.BidRequest;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
-import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.junit.Test;
 
@@ -18,12 +17,12 @@ public class AvroEncodersTest {
     BidReqs.assertAvroGenerics(
         BidReqs.avroGeneric()
             .map(AvroEncoders.binary(BidReqs.avroSchema))
-            .map(AvroDecoders.binary(new GenericDatumReader<>(BidReqs.avroSchema))));
+            .map(AvroDecoders.binary(BidReqs.avroSchema, null)));
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
             .map(AvroEncoders.binary(BidReqs.avroClass))
-            .map(AvroDecoders.binary(new GenericDatumReader<>(BidReqs.avroSchema))));
+            .map(AvroDecoders.binary(BidReqs.avroSchema, null)));
   }
 
   @Test
@@ -31,12 +30,12 @@ public class AvroEncodersTest {
     BidReqs.assertAvroGenerics(
         BidReqs.avroGeneric()
             .map(AvroEncoders.json(BidReqs.avroSchema))
-            .map(AvroDecoders.json(new GenericDatumReader<>(BidReqs.avroSchema))));
+            .map(AvroDecoders.json(BidReqs.avroSchema, null)));
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
             .map(AvroEncoders.json(BidReqs.avroClass))
-            .map(AvroDecoders.json(new GenericDatumReader<>(BidReqs.avroSchema))));
+            .map(AvroDecoders.json(BidReqs.avroSchema, null)));
   }
 
   @Test
@@ -64,16 +63,14 @@ public class AvroEncodersTest {
         BidReqs.avroGeneric()
             .map(anoaFactory::<GenericRecord>wrap)
             .map(AvroEncoders.binary(anoaFactory, BidReqs.avroSchema))
-            .map(AvroDecoders.binary(anoaFactory,
-                                     new GenericDatumReader<GenericRecord>(BidReqs.avroSchema)))
+            .map(AvroDecoders.binary(anoaFactory, BidReqs.avroSchema, null))
             .flatMap(Anoa::asStream));
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
             .map(anoaFactory::<BidRequest>wrap)
             .map(AvroEncoders.binary(anoaFactory, BidReqs.avroClass))
-            .map(AvroDecoders.binary(anoaFactory,
-                                     new GenericDatumReader<GenericRecord>(BidReqs.avroSchema)))
+            .map(AvroDecoders.binary(anoaFactory, BidReqs.avroSchema, null))
             .flatMap(Anoa::asStream));
   }
 
@@ -84,16 +81,14 @@ public class AvroEncodersTest {
         BidReqs.avroGeneric()
             .map(anoaFactory::<GenericRecord>wrap)
             .map(AvroEncoders.json(anoaFactory, BidReqs.avroSchema))
-            .map(AvroDecoders.json(anoaFactory,
-                                   new GenericDatumReader<GenericRecord>(BidReqs.avroSchema)))
+            .map(AvroDecoders.json(anoaFactory, BidReqs.avroSchema, null))
             .flatMap(Anoa::asStream));
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
             .map(anoaFactory::<BidRequest>wrap)
             .map(AvroEncoders.json(anoaFactory, BidReqs.avroClass))
-            .map(AvroDecoders.json(anoaFactory,
-                                   new GenericDatumReader<GenericRecord>(BidReqs.avroSchema)))
+            .map(AvroDecoders.json(anoaFactory, BidReqs.avroSchema, null))
             .flatMap(Anoa::asStream));
   }
 

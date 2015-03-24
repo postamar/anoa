@@ -1,7 +1,7 @@
 package com.adgear.anoa.tools.runnable;
 
 import com.adgear.anoa.AnoaReflectionUtils;
-import com.adgear.anoa.read.AvroSpecificStreams;
+import com.adgear.anoa.read.AvroStreams;
 import com.adgear.anoa.tools.function.AnoaFieldNuller;
 import com.adgear.anoa.write.AvroConsumers;
 import com.adgear.anoa.write.WriteConsumer;
@@ -33,7 +33,7 @@ public class AvroClearFields<R extends SpecificRecord> implements Runnable {
   @Override
   public void run() {
     try (WriteConsumer<R> consumer = AvroConsumers.batch(recordClass, outputStream)) {
-      AvroSpecificStreams.batch(recordClass, inputStream)
+      AvroStreams.batch(recordClass, inputStream)
           .map(new AnoaFieldNuller<>(fields))
           .forEach(consumer);
     } catch (IOException e) {

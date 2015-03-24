@@ -20,7 +20,7 @@ import java.util.function.Supplier;
 
 
 /**
- * Utility class for generating serializing functions for Thrift records. Unless specified
+ * Utility class for generating functions for serializing Thrift records. Unless specified
  * otherwise, the functions should not be deemed thread-safe.
  */
 public class ThriftEncoders {
@@ -97,8 +97,7 @@ public class ThriftEncoders {
     };
   }
 
-  static <T extends TBase, M>
-  @NonNull Function<Anoa<T, M>, Anoa<byte[], M>> fn(
+  static <T extends TBase, M> @NonNull Function<Anoa<T, M>, Anoa<byte[], M>> fn(
       @NonNull AnoaFactory<M> anoaFactory,
       @NonNull Function<TTransport, TProtocol> protocolFactory) {
     TMemoryOutputTransport tTransport = new TMemoryOutputTransport();

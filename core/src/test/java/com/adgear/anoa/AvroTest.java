@@ -1,8 +1,7 @@
 package com.adgear.anoa;
 
 import com.adgear.anoa.read.AvroDecoders;
-import com.adgear.anoa.read.AvroGenericStreams;
-import com.adgear.anoa.read.AvroSpecificStreams;
+import com.adgear.anoa.read.AvroStreams;
 import com.adgear.anoa.read.JacksonStreams;
 import com.adgear.anoa.write.AvroConsumers;
 import com.adgear.anoa.write.AvroEncoders;
@@ -57,7 +56,7 @@ public class AvroTest {
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try (WriteConsumer<BidRequest> consumer = AvroConsumers.batch(BidRequest.class, baos)) {
-      long total = AvroSpecificStreams.jackson(f, BidRequest.class, true, jp)
+      long total = AvroStreams.jackson(f, BidRequest.class, true, jp)
           .map(f.writeConsumer(consumer))
           .filter(Anoa::isPresent)
           .count();
@@ -65,8 +64,9 @@ public class AvroTest {
       Assert.assertEquals(946, total);
     }
 
-    Assert.assertEquals(946, AvroGenericStreams.batch(BidRequest.getClassSchema(), new ByteArrayInputStream(baos.toByteArray())
-    ).count());
+    Assert.assertEquals(946, AvroStreams
+        .batch(BidRequest.getClassSchema(), new ByteArrayInputStream(baos.toByteArray())
+        ).count());
   }
 
 }

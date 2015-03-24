@@ -1,7 +1,7 @@
 package com.adgear.anoa;
 
 import com.adgear.anoa.read.AvroDecoders;
-import com.adgear.anoa.read.AvroSpecificStreams;
+import com.adgear.anoa.read.AvroStreams;
 import com.adgear.anoa.read.CborStreams;
 import com.adgear.anoa.read.CsvStreams;
 import com.adgear.anoa.read.JsonStreams;
@@ -53,7 +53,7 @@ public class JacksonTest {
     csvParser.setSchema(CsvSchema.builder().setUseHeader(true).build());
 
     try (CsvGenerator tsvGenerator = new CsvConsumers(schema).generator(outputStream)) {
-      AvroSpecificStreams.jackson(Simple.class, false, csvParser)
+      AvroStreams.jackson(Simple.class, false, csvParser)
           .map(AvroEncoders.jackson(Simple.class, () -> tsvGenerator))
           .forEach(Unchecked.consumer(CsvGenerator::flush));
     }

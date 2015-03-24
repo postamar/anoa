@@ -7,9 +7,6 @@ import com.adgear.avro.openrtb.BidRequest;
 import com.fasterxml.jackson.core.TreeNode;
 
 import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.specific.SpecificDatumReader;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -19,21 +16,20 @@ import java.util.stream.Collectors;
 
 public class AvroDecodersTest {
 
-  final public GenericDatumReader<GenericRecord> genericReader =
-      new GenericDatumReader<>(BidReqs.avroSchema);
-  final public GenericDatumReader<BidRequest> specificReader =
-      new SpecificDatumReader<>(BidReqs.avroClass);
-
   @Test
   public void testBinary() {
-    BidReqs.assertAvroGenerics(BidReqs.avroBinary().map(AvroDecoders.binary(genericReader)));
-    BidReqs.assertAvroSpecifics(BidReqs.avroBinary().map(AvroDecoders.binary(specificReader)));
+    BidReqs.assertAvroGenerics(BidReqs.avroBinary()
+                                   .map(AvroDecoders.binary(BidReqs.avroSchema, null)));
+    BidReqs.assertAvroSpecifics(BidReqs.avroBinary()
+                                    .map(AvroDecoders.binary(BidReqs.avroClass, null)));
   }
 
   @Test
   public void testJson() {
-    BidReqs.assertAvroGenerics(BidReqs.avroJson().map(AvroDecoders.json(genericReader)));
-    BidReqs.assertAvroSpecifics(BidReqs.avroJson().map(AvroDecoders.json(specificReader)));
+    BidReqs.assertAvroGenerics(BidReqs.avroJson()
+                                   .map(AvroDecoders.json(BidReqs.avroSchema, null)));
+    BidReqs.assertAvroSpecifics(BidReqs.avroJson()
+                                    .map(AvroDecoders.json(BidReqs.avroClass, BidRequest::new)));
   }
 
   @Test
@@ -53,12 +49,12 @@ public class AvroDecodersTest {
   public void testAnoaBinary() {
     BidReqs.assertAvroGenerics(BidReqs.avroBinary()
                                    .map(anoaFactory::<byte[]>wrap)
-                                   .map(AvroDecoders.binary(anoaFactory, genericReader))
+                                   .map(AvroDecoders.binary(anoaFactory, BidReqs.avroSchema, null))
                                    .map(Anoa::get));
 
     BidReqs.assertAvroSpecifics(BidReqs.avroBinary()
                                     .map(anoaFactory::<byte[]>wrap)
-                                    .map(AvroDecoders.binary(anoaFactory, specificReader))
+                                    .map(AvroDecoders.binary(anoaFactory, BidReqs.avroClass, null))
                                     .map(Anoa::get));
   }
 
@@ -67,13 +63,13 @@ public class AvroDecodersTest {
     BidReqs.assertAvroGenerics(
         BidReqs.avroJson()
             .map(anoaFactory::<String>wrap)
-            .map(AvroDecoders.json(anoaFactory, genericReader))
+            .map(AvroDecoders.json(anoaFactory, BidReqs.avroSchema, null))
             .map(Anoa::get));
 
     BidReqs.assertAvroSpecifics(
         BidReqs.avroJson()
             .map(anoaFactory::<String>wrap)
-            .map(AvroDecoders.json(anoaFactory, specificReader))
+            .map(AvroDecoders.json(anoaFactory, BidReqs.avroClass, null))
             .map(Anoa::get));
   }
 
@@ -98,7 +94,7 @@ public class AvroDecodersTest {
   public void testAnoaBroken() {
     Map<String, List<Throwable>> metaMap = BidReqs.thriftCompact()
         .map(anoaFactory::<byte[]>wrap)
-        .map(AvroDecoders.binary(anoaFactory, specificReader))
+        .map(AvroDecoders.binary(anoaFactory, BidReqs.avroClass, null))
         .peek(a -> Assert.assertFalse(a.isPresent()))
         .flatMap(Anoa::meta)
         .collect(Collectors.groupingBy(Throwable::toString));

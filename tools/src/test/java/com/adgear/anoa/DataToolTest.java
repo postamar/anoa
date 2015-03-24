@@ -1,6 +1,6 @@
 package com.adgear.anoa;
 
-import com.adgear.anoa.read.AvroGenericStreams;
+import com.adgear.anoa.read.AvroStreams;
 import com.adgear.anoa.read.CborStreams;
 import com.adgear.anoa.tools.runnable.DataTool;
 import com.adgear.anoa.tools.runnable.Format;
@@ -49,7 +49,7 @@ public class DataToolTest {
     AnoaFactory<Throwable> f = AnoaFactory.passAlong();
     Assert.assertEquals(
         946,
-        AvroGenericStreams.batch(f, new ByteArrayInputStream(
+        AvroStreams.batch(f, new ByteArrayInputStream(
             convert(schema, Format.JSON, Format.AVRO, bidreqs())))
             .filter(Anoa::isPresent)
             .count());

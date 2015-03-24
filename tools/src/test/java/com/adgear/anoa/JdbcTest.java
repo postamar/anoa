@@ -1,7 +1,7 @@
 package com.adgear.anoa;
 
 import com.adgear.anoa.read.AvroDecoders;
-import com.adgear.anoa.read.AvroSpecificStreams;
+import com.adgear.anoa.read.AvroStreams;
 import com.adgear.anoa.read.CsvStreams;
 import com.adgear.anoa.read.JdbcStreams;
 import com.adgear.anoa.read.ThriftDecoders;
@@ -111,7 +111,7 @@ public class JdbcTest {
                 .map(AvroDecoders.jackson(induced, false))
                 .forEach(consumer);
           }
-          Assert.assertEquals(2, AvroSpecificStreams.batch(
+          Assert.assertEquals(2, AvroStreams.batch(
               com.adgear.avro.Simple.class,
               new ByteArrayInputStream(baos.toByteArray())).count());
         }
@@ -159,8 +159,8 @@ public class JdbcTest {
       bytes = baos.toByteArray();
     }
     System.out.println(new String(bytes));
-    Assert.assertEquals(2, AvroSpecificStreams.json(com.adgear.avro.Simple.class,
-                                                    new ByteArrayInputStream(bytes))
+    Assert.assertEquals(2, AvroStreams.json(com.adgear.avro.Simple.class,
+                                            new ByteArrayInputStream(bytes))
         .filter(x -> x != null)
         .count());
   }
