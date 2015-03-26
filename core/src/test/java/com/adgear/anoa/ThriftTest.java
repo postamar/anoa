@@ -14,14 +14,24 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import thrift.com.adgear.avro.Simple;
 import thrift.com.adgear.avro.openrtb.BidRequest;
 
 public class ThriftTest {
 
+
+  @Test(expected = AnoaJacksonTypeException.class)
+  public void testMissingFields() throws Exception {
+    ThriftStreams.jackson(Simple.class,
+                          false,
+                          new ObjectMapper().getFactory().createParser("{\"baz\":1.9}"))
+        .forEach(System.err::println);
+  }
+
   @Test
   public void test() throws Exception {
     final List<BidRequest> collected = new ArrayList<>();
-    AnoaHandler<Throwable> anoaHandler = AnoaHandler.passAlong();
+    AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP;
     try (InputStream inputStream = getClass().getResourceAsStream("/bidreqs.json")) {
       try (JsonParser jp = new JsonFactory(new ObjectMapper()).createParser(inputStream)) {
         long total = ThriftStreams.jackson(anoaHandler, BidRequest.class, true, jp)

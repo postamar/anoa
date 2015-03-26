@@ -43,7 +43,7 @@ public class AvroDecodersTest {
                                     .map(AvroDecoders.jackson(BidReqs.avroClass, true)));
   }
 
-  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.passAlong();
+  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP;
 
   @Test
   public void testAnoaBinary() {

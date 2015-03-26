@@ -15,7 +15,6 @@ import org.codehaus.jackson.node.JsonNodeFactory;
 import org.jooq.lambda.SQL;
 import org.jooq.lambda.Unchecked;
 import org.jooq.lambda.fi.util.function.CheckedFunction;
-import org.jooq.lambda.tuple.Tuple;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -75,21 +74,13 @@ public class JdbcStreams {
   public <M> @NonNull Stream<Anoa<ObjectNode, M>> resultSet(
       @NonNull AnoaHandler<M> anoaHandler,
       @NonNull ResultSet resultSet) {
-    final CheckedFunction<ResultSet, ObjectNode> fn;
+    final Function<Anoa<ResultSet, M>, Anoa<ObjectNode, M>> fn;
     try {
-      fn = rowFn(resultSet.getMetaData());
+      fn = anoaHandler.functionChecked(rowFn(resultSet.getMetaData()));
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
-    return SQL.seq(resultSet, (ResultSet rs) -> {
-      final ObjectNode objectNode;
-      try {
-        objectNode = fn.apply(rs);
-      } catch (Throwable throwable) {
-        return new Anoa<>(anoaHandler.biFn.apply(throwable, Tuple.tuple(rs)));
-      }
-      return anoaHandler.wrap(objectNode);
-    });
+    return SQL.seq(resultSet, fn.compose(anoaHandler::wrap));
   }
 
   protected CheckedFunction<ResultSet, ObjectNode> rowFn(

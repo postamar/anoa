@@ -16,18 +16,15 @@ import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import org.jooq.lambda.Unchecked;
 import org.jooq.lambda.fi.util.function.CheckedSupplier;
-import org.jooq.lambda.tuple.Tuple;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Iterator;
-import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -44,23 +41,12 @@ class ReadIteratorUtils {
       AnoaHandler<M> anoaHandler,
       Supplier<Boolean> eofClosure,
       CheckedSupplier<X> supplier) {
-    Anoa<X, M> anoaInitial = anoaHandler.wrap(null);
-    UnaryOperator<Anoa<X, M>> anoaFn = ((Anoa<X, M> anoa) -> {
-      final X result;
-      try {
-        result = supplier.get();
-      } catch (Throwable e) {
-        return new Anoa<>(Stream.concat(anoa.meta(), anoaHandler.biFn.apply(e, Tuple.tuple())));
-      }
-      return new Anoa<>(Optional.of(result), anoa.meta());
-    });
+    final Supplier<Anoa<X, M>> anoaSupplier = anoaHandler.supplierChecked(supplier);
     return new ReadIterator<>(
         eofClosure,
-        (Consumer<Boolean> setHasNext) -> ((Anoa<X, M> anoa) -> {
-          if (anoa == null) {
-            return anoaFn.apply(anoaInitial);
-          } else if (anoa.isPresent()) {
-            return anoaFn.apply(anoa);
+        (Consumer<Boolean> setHasNext) -> (anoa -> {
+          if (anoa == null || anoa.isPresent()) {
+            return anoaSupplier.get();
           } else {
             setHasNext.accept(false);
             return null;

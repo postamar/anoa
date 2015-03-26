@@ -25,6 +25,9 @@ import java.util.function.Supplier;
  */
 public class ThriftEncoders {
 
+  protected ThriftEncoders() {
+  }
+
   /**
    * @param <T> Thrift record type
    * @return A function for serializing Thrift records as compact binary blobs.

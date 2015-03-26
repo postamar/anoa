@@ -55,7 +55,7 @@ public class AvroEncodersTest {
             .map(AvroDecoders.jackson(BidReqs.avroSchema, true)));
   }
 
-  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.passAlong();
+  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP;
 
   @Test
   public void testAnoaBinary() {

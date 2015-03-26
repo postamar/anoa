@@ -8,6 +8,4 @@ record Simple {
 
   /** [30] thrift field #30 */
   double @aliases(["blab"]) baz;
-
-
 }

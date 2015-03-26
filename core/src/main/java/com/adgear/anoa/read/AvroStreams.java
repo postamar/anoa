@@ -33,6 +33,9 @@ import java.util.stream.Stream;
  */
 public class AvroStreams {
 
+  protected AvroStreams() {
+  }
+
   /**
    * @param schema Avro record schema
    * @param inputStream data source

@@ -24,6 +24,9 @@ import java.util.function.Supplier;
  */
 public class ThriftDecoders {
 
+  protected ThriftDecoders() {
+  }
+
   /** 
    * @param supplier provides the returned Thrift record instances
    * @param <T> Thrift record type 
@@ -103,8 +106,9 @@ public class ThriftDecoders {
     final TProtocol tProtocol = protocolFactory.apply(tTransport);
     final ReadIterator<T> readIterator = ReadIteratorUtils.thrift(tProtocol, supplier);
     return (byte[] bytes) -> {
+      readIterator.reset();
       tTransport.reset(bytes);
-      return readIterator.hasNext() ? readIterator.next() : null;
+      return readIterator.next();
     };
   }
 
@@ -114,18 +118,13 @@ public class ThriftDecoders {
       @NonNull Function<TTransport, TProtocol> protocolFactory) {
     final TMemoryInputTransport tTransport = new TMemoryInputTransport();
     final TProtocol tProtocol = protocolFactory.apply(tTransport);
-    final ReadIterator<Anoa<T, M>> readIterator = ReadIteratorUtils.thrift(anoaHandler,
-                                                                           tProtocol,
-                                                                           supplier);
-    return (Anoa<byte[], M> bytesWrapped) -> {
-      if (bytesWrapped.isPresent()) {
-        readIterator.reset();
-        tTransport.reset(bytesWrapped.get());
-        return readIterator.next();
-      } else {
-        return new Anoa<>(bytesWrapped.meta());
-      }
-    };
+    final ReadIterator<Anoa<T, M>> readIterator =
+        ReadIteratorUtils.thrift(anoaHandler, tProtocol, supplier);
+    return (Anoa<byte[], M> bytesWrapped) -> bytesWrapped.flatMap(bytes -> {
+      readIterator.reset();
+      tTransport.reset(bytesWrapped.get());
+      return readIterator.next();
+    });
   }
 
   /** 
