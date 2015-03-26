@@ -46,10 +46,9 @@ public class DataToolTest {
 
   @Test
   public void testJsonToAvro() {
-    AnoaHandler<Throwable> f = AnoaHandler.passAlong();
     Assert.assertEquals(
         946,
-        AvroStreams.batch(f, new ByteArrayInputStream(
+        AvroStreams.batch(AnoaHandler.NO_OP, new ByteArrayInputStream(
             convert(schema, Format.JSON, Format.AVRO, bidreqs())))
             .filter(Anoa::isPresent)
             .count());

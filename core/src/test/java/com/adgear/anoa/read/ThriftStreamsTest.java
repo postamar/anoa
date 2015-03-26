@@ -10,7 +10,6 @@ import org.junit.Test;
 import java.util.List;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import thrift.com.adgear.avro.openrtb.BidRequest;
 
@@ -73,8 +72,7 @@ public class ThriftStreamsTest {
         .forEach(Assert::assertNotNull);
   }
 
-  final public AnoaHandler<String> anoaHandler = new AnoaHandler<>(
-      (t, __) -> Stream.of(t.toString()));
+  final public AnoaHandler<String> anoaHandler = AnoaHandler.withFn(Object::toString);
 
   @Test
   public void testAnoaBinary() {

@@ -19,19 +19,25 @@ abstract class AbstractReader<R> {
 
   final R readChecked(JsonParser jacksonParser, Boolean strict) throws IOException {
     jacksonParser.nextToken();
-    return Boolean.TRUE.equals(strict) ? readStrict(jacksonParser) : read(jacksonParser);
+    return validateTopLevel(Boolean.TRUE.equals(strict)
+                            ? readStrict(jacksonParser)
+                            : read(jacksonParser));
+  }
+
+  protected R validateTopLevel(R record) {
+    return record;
   }
 
   abstract protected R read(JsonParser jacksonParser) throws IOException;
 
   abstract protected R readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException;
 
-  static protected interface ValueConsumer<E extends Exception> {
-    public void accept(JsonParser jacksonParser) throws IOException, E;
+  protected interface ValueConsumer<E extends Exception> {
+    void accept(JsonParser jacksonParser) throws IOException, E;
   }
 
-  static protected interface FieldValueConsumer<E extends Exception> {
-    public void accept(String fieldName, JsonParser jacksonParser) throws IOException, E;
+  protected interface FieldValueConsumer<E extends Exception> {
+    void accept(String fieldName, JsonParser jacksonParser) throws IOException, E;
   }
 
   static protected <E extends Exception> void doArray(JsonParser jacksonParser,

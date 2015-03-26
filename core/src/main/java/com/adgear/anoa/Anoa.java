@@ -10,44 +10,18 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class Anoa<T, M> {
 
-  final private Optional<T> value;
-  final private ArrayList<M> meta;
-
-  /**
-   * Constructs empty {@code Anoa}.
-   */
-  public Anoa() {
-    this(Optional.<T>empty(), new ArrayList<M>());
+  static public <T, M> Anoa<T, M> of(@Nullable T value, Collection<M> metadata) {
+    return new Anoa<>(Optional.ofNullable(value), new ArrayList<>(metadata));
   }
 
-  /**
-   * Constructs empty {@code Anoa} with metadata.
-   */
-  public Anoa(Stream<M> meta) {
-    this(Optional.<T>empty(), meta);
-  }
+  final Optional<T> value;
+  final ArrayList<M> meta;
 
-  /**
-   * Constructs {@code Anoa} from {@code Optional}.
-   */
-  public Anoa(Optional<T> value) {
-    this(value, new ArrayList<M>());
-  }
-
-  /**
-   * Constructs {@code Anoa} from {@code Optional} with metadata.
-   */
-  public Anoa(Optional<T> value, Stream<M> meta) {
-    this.value = value;
-    this.meta = meta.collect(Collectors.toCollection(ArrayList::new));
-  }
-
-  private Anoa(Optional<T> value, ArrayList<M> meta) {
+  Anoa(Optional<T> value, ArrayList<M> meta) {
     this.value = value;
     this.meta = meta;
   }
@@ -165,13 +139,13 @@ public final class Anoa<T, M> {
   }
 
   @SuppressWarnings("unchecked")
-  <T_, M_> Anoa<T_, M_> unsafeCast() {
-    return (Anoa<T_, M_>) this;
+  <U> Anoa<U, M> unsafeCast() {
+    return (Anoa<U, M>) this;
   }
 
   /**
-   * If a value is present, apply the provided {@code Anoa}-bearing mapping function to it,
-   * return that result, otherwise return an empty {@code Anoa}.
+   * If a value is present, apply the provided mapping function to it, return that result wrapped
+   * in an {@code Anoa}, otherwise return an empty {@code Anoa}.
    *
    * @param <U>    The type parameter to the {@code Anoa} returned by
    * @param mapper a mapping function to apply to the value, if present
@@ -180,11 +154,7 @@ public final class Anoa<T, M> {
    * @throws NullPointerException if the mapping function is null or returns a null result
    */
   public <U> Anoa<U, M> map(Function<? super T, ? extends U> mapper) {
-    if (value.isPresent()) {
-      return new Anoa<>(Optional.ofNullable(mapper.apply(value.get())), meta);
-    } else {
-      return unsafeCast();
-    }
+    return new Anoa<>(value.map(mapper), new ArrayList<>(meta));
   }
 
   /**
@@ -198,12 +168,13 @@ public final class Anoa<T, M> {
    * @throws NullPointerException if the mapping function is null or returns a null result
    */
   public <U> Anoa<U, M> flatMap(Function<? super T, Anoa<U, M>> mapper) {
+    final ArrayList<M> meta = new ArrayList<>(this.meta);
     if (value.isPresent()) {
       final Anoa<U, M> mapperResult = mapper.apply(value.get());
       meta.addAll(mapperResult.meta);
       return new Anoa<>(mapperResult.value, meta);
     } else {
-      return unsafeCast();
+      return new Anoa<>(Optional.empty(), meta);
     }
   }
 
