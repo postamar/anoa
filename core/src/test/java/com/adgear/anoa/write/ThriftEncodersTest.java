@@ -45,7 +45,7 @@ public class ThriftEncodersTest {
                                   .map(Unchecked.function(JsonParser::readValueAsTree)));
   }
 
-  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.passAlong();
+  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP;
 
   @Test
   public void testAnoaBinary() {

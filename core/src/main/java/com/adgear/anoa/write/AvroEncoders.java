@@ -28,6 +28,9 @@ import java.util.function.Supplier;
  */
 public class AvroEncoders {
 
+  protected AvroEncoders() {
+  }
+
   /**
    * @param schema Avro schema of records to serialize
    */

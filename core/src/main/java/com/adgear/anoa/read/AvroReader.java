@@ -4,118 +4,72 @@ import com.adgear.anoa.AnoaJacksonTypeException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
-import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
 import org.apache.avro.specific.SpecificData;
-import org.apache.avro.specific.SpecificFixed;
 import org.apache.avro.specific.SpecificRecord;
-import org.codehaus.jackson.node.NullNode;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 abstract class AvroReader<R extends IndexedRecord> extends AbstractReader<R> {
 
-  static protected class Field {
-
-    @SuppressWarnings("unchecked")
-    protected Field(Schema.Field field, Object defaultValue, AbstractReader<?> reader) {
-      this.pos = field.pos();
-      this.schema = field.schema();
-      this.reader = reader;
-      this.defaultValue = defaultValue;
-    }
-
-    final protected int pos;
-    final protected Schema schema;
-    final protected Object defaultValue;
-    final protected AbstractReader<?> reader;
-
-    final protected Object valueOrDefault(Object value) {
-      return (value != null || defaultValue == null)
-             ? value
-             : SpecificData.get().deepCopy(schema, defaultValue);
-    }
-  }
-
-  final private Map<Integer, Object> defaultValues;
-  final private Map<String, Optional<Field>> fieldLookUp;
+  final protected List<AvroFieldWrapper> fieldWrappers;
+  final private Map<String, Optional<AvroFieldWrapper>> fieldLookUp;
 
   abstract protected R newInstance() throws Exception;
 
   @SuppressWarnings("unchecked")
   private AvroReader(Schema schema) {
     this.fieldLookUp = new HashMap<>();
-    this.defaultValues = new HashMap<>();
-    for (Schema.Field f : schema.getFields()) {
-      final Object v = defaultValue(f);
-      if (v != null) {
-        defaultValues.put(f.pos(), v);
-      }
-      Optional<Field> cached = Optional.of(new Field(f, v, createReader(f.schema())));
-      fieldLookUp.put(f.name(), cached);
-      for (String alias : f.aliases()) {
-        fieldLookUp.put(alias, cached);
-      }
+    this.fieldWrappers = new ArrayList<>();
+    int index = 0;
+    for (Schema.Field field : schema.getFields()) {
+      AvroFieldWrapper fieldWrapper = new AvroFieldWrapper(index++, field);
+      fieldWrappers.add(fieldWrapper);
+      fieldLookUp.put(field.name(), Optional.of(fieldWrapper));
+      field.aliases().stream().forEach(alias -> fieldLookUp.put(alias, Optional.of(fieldWrapper)));
     }
   }
 
-  @SuppressWarnings("unchecked")
-  private Object defaultValue(Schema.Field field) {
-    if (field.defaultValue() == null || NullNode.getInstance().equals(field.defaultValue())) {
-        return null;
-    }
-    try {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
-      ResolvingGrammarGenerator.encode(encoder, field.schema(), field.defaultValue());
-      encoder.flush();
-      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);
-      return SpecificData.get().createDatumReader(field.schema()).read(null, decoder);
-    } catch (IOException e) {
-      throw new AvroRuntimeException(e);
-    }
+  @Override
+  protected R validateTopLevel(R record) {
+    GenericData.get().validate(record.getSchema(), record);
+    return record;
   }
 
   @Override
   public R read(JsonParser jacksonParser) throws IOException {
     if (jacksonParser.getCurrentToken() == JsonToken.START_OBJECT) {
-      final R record;
+      final AvroRecordWrapper<R> recordWrapper;
       try {
-        record = newInstance();
+        recordWrapper = new AvroRecordWrapper<>(newInstance(), fieldWrappers);
       } catch (Exception e) {
         return null;
       }
-      defaultValues.entrySet().stream().forEach(e -> record.put(e.getKey(), e.getValue()));
       doMap(jacksonParser, (fieldName, p) -> {
-        Optional<Field> cacheValue = fieldLookUp.get(fieldName);
+        Optional<AvroFieldWrapper> cacheValue = fieldLookUp.get(fieldName);
         if (cacheValue == null) {
-          Optional<Map.Entry<String, Optional<Field>>> found = fieldLookUp.entrySet().stream()
+          final Optional<Map.Entry<String, Optional<AvroFieldWrapper>>> found = fieldLookUp.entrySet().stream()
               .filter(e -> (0 == fieldName.compareToIgnoreCase(e.getKey())))
               .findAny();
-          cacheValue = found.isPresent() ? found.get().getValue() : Optional.<Field>empty();
+          cacheValue = found.flatMap(Map.Entry::getValue);
           fieldLookUp.put(fieldName, cacheValue);
         }
         if (cacheValue.isPresent()) {
-          final Field field = cacheValue.get();
-          record.put(field.pos, field.valueOrDefault(field.reader.read(p)));
+          recordWrapper.put(cacheValue.get(), cacheValue.get().reader.read(p));
         } else {
           gobbleValue(p);
         }
       });
-      return record;
+      return recordWrapper.get();
     } else {
       gobbleValue(jacksonParser);
       return null;
@@ -128,69 +82,25 @@ abstract class AvroReader<R extends IndexedRecord> extends AbstractReader<R> {
       case VALUE_NULL:
         return null;
       case START_OBJECT:
-        final R record;
+        final AvroRecordWrapper<R> recordWrapper;
         try {
-          record = newInstance();
+          recordWrapper = new AvroRecordWrapper<>(newInstance(), fieldWrappers);
         } catch (Exception e) {
           throw new AnoaJacksonTypeException(e);
         }
-        defaultValues.entrySet().stream().forEach(e -> record.put(e.getKey(), e.getValue()));
         doMap(jacksonParser, (fieldName, p) -> {
-          final Optional<Field> cacheValue =
-              fieldLookUp.computeIfAbsent(fieldName, __ -> Optional.<Field>empty());
+          final Optional<AvroFieldWrapper> cacheValue =
+              fieldLookUp.computeIfAbsent(fieldName, __ -> Optional.<AvroFieldWrapper>empty());
           if (cacheValue.isPresent()) {
-            final Field field = cacheValue.get();
-            record.put(field.pos, field.valueOrDefault(field.reader.readStrict(p)));
+            recordWrapper.put(cacheValue.get(), cacheValue.get().reader.readStrict(p));
           } else {
             gobbleValue(p);
           }
         });
-        SpecificData.get().validate(record.getSchema(), record);
-        return record;
+        return recordWrapper.get();
       default:
         throw new AnoaJacksonTypeException("Token is not '{': " + jacksonParser.getCurrentToken());
-    }  }
-
-  @SuppressWarnings("unchecked")
-  static protected AbstractReader<?> createReader(Schema schema) {
-    switch (schema.getType()) {
-      case ARRAY:
-        return new ListReader(createReader(schema.getElementType()));
-      case BOOLEAN:
-        return new BooleanReader();
-      case BYTES:
-        return new ByteBufferReader();
-      case DOUBLE:
-        return new DoubleReader();
-      case ENUM:
-        return new EnumReader(SpecificData.get().getClass(schema));
-      case FIXED:
-        final Class<? extends SpecificFixed> fixedClass = SpecificData.get().getClass(schema);
-        return (fixedClass == null)
-               ? new AvroFixedReader.AvroGenericFixedReader(schema)
-               : new AvroFixedReader.AvroSpecificFixedReader<>(fixedClass);
-      case FLOAT:
-        return new FloatReader();
-      case INT:
-        return new IntegerReader();
-      case LONG:
-        return new LongReader();
-      case MAP:
-        return new MapReader(createReader(schema.getValueType()));
-      case RECORD:
-        final Class<? extends SpecificRecord> recordClass = SpecificData.get().getClass(schema);
-        return (recordClass == null)
-               ? new GenericReader(schema)
-               : new SpecificReader<>(recordClass);
-      case STRING:
-        return new StringReader();
-      case UNION:
-        if (schema.getTypes().size() == 2) {
-          return createReader(schema.getTypes().get(
-              (schema.getTypes().get(0).getType() == Schema.Type.NULL) ? 1 : 0));
-        }
     }
-    throw new RuntimeException("Unsupported Avro schema: " + schema);
   }
 
   static class GenericReader extends AvroReader<GenericRecord> {

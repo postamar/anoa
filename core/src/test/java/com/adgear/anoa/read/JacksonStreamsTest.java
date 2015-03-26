@@ -36,9 +36,8 @@ public class JacksonStreamsTest {
 
   @Test
   public void testAnoaObjects() {
-    AnoaHandler<Throwable> anoaHandler = AnoaHandler.passAlong();
     List<Anoa<ObjectNode, Throwable>> list = build()
-        .from(anoaHandler, BidReqs.jsonBytes(-1))
+        .from(AnoaHandler.NO_OP, BidReqs.jsonBytes(-1))
         .collect(Collectors.toList());
     Assert.assertEquals(BidReqs.n + 1, list.size());
     BidReqs.assertJsonObjects(list.stream().flatMap(Anoa::asStream));

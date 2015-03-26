@@ -62,7 +62,7 @@ public class JdbcTest {
 
   @Test
   public void testToThrift() throws Exception {
-    AnoaHandler<Throwable> f = AnoaHandler.passAlong();
+    AnoaHandler<Throwable> f = AnoaHandler.NO_OP;
     try (Connection connection = openDBConnection()) {
       try (Statement statement = connection.createStatement()) {
         try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {

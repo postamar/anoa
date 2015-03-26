@@ -28,6 +28,9 @@ import java.util.function.Supplier;
  */
 public class AvroDecoders {
 
+  protected AvroDecoders() {
+  }
+
   static protected <R extends IndexedRecord> Supplier<R> ofNullable(Supplier<R> supplier) {
     return (supplier != null) ? supplier : () -> ((R) null);
   }

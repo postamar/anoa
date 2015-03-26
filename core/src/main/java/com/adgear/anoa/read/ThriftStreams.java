@@ -27,6 +27,9 @@ import java.util.stream.Stream;
  */
 public class ThriftStreams {
 
+  protected ThriftStreams() {
+  }
+
   /**
    * Stream from Thrift compact binary representations
    *

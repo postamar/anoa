@@ -24,6 +24,9 @@ import java.io.UncheckedIOException;
  */
 public class AvroConsumers {
 
+  protected AvroConsumers() {
+  }
+
   /**
    * Write as compressed Avro batch file, readable with {@link org.apache.avro.file.DataFileStream}
    *
