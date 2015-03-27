@@ -132,7 +132,7 @@ public class JacksonStreams<
   }
 
   public @NonNull Stream<N> from(@NonNull P parser) {
-    return ReadIteratorUtils.<N>jackson(parser).stream();
+    return LookAheadIteratorFactory.<N>jackson(parser).asStream();
   }
 
   public @NonNull Stream<N> from(@NonNull InputStream inputStream) {
@@ -161,7 +161,7 @@ public class JacksonStreams<
 
   public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaHandler<M> anoaHandler,
                                               @NonNull P parser) {
-    return ReadIteratorUtils.<N, M>jackson(anoaHandler, parser).stream();
+    return LookAheadIteratorFactory.<N, M>jackson(anoaHandler, parser).asStream();
   }
 
   public <M> @NonNull Stream<Anoa<N, M>> from(@NonNull AnoaHandler<M> anoaHandler,

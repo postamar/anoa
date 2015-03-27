@@ -17,33 +17,26 @@ import org.apache.thrift.transport.TTransportException;
 import org.jooq.lambda.Unchecked;
 import org.jooq.lambda.fi.util.function.CheckedSupplier;
 
+import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.Iterator;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
-class ReadIteratorUtils {
+class LookAheadIteratorFactory {
 
-  static <T> Stream<T> stream(Iterator<T> iterator) {
-    final Spliterator<T> spliterator = Spliterators.spliteratorUnknownSize(
-        iterator,
-        Spliterator.NONNULL | Spliterator.ORDERED);
-    return StreamSupport.stream(spliterator, false);
+  protected LookAheadIteratorFactory() {
   }
 
-  static protected <X, M> ReadIterator<Anoa<X, M>> anoa(
+  static protected <X, M> LookAheadIterator<Anoa<X, M>> anoa(
       AnoaHandler<M> anoaHandler,
-      Supplier<Boolean> eofClosure,
-      CheckedSupplier<X> supplier) {
+      Supplier<Boolean> noNext,
+      CheckedSupplier<X> supplier,
+      Closeable onClose) {
     final Supplier<Anoa<X, M>> anoaSupplier = anoaHandler.supplierChecked(supplier);
-    return new ReadIterator<>(
-        eofClosure,
+    return new LookAheadIterator<>(
+        noNext,
         (Consumer<Boolean> setHasNext) -> (anoa -> {
           if (anoa == null || anoa.isPresent()) {
             return anoaSupplier.get();
@@ -51,12 +44,13 @@ class ReadIteratorUtils {
             setHasNext.accept(false);
             return null;
           }
-        }));
+        }),
+        onClose);
   }
 
-
-  static <N extends TreeNode> ReadIterator<N> jackson(JsonParser jacksonParser) {
-    return new ReadIterator<>(
+  static <N extends TreeNode> LookAheadIterator<N> jackson(
+      JsonParser jacksonParser) {
+    return new LookAheadIterator<>(
         Unchecked.supplier(jacksonParser::isClosed),
         (Consumer<Boolean> setHasNext) -> (__ -> {
           try {
@@ -72,11 +66,13 @@ class ReadIteratorUtils {
             setHasNext.accept(false);
             throw new UncheckedIOException(e);
           }
-        }));
+        }),
+        jacksonParser);
   }
 
-  static <N extends TreeNode, M> ReadIterator<Anoa<N, M>> jackson(AnoaHandler<M> anoaHandler,
-                                                                  JsonParser jacksonParser) {
+  static <N extends TreeNode, M> LookAheadIterator<Anoa<N, M>> jackson(
+      AnoaHandler<M> anoaHandler,
+      JsonParser jacksonParser) {
     return anoa(
         anoaHandler,
         Unchecked.supplier(jacksonParser::isClosed),
@@ -86,11 +82,13 @@ class ReadIteratorUtils {
             throw new IOException("JsonParser::readValueAsTree returned null.");
           }
           return tree;
-        });
+        },
+        jacksonParser);
   }
 
-  static <R extends IndexedRecord> ReadIterator<R> avro(DataFileStream<R> dfs) {
-    return new ReadIterator<>(
+  static <R extends IndexedRecord> LookAheadIterator<R> avro(
+      DataFileStream<R> dfs) {
+    return new LookAheadIterator<>(
         () -> !dfs.hasNext(),
         (Consumer<Boolean> setHasNext) -> (__ -> {
           try {
@@ -99,21 +97,26 @@ class ReadIteratorUtils {
             setHasNext.accept(false);
             throw new UncheckedIOException(e);
           }
-        }));
+        }),
+        dfs);
   }
 
-  static <R extends IndexedRecord, M> ReadIterator<Anoa<R, M>> avro(AnoaHandler<M> anoaHandler,
-                                                                    DataFileStream<R> dfs) {
+  static <R extends IndexedRecord, M> LookAheadIterator<Anoa<R, M>> avro(
+      AnoaHandler<M> anoaHandler,
+      DataFileStream<R> dfs) {
     return anoa(
         anoaHandler,
         () -> !dfs.hasNext(),
-        () -> dfs.next(null));
+        () -> dfs.next(null),
+        dfs);
   }
 
-  static <R extends IndexedRecord> ReadIterator<R> avro(DatumReader<R> reader,
-                                                        Decoder decoder,
-                                                        Supplier<Boolean> eof) {
-    return new ReadIterator<>(
+  static <R extends IndexedRecord> LookAheadIterator<R> avro(
+      DatumReader<R> reader,
+      Decoder decoder,
+      Supplier<Boolean> eof,
+      Closeable closeable) {
+    return new LookAheadIterator<>(
         eof,
         (Consumer<Boolean> setHasNext) -> (__ -> {
           try {
@@ -125,22 +128,24 @@ class ReadIteratorUtils {
             setHasNext.accept(false);
             throw new UncheckedIOException(e);
           }
-        }));
+        }),
+        closeable);
   }
 
-  static <R extends IndexedRecord, M> ReadIterator<Anoa<R, M>> avro(
+  static <R extends IndexedRecord, M> LookAheadIterator<Anoa<R, M>> avro(
       AnoaHandler<M> anoaHandler,
       DatumReader<R> reader,
       Decoder decoder,
-      Supplier<Boolean> eof) {
-    return anoa(anoaHandler, eof, () -> reader.read(null, decoder));
+      Supplier<Boolean> eof,
+      Closeable closeable) {
+    return anoa(anoaHandler, eof, () -> reader.read(null, decoder), closeable);
   }
 
-  static <T extends TBase> ReadIterator<T> thrift(
+  static <T extends TBase> LookAheadIterator<T> thrift(
       TProtocol tProtocol,
       Supplier<T> supplier) {
     final TTransport tTransport = tProtocol.getTransport();
-    return new ReadIterator<>(
+    return new LookAheadIterator<>(
         () -> !tTransport.isOpen(),
         (Consumer<Boolean> setHasNext) -> (__ -> {
           final T record = supplier.get();
@@ -158,10 +163,11 @@ class ReadIteratorUtils {
             throw new RuntimeException(e);
           }
           return record;
-        }));
+        }),
+        tTransport);
   }
 
-  static <T extends TBase, M> ReadIterator<Anoa<T, M>> thrift(
+  static <T extends TBase, M> LookAheadIterator<Anoa<T, M>> thrift(
       AnoaHandler<M> anoaHandler,
       TProtocol tProtocol,
       Supplier<T> supplier) {
@@ -173,6 +179,7 @@ class ReadIteratorUtils {
           final T record = supplier.get();
           record.read(tProtocol);
           return record;
-        });
+        },
+        tTransport);
   }
 }

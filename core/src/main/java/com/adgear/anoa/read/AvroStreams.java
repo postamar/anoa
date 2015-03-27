@@ -115,7 +115,8 @@ public class AvroStreams {
       @NonNull GenericDatumReader<R> reader,
       @NonNull InputStream inputStream) {
     final BinaryDecoder d = DecoderFactory.get().binaryDecoder(inputStream, null);
-    return ReadIteratorUtils.avro(reader, d, Unchecked.supplier(d::isEnd)).stream();
+    return LookAheadIteratorFactory
+        .avro(reader, d, Unchecked.supplier(d::isEnd), inputStream).asStream();
   }
 
   static <R extends IndexedRecord, M> @NonNull Stream<Anoa<R, M>> binary(
@@ -123,7 +124,8 @@ public class AvroStreams {
       @NonNull GenericDatumReader<R> reader,
       @NonNull InputStream inputStream) {
     final BinaryDecoder d = DecoderFactory.get().binaryDecoder(inputStream, null);
-    return ReadIteratorUtils.avro(anoaHandler, reader, d, Unchecked.supplier(d::isEnd)).stream();
+    return LookAheadIteratorFactory
+        .avro(anoaHandler, reader, d, Unchecked.supplier(d::isEnd), inputStream).asStream();
   }
 
   /**
@@ -210,7 +212,7 @@ public class AvroStreams {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-    return ReadIteratorUtils.avro(reader, decoder, () -> false).stream();
+    return LookAheadIteratorFactory.avro(reader, decoder, () -> false, inputStream).asStream();
   }
 
   static <R extends IndexedRecord, M> @NonNull Stream<Anoa<R, M>> json(
@@ -223,7 +225,8 @@ public class AvroStreams {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-    return ReadIteratorUtils.avro(anoaHandler, reader, decoder, () -> false).stream();
+    return LookAheadIteratorFactory
+        .avro(anoaHandler, reader, decoder, () -> false, inputStream).asStream();
   }
 
   /**
@@ -420,7 +423,7 @@ public class AvroStreams {
    */
   static public <R extends IndexedRecord> @NonNull Stream<R> batch(
       @NonNull DataFileStream<R> dataFileStream) {
-    return ReadIteratorUtils.avro(dataFileStream).stream();
+    return LookAheadIteratorFactory.avro(dataFileStream).asStream();
   }
 
   /**
@@ -432,7 +435,7 @@ public class AvroStreams {
   static public <R extends IndexedRecord, M> @NonNull Stream<Anoa<R, M>> batch(
       @NonNull AnoaHandler<M> anoaHandler,
       @NonNull DataFileStream<R> dataFileStream) {
-    return ReadIteratorUtils.avro(anoaHandler, dataFileStream).stream();
+    return LookAheadIteratorFactory.avro(anoaHandler, dataFileStream).asStream();
   }
 
   /**
@@ -444,7 +447,7 @@ public class AvroStreams {
       @NonNull Schema schema,
       boolean strict,
       @NonNull JsonParser jacksonParser) {
-    return ReadIteratorUtils.jackson(jacksonParser).stream()
+    return LookAheadIteratorFactory.jackson(jacksonParser).asStream()
         .map(TreeNode::traverse)
         .map(AvroDecoders.jackson(schema, strict));
   }
@@ -461,7 +464,7 @@ public class AvroStreams {
       @NonNull Schema schema,
       boolean strict,
       @NonNull JsonParser jacksonParser) {
-    return ReadIteratorUtils.jackson(anoaHandler, jacksonParser).stream()
+    return LookAheadIteratorFactory.jackson(anoaHandler, jacksonParser).asStream()
         .map(anoaHandler.function(TreeNode::traverse))
         .map(AvroDecoders.jackson(anoaHandler, schema, strict));
   }
@@ -476,7 +479,7 @@ public class AvroStreams {
       @NonNull Class<R> recordClass,
       boolean strict,
       @NonNull JsonParser jacksonParser) {
-    return ReadIteratorUtils.jackson(jacksonParser).stream()
+    return LookAheadIteratorFactory.jackson(jacksonParser).asStream()
         .map(TreeNode::traverse)
         .map(AvroDecoders.jackson(recordClass, strict));
   }
@@ -494,7 +497,7 @@ public class AvroStreams {
       @NonNull Class<R> recordClass,
       boolean strict,
       @NonNull JsonParser jacksonParser) {
-    return ReadIteratorUtils.jackson(anoaHandler, jacksonParser).stream()
+    return LookAheadIteratorFactory.jackson(anoaHandler, jacksonParser).asStream()
         .map(anoaHandler.function(TreeNode::traverse))
         .map(AvroDecoders.jackson(anoaHandler, recordClass, strict));
   }
