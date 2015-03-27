@@ -52,7 +52,7 @@ public class AnoaReflectionUtils {
    * @return An ordered map with field enum and field metadata for this class
    */
   @SuppressWarnings("unchecked")
-  public static <F extends TFieldIdEnum>
+  static public <F extends TFieldIdEnum>
   LinkedHashMap<F, FieldMetaData> getThriftMetaDataMap(Class<? extends TBase<?,F>> thriftClass) {
     LinkedHashMap<F, FieldMetaData> result = new LinkedHashMap<>();
     ((Map<F, FieldMetaData>) FieldMetaData.getStructMetaDataMap(thriftClass)).entrySet().stream()

@@ -110,8 +110,8 @@ public class ThriftStreams {
   static public <T extends TBase> @NonNull Stream<T> compact(
       @NonNull Supplier<T> supplier,
       @NonNull TTransport tTransport) {
-    return ReadIteratorUtils.thrift(new TCompactProtocol(tTransport), supplier)
-        .stream();
+    return LookAheadIteratorFactory.thrift(new TCompactProtocol(tTransport), supplier)
+        .asStream();
   }
 
   /**
@@ -127,8 +127,8 @@ public class ThriftStreams {
       @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Supplier<T> supplier,
       @NonNull TTransport tTransport) {
-    return ReadIteratorUtils.thrift(anoaHandler, new TCompactProtocol(tTransport), supplier)
-        .stream();
+    return LookAheadIteratorFactory.thrift(anoaHandler, new TCompactProtocol(tTransport), supplier)
+        .asStream();
   }
 
   /**
@@ -213,7 +213,7 @@ public class ThriftStreams {
   static public <T extends TBase> @NonNull Stream<T> binary(
       @NonNull Supplier<T> supplier,
       @NonNull TTransport tTransport) {
-    return ReadIteratorUtils.thrift(new TBinaryProtocol(tTransport), supplier).stream();
+    return LookAheadIteratorFactory.thrift(new TBinaryProtocol(tTransport), supplier).asStream();
   }
 
   /**
@@ -229,8 +229,8 @@ public class ThriftStreams {
       @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Supplier<T> supplier,
       @NonNull TTransport tTransport) {
-    return ReadIteratorUtils.thrift(anoaHandler, new TBinaryProtocol(tTransport), supplier)
-        .stream();
+    return LookAheadIteratorFactory.thrift(anoaHandler, new TBinaryProtocol(tTransport), supplier)
+        .asStream();
   }
 
   /**
@@ -315,7 +315,7 @@ public class ThriftStreams {
   static public <T extends TBase> @NonNull Stream<T> json(
       @NonNull Supplier<T> supplier,
       @NonNull TTransport tTransport) {
-    return ReadIteratorUtils.thrift(new TJSONProtocol(tTransport), supplier).stream();
+    return LookAheadIteratorFactory.thrift(new TJSONProtocol(tTransport), supplier).asStream();
   }
 
   /**
@@ -331,7 +331,7 @@ public class ThriftStreams {
       @NonNull AnoaHandler<M> anoaHandler,
       @NonNull Supplier<T> supplier,
       @NonNull TTransport tTransport) {
-    return ReadIteratorUtils.thrift(anoaHandler, new TJSONProtocol(tTransport), supplier).stream();
+    return LookAheadIteratorFactory.thrift(anoaHandler, new TJSONProtocol(tTransport), supplier).asStream();
   }
 
   /**
@@ -346,7 +346,7 @@ public class ThriftStreams {
       @NonNull Class<T> recordClass,
       boolean strict,
       @NonNull JsonParser jacksonParser) {
-    return ReadIteratorUtils.jackson(jacksonParser).stream()
+    return LookAheadIteratorFactory.jackson(jacksonParser).asStream()
         .map(TreeNode::traverse)
         .map(ThriftDecoders.jackson(recordClass, strict));
   }
@@ -366,7 +366,7 @@ public class ThriftStreams {
       @NonNull Class<T> recordClass,
       boolean strict,
       @NonNull JsonParser jacksonParser) {
-    return ReadIteratorUtils.jackson(anoaHandler, jacksonParser).stream()
+    return LookAheadIteratorFactory.jackson(anoaHandler, jacksonParser).asStream()
         .map(anoaHandler.function(TreeNode::traverse))
         .map(ThriftDecoders.jackson(anoaHandler, recordClass, strict));
   }

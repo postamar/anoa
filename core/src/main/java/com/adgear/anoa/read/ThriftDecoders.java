@@ -104,11 +104,12 @@ public class ThriftDecoders {
       @NonNull Function<TTransport, TProtocol> protocolFactory) {
     final TMemoryInputTransport tTransport = new TMemoryInputTransport();
     final TProtocol tProtocol = protocolFactory.apply(tTransport);
-    final ReadIterator<T> readIterator = ReadIteratorUtils.thrift(tProtocol, supplier);
+    final LookAheadIterator<T> lookAheadIterator =
+        LookAheadIteratorFactory.thrift(tProtocol, supplier);
     return (byte[] bytes) -> {
-      readIterator.reset();
+      lookAheadIterator.reset(null);
       tTransport.reset(bytes);
-      return readIterator.next();
+      return lookAheadIterator.next();
     };
   }
 
@@ -118,12 +119,12 @@ public class ThriftDecoders {
       @NonNull Function<TTransport, TProtocol> protocolFactory) {
     final TMemoryInputTransport tTransport = new TMemoryInputTransport();
     final TProtocol tProtocol = protocolFactory.apply(tTransport);
-    final ReadIterator<Anoa<T, M>> readIterator =
-        ReadIteratorUtils.thrift(anoaHandler, tProtocol, supplier);
+    final LookAheadIterator<Anoa<T, M>> lookAheadIterator =
+        LookAheadIteratorFactory.thrift(anoaHandler, tProtocol, supplier);
     return (Anoa<byte[], M> bytesWrapped) -> bytesWrapped.flatMap(bytes -> {
-      readIterator.reset();
+      lookAheadIterator.reset(null);
       tTransport.reset(bytesWrapped.get());
-      return readIterator.next();
+      return lookAheadIterator.next();
     });
   }
 
