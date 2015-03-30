@@ -158,8 +158,8 @@ final public class Anoa<T, M> {
     } else {
       final Anoa<U, M> result = mapper.apply(value);
       Objects.requireNonNull(result);
-      M[] newMeta = Arrays.copyOf(meta, meta.length + result.meta.length);
-      System.arraycopy(result.meta, 0, newMeta, meta.length, newMeta.length);
+      final M[] newMeta = Arrays.copyOf(meta, meta.length + result.meta.length);
+      System.arraycopy(result.meta, 0, newMeta, meta.length, result.meta.length);
       return new Anoa<>(result.value, newMeta);
     }
   }
@@ -222,7 +222,13 @@ final public class Anoa<T, M> {
 
   @Override
   public String toString() {
-    return (value != null) ? ("Anoa(" + value + ")") : "Anoa~empty";
+    StringBuilder sb = new StringBuilder().append("Anoa<").append(value);
+    char c = '|';
+    for (Object m : meta) {
+      sb.append(c).append(m);
+      c = ',';
+    }
+    return sb.append('>').toString();
   }
 }
 

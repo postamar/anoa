@@ -1,5 +1,8 @@
-package com.adgear.anoa;
+package com.adgear.anoa.other;
 
+import com.adgear.anoa.Anoa;
+import com.adgear.anoa.AnoaHandler;
+import com.adgear.anoa.AnoaJacksonTypeException;
 import com.adgear.anoa.read.AvroDecoders;
 import com.adgear.anoa.read.AvroStreams;
 import com.adgear.anoa.read.JacksonStreams;

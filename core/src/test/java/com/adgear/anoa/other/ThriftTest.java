@@ -1,5 +1,8 @@
-package com.adgear.anoa;
+package com.adgear.anoa.other;
 
+import com.adgear.anoa.AnoaHandler;
+import com.adgear.anoa.AnoaJacksonTypeException;
+import com.adgear.anoa.BidReqs;
 import com.adgear.anoa.read.ThriftDecoders;
 import com.adgear.anoa.read.ThriftStreams;
 import com.adgear.anoa.write.ThriftEncoders;
