@@ -14,9 +14,7 @@ import org.jooq.lambda.fi.util.function.CheckedSupplier;
 import org.jooq.lambda.tuple.Tuple;
 import org.jooq.lambda.tuple.Tuple2;
 
-import java.util.ArrayList;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -33,29 +31,38 @@ import java.util.stream.Stream;
  */
 public class AnoaHandler<M> {
 
-  static public final AnoaHandler<?> ERASE
-      = new AnoaHandler<>(__ -> AnoaHandler.empty());
-  static public final AnoaHandler<Throwable> NO_OP
-      = new AnoaHandler<>(t -> AnoaHandler.<Throwable>empty().decorate(t));
-
   /**
    * this instance's exception handler
    */
-  final Function<Throwable, Anoa<?, M>> handler0;
-  final BiFunction<Throwable, Object, Anoa<?, M>> handler1;
-  final BiFunction<Throwable, Tuple2, Anoa<?, M>> handler2;
+  final Function<Throwable, M[]> handler0;
+  final BiFunction<Throwable, Object, M[]> handler1;
+  final BiFunction<Throwable, Tuple2, M[]> handler2;
 
-  AnoaHandler(Function<Throwable, Anoa<?, M>> handler0) {
+  public AnoaHandler(Function<Throwable, M[]> handler0) {
     this(handler0, ((t, __) -> handler0.apply(t)), ((t, __) -> handler0.apply(t)));
   }
 
-  AnoaHandler(Function<Throwable, Anoa<?, M>> handler0,
-              BiFunction<Throwable, Object, Anoa<?, M>> handler1,
-              BiFunction<Throwable, Tuple2, Anoa<?, M>> handler2) {
+  public AnoaHandler(Function<Throwable, M[]> handler0,
+                     BiFunction<Throwable, Object, M[]> handler1,
+                     BiFunction<Throwable, Tuple2, M[]> handler2) {
     this.handler0 = handler0;
     this.handler1 = handler1;
     this.handler2 = handler2;
   }
+
+  static private final Object[] EMPTY_ARRAY = new Object[0];
+
+  @SuppressWarnings("unchecked")
+  static private <M> M[] single(M metadatum) {
+    final M[] meta = (M[]) new Object[1];
+    meta[0] = metadatum;
+    return meta;
+  }
+
+  static public final AnoaHandler<?> ERASE
+      = new AnoaHandler<>(__ -> EMPTY_ARRAY);
+  static public final AnoaHandler<Throwable> NO_OP
+      = new AnoaHandler<>(AnoaHandler::single);
 
   /**
    * @return An {@code AnoaHandler} in which exceptions are handled by applying a function to the
@@ -63,7 +70,7 @@ public class AnoaHandler<M> {
    */
   static public <M> @NonNull AnoaHandler<M> withFn(
       @NonNull Function<Throwable, M> handler) {
-    return new AnoaHandler<>(t -> AnoaHandler.<M>empty().decorate(handler.apply(t)));
+    return new AnoaHandler<>(handler.andThen(AnoaHandler::single));
   }
 
   /**
@@ -73,16 +80,16 @@ public class AnoaHandler<M> {
   static public <M> @NonNull AnoaHandler<M> withBiFn(
       @NonNull BiFunction<Throwable, Tuple, M> handler) {
     return new AnoaHandler<>(
-        t -> AnoaHandler.<M>empty().decorate(handler.apply(t, Tuple.tuple())),
-        (t, u) -> AnoaHandler.<M>empty().decorate(handler.apply(t, Tuple.tuple(u))),
-        (t, t2) -> AnoaHandler.<M>empty().decorate(handler.apply(t, t2)));
+        t -> single(handler.apply(t, Tuple.tuple())),
+        (t, u) -> single(handler.apply(t, Tuple.tuple(u))),
+        (t, t2) -> single(handler.apply(t, t2)));
   }
 
   public <T> @NonNull Supplier<Anoa<T, M>> supplier(@NonNull Supplier<? extends T> supplier) {
     Objects.requireNonNull(supplier);
     return () -> {
       try {
-        return wrap(supplier.get());
+        return Anoa.of(supplier.get());
       } catch (Throwable throwable) {
         return handle(throwable);
       }
@@ -94,7 +101,7 @@ public class AnoaHandler<M> {
     Objects.requireNonNull(supplier);
     return () -> {
       try {
-        return wrap(supplier.get());
+        return Anoa.of(supplier.get());
       } catch (Throwable throwable) {
         return handle(throwable);
       }
@@ -106,11 +113,11 @@ public class AnoaHandler<M> {
     Objects.requireNonNull(function);
     return (Anoa<U, M> uWrapped) -> (
         uWrapped.flatMap((U u) -> {
-        try {
-          return wrap(function.apply(u));
-        } catch (Throwable throwable) {
-          return handle(throwable, u);
-        }
+          try {
+            return Anoa.of(function.apply(u));
+          } catch (Throwable throwable) {
+            return handle(throwable, u);
+          }
         }));
   }
 
@@ -120,7 +127,7 @@ public class AnoaHandler<M> {
     return (Anoa<U, M> uWrapped) -> (
         uWrapped.flatMap((U u) -> {
           try {
-            return wrap(function.apply(u));
+            return Anoa.of(function.apply(u));
           } catch (Throwable throwable) {
             return handle(throwable, u);
           }
@@ -133,7 +140,7 @@ public class AnoaHandler<M> {
     return (Anoa<U, M> uWrapped, V v) -> (
         uWrapped.flatMap((U u) -> {
           try {
-            return wrap(biFunction.apply(u, v));
+            return Anoa.of(biFunction.apply(u, v));
           } catch (Throwable throwable) {
             return handle(throwable, u, v);
           }
@@ -146,7 +153,7 @@ public class AnoaHandler<M> {
     return (Anoa<U, M> uWrapped, V v) -> (
         uWrapped.flatMap((U u) -> {
           try {
-            return wrap(biFunction.apply(u, v));
+            return Anoa.of(biFunction.apply(u, v));
           } catch (Throwable throwable) {
             return handle(throwable, u, v);
           }
@@ -172,8 +179,8 @@ public class AnoaHandler<M> {
           return handle(throwable, t);
         }
         return testResult
-               ? AnoaHandler.<T, M>anoa(t)
-               : AnoaHandler.<T, M>anoa(null).decorate(failHandler.apply(t));
+               ? Anoa.of(t)
+               : Anoa.of(null, failHandler.apply(t));
       }));
   }
 
@@ -196,8 +203,8 @@ public class AnoaHandler<M> {
             return handle(throwable, t);
           }
           return testResult
-                 ? AnoaHandler.<T, M>anoa(t)
-                 : AnoaHandler.<T, M>anoa(null).decorate(failHandler.apply(t));
+                 ? Anoa.of(t)
+                 : Anoa.of(null, failHandler.apply(t));
         }));
   }
 
@@ -211,7 +218,7 @@ public class AnoaHandler<M> {
         } catch (Throwable throwable) {
           return handle(throwable, t);
         }
-        return wrap(t);
+        return Anoa.of(t);
       }));
   }
 
@@ -224,7 +231,7 @@ public class AnoaHandler<M> {
           } catch (Throwable throwable) {
             return handle(throwable, t);
           }
-          return wrap(t);
+          return Anoa.of(t);
         }));
   }
 
@@ -238,7 +245,7 @@ public class AnoaHandler<M> {
           } catch (Throwable throwable) {
             return handle(throwable, t);
           }
-          return wrap(t);
+          return Anoa.of(t);
         }));
   }
 
@@ -252,7 +259,7 @@ public class AnoaHandler<M> {
           } catch (Throwable throwable) {
             return handle(throwable, t, u);
           }
-          return wrap(t);
+          return Anoa.of(t);
         }));
   }
 
@@ -266,31 +273,24 @@ public class AnoaHandler<M> {
           } catch (Throwable throwable) {
             return handle(throwable, t, u);
           }
-          return wrap(t);
+          return Anoa.of(t);
         }));
   }
 
+  public <T> @NonNull Anoa<T, M> wrap(@Nullable T value) {
+    return Anoa.of(value);
+  }
+
   public <T> @NonNull Anoa<T, M> handle(Throwable throwable) {
-    return handler0.apply(throwable).unsafeCast();
+    return new Anoa<>(handler0.apply(throwable));
   }
 
   public <T, U> @NonNull Anoa<T, M> handle(Throwable throwable, U arg) {
-    return handler1.apply(throwable, arg).unsafeCast();
+    return new Anoa<>(handler1.apply(throwable, arg));
   }
 
   public <T, U, V> @NonNull Anoa<T, M> handle(Throwable throwable, U arg, V otherArg) {
-    return handler2.apply(throwable, Tuple.tuple(arg, otherArg)).unsafeCast();
+    return new Anoa<>(handler1.apply(throwable, Tuple.tuple(arg, otherArg)));
   }
 
-  static <T, M> @NonNull Anoa<T, M> anoa(@Nullable T value) {
-    return new Anoa<>(Optional.ofNullable(value), new ArrayList<M>());
-  }
-
-  public <T> @NonNull Anoa<T, M> wrap(@Nullable T value) {
-    return AnoaHandler.anoa(value);
-  }
-
-  static <M> Anoa<?, M> empty() {
-    return new Anoa<>(Optional.empty(), new ArrayList<M>());
-  }
 }
