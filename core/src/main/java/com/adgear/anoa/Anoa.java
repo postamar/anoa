@@ -3,8 +3,9 @@ package com.adgear.anoa;
 import checkers.nullness.quals.NonNull;
 import checkers.nullness.quals.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -12,16 +13,29 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public final class Anoa<T, M> {
+final public class Anoa<T, M> {
 
-  static public <T, M> Anoa<T, M> of(@Nullable T value, Collection<M> metadata) {
-    return new Anoa<>(Optional.ofNullable(value), new ArrayList<>(metadata));
+  static private final Object[] EMPTY_ARRAY = new Object[0];
+
+  @SuppressWarnings("unchecked")
+  static public <T, M> Anoa<T, M> of(@Nullable T value) {
+    return new Anoa<>(value, (M[]) EMPTY_ARRAY);
   }
 
-  final Optional<T> value;
-  final ArrayList<M> meta;
+  @SuppressWarnings("unchecked")
+  static public <T, M> Anoa<T, M> of(@Nullable T value, @NonNull Stream<M> metadata) {
+    Objects.requireNonNull(metadata);
+    return new Anoa<>(value, (M[]) metadata.toArray());
+  }
 
-  Anoa(Optional<T> value, ArrayList<M> meta) {
+  final T value;
+  final M[] meta;
+
+  Anoa(M[] meta) {
+    this(null, meta);
+  }
+
+  Anoa(T value, M[] meta) {
     this.value = value;
     this.meta = meta;
   }
@@ -32,43 +46,7 @@ public final class Anoa<T, M> {
    * @return a stream of metadata elements decorating this {@code Anoa}
    */
   public @NonNull Stream<@NonNull M> meta() {
-    return meta.stream();
-  }
-
-  /**
-   * Decorates this {@code Anoa} with metadata element
-   *
-   * @param metadata a metadata element
-   */
-  public Anoa<T, M> decorate(@NonNull M metadata) {
-    meta.add(metadata);
-    return this;
-  }
-
-  /**
-   * Decorates this {@code Anoa} with metadata elements
-   *
-   * @param metadata an stream for metadata elements
-   */
-  public Anoa<T, M> decorate(@NonNull Stream<@NonNull M> metadata) {
-    metadata.forEach(meta::add);
-    return this;
-  }
-
-  /**
-   * Decorates this {@code Anoa} with metadata elements
-   *
-   * @param metadata an iterable for metadata elements
-   */
-  public Anoa<T, M> decorate(@NonNull Iterable<@NonNull M> metadata) {
-    if (metadata instanceof Collection) {
-      meta.addAll((Collection<M>) metadata);
-    } else {
-      for (M element : metadata) {
-        meta.add(element);
-      }
-    }
-    return this;
+    return Arrays.stream(meta);
   }
 
   /**
@@ -77,9 +55,8 @@ public final class Anoa<T, M> {
    * @return the value held by this {@code Anoa}
    */
   public Optional<T> asOptional() {
-    return value;
+    return Optional.ofNullable(value);
   }
-
 
   /**
    * Returns the value held in this {@code Anoa} in a stream, if exists
@@ -87,7 +64,7 @@ public final class Anoa<T, M> {
    * @return a stream containing the value held by this {@code Anoa}, if exists
    */
   public Stream<T> asStream() {
-    return value.isPresent() ? Stream.of(value.get()) : Stream.<T>empty();
+    return (value != null) ? Stream.of(value) : Stream.<T>empty();
   }
 
   /**
@@ -99,7 +76,10 @@ public final class Anoa<T, M> {
    * @see Anoa#isPresent()
    */
   public T get() {
-    return value.get();
+    if (value == null) {
+      throw new NoSuchElementException();
+    }
+    return value;
   }
 
   /**
@@ -108,7 +88,7 @@ public final class Anoa<T, M> {
    * @return {@code true} if there is a value present, otherwise {@code false}
    */
   public boolean isPresent() {
-    return value.isPresent();
+    return (value != null);
   }
 
   /**
@@ -118,63 +98,69 @@ public final class Anoa<T, M> {
    * @throws NullPointerException if value is present and {@code consumer} is null
    */
   public void ifPresent(Consumer<? super T> consumer) {
-    value.ifPresent(consumer);
+    if (value != null) {
+      consumer.accept(value);
+    }
   }
 
   /**
    * If a value is present, and the value matches the given predicate, return an {@code
-   * Anoa} describing the value, otherwise return an empty {@code Anoa}.
+   * Anoa} describing the value, otherwise return an empty0 {@code Anoa}.
    *
    * @param predicate a predicate to apply to the value, if present
    * @return an {@code Anoa} describing the value of this {@code Anoa} if a value is
-   * present and the value matches the given predicate, otherwise an empty {@code Anoa}
+   * present and the value matches the given predicate, otherwise an empty0 {@code Anoa}
    * @throws NullPointerException if the predicate is null
    */
   public Anoa<T, M> filter(Predicate<? super T> predicate) {
-    if (value.isPresent()) {
-      return predicate.test(value.get()) ? this : new Anoa<>(Optional.empty(), meta);
-    } else {
+    if (value == null) {
       return this;
+    } else {
+      return predicate.test(value) ? this : new Anoa<>(null, meta);
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  <U> Anoa<U, M> unsafeCast() {
-    return (Anoa<U, M>) this;
   }
 
   /**
    * If a value is present, apply the provided mapping function to it, return that result wrapped
-   * in an {@code Anoa}, otherwise return an empty {@code Anoa}.
+   * in an {@code Anoa}, otherwise return an empty0 {@code Anoa}.
    *
    * @param <U>    The type parameter to the {@code Anoa} returned by
    * @param mapper a mapping function to apply to the value, if present
    * @return the result of applying an {@code Anoa}-bearing mapping function to the value of
-   * this {@code Anoa}, if a value is present, otherwise an empty {@code Anoa}
+   * this {@code Anoa}, if a value is present, otherwise an empty0 {@code Anoa}
    * @throws NullPointerException if the mapping function is null or returns a null result
    */
+  @SuppressWarnings("unchecked")
   public <U> Anoa<U, M> map(Function<? super T, ? extends U> mapper) {
-    return new Anoa<>(value.map(mapper), new ArrayList<>(meta));
+    if (value == null) {
+      return (Anoa<U, M>) this;
+    } else {
+      final U result = mapper.apply(value);
+      Objects.requireNonNull(result);
+      return new Anoa<>(result, meta);
+    }
   }
 
   /**
    * If a value is present, apply the provided {@code Anoa}-bearing mapping function to it,
-   * return that result, otherwise return an empty {@code Anoa}.
+   * return that result, otherwise return an empty0 {@code Anoa}.
    *
    * @param <U>    The type parameter to the {@code Anoa} returned by
    * @param mapper a mapping function to apply to the value, if present
    * @return the result of applying an {@code Anoa}-bearing mapping function to the value of
-   * this {@code Anoa}, if a value is present, otherwise an empty {@code Anoa}
+   * this {@code Anoa}, if a value is present, otherwise an empty0 {@code Anoa}
    * @throws NullPointerException if the mapping function is null or returns a null result
    */
+  @SuppressWarnings("unchecked")
   public <U> Anoa<U, M> flatMap(Function<? super T, Anoa<U, M>> mapper) {
-    final ArrayList<M> meta = new ArrayList<>(this.meta);
-    if (value.isPresent()) {
-      final Anoa<U, M> mapperResult = mapper.apply(value.get());
-      meta.addAll(mapperResult.meta);
-      return new Anoa<>(mapperResult.value, meta);
+    if (value == null) {
+      return (Anoa<U, M>) this;
     } else {
-      return new Anoa<>(Optional.empty(), meta);
+      final Anoa<U, M> result = mapper.apply(value);
+      Objects.requireNonNull(result);
+      M[] newMeta = Arrays.copyOf(meta, meta.length + result.meta.length);
+      System.arraycopy(result.meta, 0, newMeta, meta.length, newMeta.length);
+      return new Anoa<>(result.value, newMeta);
     }
   }
 
@@ -185,7 +171,7 @@ public final class Anoa<T, M> {
    * @return the value, if present, otherwise {@code other}
    */
   public T orElse(@Nullable T other) {
-    return value.orElse(other);
+    return (value != null) ? value : other;
   }
 
   /**
@@ -197,7 +183,7 @@ public final class Anoa<T, M> {
    * @throws NullPointerException if value is not present and {@code other} is null
    */
   public T orElseGet(@NonNull Supplier<@Nullable ? extends T> other) {
-    return value.orElseGet(other);
+    return (value != null) ? value : other.get();
   }
 
   /**
@@ -211,12 +197,32 @@ public final class Anoa<T, M> {
    * @throws NullPointerException if no value is present and {@code exceptionSupplier} is null
    */
   public <X extends Throwable> T orElseThrow(Supplier<? extends X> exceptionSupplier) throws X {
-    return value.orElseThrow(exceptionSupplier);
+    if (value == null) {
+      throw exceptionSupplier.get();
+    }
+    return value;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || !(o instanceof Anoa)) {
+      return false;
+    }
+    final Anoa<?, ?> anoa = (Anoa<?, ?>) o;
+    return Objects.equals(value, anoa.value) && Arrays.equals(meta, anoa.meta);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(value, meta);
   }
 
   @Override
   public String toString() {
-    return value.isPresent() ? ("Anoa(" + value.get() + ")") : "Anoa~empty";
+    return (value != null) ? ("Anoa(" + value + ")") : "Anoa~empty";
   }
 }
 
