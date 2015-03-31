@@ -37,7 +37,7 @@ public class AvroStreamsTest {
         AvroStreams.jackson(BidReqs.avroClass, true, BidReqs.jsonParser(-1)));
   }
 
-  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP;
+  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
 
   @Test
   public void testAnoaBatch() {

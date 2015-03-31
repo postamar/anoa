@@ -1,8 +1,5 @@
 package com.adgear.anoa.read;
 
-import checkers.nullness.quals.NonNull;
-import checkers.nullness.quals.Nullable;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -35,9 +32,9 @@ final public class LookAheadIterator<T> implements Iterator<T> {
    * @param closeable {@link Closeable#close()} will be called at the end of the iteration
    */
   public LookAheadIterator(
-      @NonNull Supplier<Boolean> noNext,
-      @NonNull Function<Consumer<Boolean>, UnaryOperator<T>> nextFactory,
-      @Nullable Closeable closeable) {
+      /*@NonNull*/ Supplier<Boolean> noNext,
+      /*@NonNull*/ Function<Consumer<Boolean>, UnaryOperator<T>> nextFactory,
+      /*@Nullable*/ Closeable closeable) {
     this.next = nextFactory.apply(this::setHasNext);
     this.noNext = noNext;
     this.closeable = closeable;
@@ -49,7 +46,7 @@ final public class LookAheadIterator<T> implements Iterator<T> {
   private boolean hasNext;
   private T nextValue;
 
-  void reset(@Nullable T nextValue) {
+  void reset(/*@Nullable*/ T nextValue) {
     this.isStale = true;
     this.hasNext = true;
     this.nextValue = nextValue;
@@ -93,18 +90,18 @@ final public class LookAheadIterator<T> implements Iterator<T> {
   /**
    * Returns a sequential stream wrapping the generated {@code LookAheadIterator} instance.
    */
-  static public <T> @NonNull Stream<T> stream(
-      @NonNull Supplier<Boolean> noNext,
-      @NonNull Function<Consumer<Boolean>, UnaryOperator<T>> nextFactory,
-      @Nullable Closeable closeable) {
+  static public <T> /*@NonNull*/ Stream<T> stream(
+      /*@NonNull*/ Supplier<Boolean> noNext,
+      /*@NonNull*/ Function<Consumer<Boolean>, UnaryOperator<T>> nextFactory,
+      /*@Nullable*/ Closeable closeable) {
     return new LookAheadIterator<>(noNext, nextFactory, closeable).asStream();
   }
 
-  @NonNull Spliterator<T> asSpliterator() {
+  /*@NonNull*/ Spliterator<T> asSpliterator() {
     return Spliterators.spliteratorUnknownSize(this, Spliterator.NONNULL | Spliterator.ORDERED);
   }
 
-  @NonNull Stream<T> asStream() {
+  /*@NonNull*/ Stream<T> asStream() {
     return StreamSupport.stream(asSpliterator(), false);
   }
 }

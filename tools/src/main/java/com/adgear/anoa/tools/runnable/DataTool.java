@@ -51,7 +51,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class DataTool<F extends TFieldIdEnum, T extends TBase<?, F>> implements Runnable {
+public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
 
   final private Schema declaredAvroSchema;
   final private Class<T> thriftClass;

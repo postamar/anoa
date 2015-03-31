@@ -1,7 +1,5 @@
 package com.adgear.anoa.read;
 
-import checkers.nullness.quals.NonNull;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvFactory;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
@@ -23,7 +21,7 @@ public class CsvStreams extends JacksonStreamsBase<
   /**
    * @param csvSchema format schema to use
    */
-  public CsvStreams(@NonNull CsvSchema csvSchema) {
+  public CsvStreams(/*@NonNull*/ CsvSchema csvSchema) {
     super(new CsvMapper(new CsvFactory()), Optional.of(csvSchema));
   }
 

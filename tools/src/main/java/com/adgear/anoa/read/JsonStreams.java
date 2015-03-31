@@ -1,7 +1,5 @@
 package com.adgear.anoa.read;
 
-import checkers.nullness.quals.NonNull;
-
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
 import com.fasterxml.jackson.core.FormatSchema;
@@ -50,8 +48,8 @@ public class JsonStreams extends JacksonStreamsBase<
    * @param <M> Metadata type
    * @return Object-mapping function appliable to TokenBuffer instances
    */
-  public <M> @NonNull Function<Anoa<TokenBuffer, M>, Anoa<ObjectNode, M>> tokenBuffer(
-      @NonNull AnoaHandler<M> anoaHandler) {
+  public <M> /*@NonNull*/ Function<Anoa<TokenBuffer, M>, Anoa<ObjectNode, M>> tokenBuffer(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler) {
     return anoaHandler.functionChecked((TokenBuffer tb) -> parser(tb).readValueAsTree());
   }
 }

@@ -2,14 +2,13 @@ package com.adgear.anoa.write;
 
 import org.apache.thrift.TBase;
 import org.apache.thrift.TException;
-import org.apache.thrift.TFieldIdEnum;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TTransport;
 
 import java.io.IOException;
 import java.util.function.Function;
 
-class ThriftWriteConsumer<T extends TBase<T, ? extends TFieldIdEnum>> implements WriteConsumer<T> {
+class ThriftWriteConsumer<T extends TBase> implements WriteConsumer<T> {
 
   final TTransport tTransport;
   final TProtocol tProtocol;

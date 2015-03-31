@@ -1,7 +1,5 @@
 package com.adgear.anoa.tools.function;
 
-import checkers.nullness.quals.NonNull;
-
 import org.jooq.lambda.Unchecked;
 import org.jooq.lambda.fi.util.function.CheckedPredicate;
 import org.josql.QueryExecutionException;
@@ -22,7 +20,7 @@ public class AnoaSqlWhereFilter<T> implements Predicate<T> {
   /**
    * @param expressionEvaluator a JoSQL ExpressionEvaluator instance.
    */
-  public AnoaSqlWhereFilter(@NonNull ExpressionEvaluator expressionEvaluator) {
+  public AnoaSqlWhereFilter(/*@NonNull*/ ExpressionEvaluator expressionEvaluator) {
     this.expressionEvaluator = expressionEvaluator;
   }
 
@@ -30,11 +28,11 @@ public class AnoaSqlWhereFilter<T> implements Predicate<T> {
    * @param klazz record Class object
    * @param whereClause SQL WHERE clause, without the WHERE keyword
    */
-  public AnoaSqlWhereFilter(@NonNull Class<T> klazz, @NonNull String whereClause) {
+  public AnoaSqlWhereFilter(/*@NonNull*/ Class<T> klazz, /*@NonNull*/ String whereClause) {
     this(Unchecked.supplier(() -> new ExpressionEvaluator(whereClause, klazz)).get());
   }
 
-  public boolean test(@NonNull T object) {
+  public boolean test(/*@NonNull*/ T object) {
     try {
       return expressionEvaluator.isTrue(object);
     } catch (QueryExecutionException e) {
@@ -42,7 +40,7 @@ public class AnoaSqlWhereFilter<T> implements Predicate<T> {
     }
   }
 
-  public @NonNull CheckedPredicate<T> asChecked() {
+  public /*@NonNull*/ CheckedPredicate<T> asChecked() {
     return expressionEvaluator::isTrue;
   }
 }

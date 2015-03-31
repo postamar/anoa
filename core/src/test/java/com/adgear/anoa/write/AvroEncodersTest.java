@@ -55,20 +55,20 @@ public class AvroEncodersTest {
             .map(AvroDecoders.jackson(BidReqs.avroSchema, true)));
   }
 
-  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP;
+  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
 
   @Test
   public void testAnoaBinary() {
     BidReqs.assertAvroGenerics(
         BidReqs.avroGeneric()
-            .map(anoaHandler::<GenericRecord>wrap)
+            .map(anoaHandler::<GenericRecord>of)
             .map(AvroEncoders.binary(anoaHandler, BidReqs.avroSchema))
             .map(AvroDecoders.binary(anoaHandler, BidReqs.avroSchema, null))
             .flatMap(Anoa::asStream));
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
-            .map(anoaHandler::<BidRequest>wrap)
+            .map(anoaHandler::<BidRequest>of)
             .map(AvroEncoders.binary(anoaHandler, BidReqs.avroClass))
             .map(AvroDecoders.binary(anoaHandler, BidReqs.avroSchema, null))
             .flatMap(Anoa::asStream));
@@ -79,14 +79,14 @@ public class AvroEncodersTest {
   public void testAnoaJson() {
     BidReqs.assertAvroGenerics(
         BidReqs.avroGeneric()
-            .map(anoaHandler::<GenericRecord>wrap)
+            .map(anoaHandler::<GenericRecord>of)
             .map(AvroEncoders.json(anoaHandler, BidReqs.avroSchema))
             .map(AvroDecoders.json(anoaHandler, BidReqs.avroSchema, null))
             .flatMap(Anoa::asStream));
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
-            .map(anoaHandler::<BidRequest>wrap)
+            .map(anoaHandler::<BidRequest>of)
             .map(AvroEncoders.json(anoaHandler, BidReqs.avroClass))
             .map(AvroDecoders.json(anoaHandler, BidReqs.avroSchema, null))
             .flatMap(Anoa::asStream));
@@ -96,7 +96,7 @@ public class AvroEncodersTest {
   public void testAnoaJackson() {
     BidReqs.assertAvroGenerics(
         BidReqs.avroGeneric()
-            .map(anoaHandler::<GenericRecord>wrap)
+            .map(anoaHandler::<GenericRecord>of)
             .map(AvroEncoders.jackson(anoaHandler,
                                       BidReqs.avroSchema,
                                       () -> new TokenBuffer(BidReqs.objectMapper, false)))
@@ -106,7 +106,7 @@ public class AvroEncodersTest {
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
-            .map(anoaHandler::<BidRequest>wrap)
+            .map(anoaHandler::<BidRequest>of)
             .map(AvroEncoders.jackson(anoaHandler,
                                       BidReqs.avroClass,
                                       () -> new TokenBuffer(BidReqs.objectMapper, false)))

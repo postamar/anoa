@@ -1,7 +1,5 @@
 package com.adgear.anoa.tools.function;
 
-import checkers.nullness.quals.NonNull;
-
 import org.jooq.lambda.fi.util.function.CheckedUnaryOperator;
 
 import java.lang.reflect.Field;
@@ -20,7 +18,7 @@ public class AnoaFieldNuller<T> implements UnaryOperator<T> {
   /**
    * @param fields the field names to set to null, according to this object
    */
-  public AnoaFieldNuller(@NonNull String... fields) {
+  public AnoaFieldNuller(/*@NonNull*/ String... fields) {
     this.fields = fields;
   }
 
@@ -32,7 +30,7 @@ public class AnoaFieldNuller<T> implements UnaryOperator<T> {
   }
 
 
-  public @NonNull T applyChecked(@NonNull T object)
+  public /*@NonNull*/ T applyChecked(/*@NonNull*/ T object)
       throws NoSuchFieldException, IllegalAccessException {
     for (String field : fields) {
       ObjectFieldWrapper wrapper = getFieldAtPath(object, field);
@@ -41,7 +39,7 @@ public class AnoaFieldNuller<T> implements UnaryOperator<T> {
     return object;
   }
 
-  public @NonNull T apply(@NonNull T object) {
+  public /*@NonNull*/ T apply(/*@NonNull*/ T object) {
     try {
       return applyChecked(object);
     } catch (NoSuchFieldException | IllegalAccessException e) {
@@ -49,7 +47,7 @@ public class AnoaFieldNuller<T> implements UnaryOperator<T> {
     }
   }
 
-  public @NonNull CheckedUnaryOperator<T> asChecked() {
+  public /*@NonNull*/ CheckedUnaryOperator<T> asChecked() {
     return this::applyChecked;
   }
 

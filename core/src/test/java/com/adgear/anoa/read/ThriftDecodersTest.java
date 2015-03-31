@@ -41,13 +41,13 @@ public class ThriftDecodersTest {
             .map(ThriftDecoders.jackson(BidReqs.thriftClass, true)));
   }
 
-  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP;
+  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
 
   @Test
   public void testAnoaBinary() {
     BidReqs.assertThriftObjects(
         BidReqs.thriftBinary()
-            .map(anoaHandler::<byte[]>wrap)
+            .map(anoaHandler::<byte[]>of)
             .map(ThriftDecoders.binary(anoaHandler, BidReqs.thriftSupplier))
             .map(Anoa::get));
   }
@@ -56,7 +56,7 @@ public class ThriftDecodersTest {
   public void testAnoaCompact() {
     BidReqs.assertThriftObjects(
         BidReqs.thriftCompact()
-            .map(anoaHandler::<byte[]>wrap)
+            .map(anoaHandler::<byte[]>of)
             .map(ThriftDecoders.compact(anoaHandler, BidReqs.thriftSupplier))
             .map(Anoa::get));
   }
@@ -65,7 +65,7 @@ public class ThriftDecodersTest {
   public void testAnoaJson() {
     BidReqs.assertThriftObjects(
         BidReqs.thriftJson()
-            .map(anoaHandler::<byte[]>wrap)
+            .map(anoaHandler::<byte[]>of)
             .map(ThriftDecoders.json(anoaHandler, BidReqs.thriftSupplier))
             .map(Anoa::get));
   }
@@ -75,7 +75,7 @@ public class ThriftDecodersTest {
   public void testAnoaJackson() {
     BidReqs.assertThriftObjects(
         BidReqs.jsonObjects()
-            .map(anoaHandler::<TreeNode>wrap)
+            .map(anoaHandler::<TreeNode>of)
             .map(anoaHandler.function(TreeNode::traverse))
             .map(ThriftDecoders.jackson(anoaHandler, BidReqs.thriftClass, true))
             .map(Anoa::get));
@@ -84,7 +84,7 @@ public class ThriftDecodersTest {
   @Test
   public void testAnoaBroken() {
     Map<String, List<Throwable>> metaMap = BidReqs.thriftBinary()
-        .map(anoaHandler::<byte[]>wrap)
+        .map(anoaHandler::<byte[]>of)
         .map(ThriftDecoders.compact(anoaHandler, BidReqs.thriftSupplier))
         .peek(a -> Assert.assertFalse(a.isPresent()))
         .flatMap(Anoa::meta)

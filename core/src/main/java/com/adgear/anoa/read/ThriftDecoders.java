@@ -1,13 +1,10 @@
 package com.adgear.anoa.read;
 
-import checkers.nullness.quals.NonNull;
-
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
 import com.fasterxml.jackson.core.JsonParser;
 
 import org.apache.thrift.TBase;
-import org.apache.thrift.TFieldIdEnum;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.protocol.TJSONProtocol;
@@ -32,8 +29,8 @@ public class ThriftDecoders {
    * @param <T> Thrift record type 
    * @return A function which deserializes a Thrift record from its compact binary encoding
    */
-  static public <T extends TBase> @NonNull Function<byte[], T> compact(
-      @NonNull Supplier<T> supplier) {
+  static public <T extends TBase> /*@NonNull*/ Function<byte[], T> compact(
+      /*@NonNull*/ Supplier<T> supplier) {
     return fn(supplier, TCompactProtocol::new);
   }
 
@@ -45,9 +42,9 @@ public class ThriftDecoders {
    * @return A function which deserializes a Thrift record from its compact binary encoding 
    */
   static public <T extends TBase, M>
-  @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> compact(
-      @NonNull AnoaHandler<M> anoaHandler,
-      @NonNull Supplier<T> supplier) {
+  /*@NonNull*/ Function<Anoa<byte[], M>, Anoa<T, M>> compact(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler,
+      /*@NonNull*/ Supplier<T> supplier) {
     return fn(anoaHandler, supplier, TCompactProtocol::new);
   }
 
@@ -56,8 +53,8 @@ public class ThriftDecoders {
    * @param <T> Thrift record type
    * @return A function which deserializes a Thrift record from its standard binary encoding
    */
-  static public <T extends TBase> @NonNull Function<byte[], T> binary(
-      @NonNull Supplier<T> supplier) {
+  static public <T extends TBase> /*@NonNull*/ Function<byte[], T> binary(
+      /*@NonNull*/ Supplier<T> supplier) {
     return fn(supplier, TBinaryProtocol::new);
   }
 
@@ -69,9 +66,9 @@ public class ThriftDecoders {
    * @return A function which deserializes a Thrift record from its standard binary encoding
    */
   static public <T extends TBase, M>
-  @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> binary(
-      @NonNull AnoaHandler<M> anoaHandler,
-      @NonNull Supplier<T> supplier) {
+  /*@NonNull*/ Function<Anoa<byte[], M>, Anoa<T, M>> binary(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler,
+      /*@NonNull*/ Supplier<T> supplier) {
     return fn(anoaHandler, supplier, TBinaryProtocol::new);
   }
 
@@ -80,8 +77,8 @@ public class ThriftDecoders {
    * @param <T> Thrift record type
    * @return A function which deserializes a Thrift record from its Thrift JSON encoding
    */
-  static public <T extends TBase> @NonNull Function<byte[], T> json(
-      @NonNull Supplier<T> supplier) {
+  static public <T extends TBase> /*@NonNull*/ Function<byte[], T> json(
+      /*@NonNull*/ Supplier<T> supplier) {
     return fn(supplier, TJSONProtocol::new);
   }
 
@@ -93,15 +90,15 @@ public class ThriftDecoders {
    * @return A function which deserializes a Thrift record from its Thrift JSON encoding
    */
   static public <T extends TBase, M>
-  @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> json(
-      @NonNull AnoaHandler<M> anoaHandler,
-      @NonNull Supplier<T> supplier) {
+  /*@NonNull*/ Function<Anoa<byte[], M>, Anoa<T, M>> json(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler,
+      /*@NonNull*/ Supplier<T> supplier) {
     return fn(anoaHandler, supplier, TJSONProtocol::new);
   }
 
-  static <T extends TBase> @NonNull Function<byte[], T> fn(
-      @NonNull Supplier<T> supplier,
-      @NonNull Function<TTransport, TProtocol> protocolFactory) {
+  static <T extends TBase> /*@NonNull*/ Function<byte[], T> fn(
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ Function<TTransport, TProtocol> protocolFactory) {
     final TMemoryInputTransport tTransport = new TMemoryInputTransport();
     final TProtocol tProtocol = protocolFactory.apply(tTransport);
     final LookAheadIterator<T> lookAheadIterator =
@@ -113,10 +110,10 @@ public class ThriftDecoders {
     };
   }
 
-  static <T extends TBase, M> @NonNull Function<Anoa<byte[], M>, Anoa<T, M>> fn(
-      @NonNull AnoaHandler<M> anoaHandler,
-      @NonNull Supplier<T> supplier,
-      @NonNull Function<TTransport, TProtocol> protocolFactory) {
+  static <T extends TBase, M> /*@NonNull*/ Function<Anoa<byte[], M>, Anoa<T, M>> fn(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler,
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ Function<TTransport, TProtocol> protocolFactory) {
     final TMemoryInputTransport tTransport = new TMemoryInputTransport();
     final TProtocol tProtocol = protocolFactory.apply(tTransport);
     final LookAheadIterator<Anoa<T, M>> lookAheadIterator =
@@ -132,15 +129,14 @@ public class ThriftDecoders {
    * @param recordClass Thrift record class object
    * @param strict enable strict type checking
    * @param <P> Jackson JsonParser type
-   * @param <F> Thrift record field type
    * @param <T> Thrift record type
    * @return A function which reads a Thrift record from a JsonParser, in its 'natural' encoding.
    */
-  static public <P extends JsonParser, F extends TFieldIdEnum, T extends TBase<?, F>>
-  @NonNull Function<P, T> jackson(
-      @NonNull Class<T> recordClass,
+  static public <P extends JsonParser, T extends TBase>
+  /*@NonNull*/ Function<P, T> jackson(
+      /*@NonNull*/ Class<T> recordClass,
       boolean strict) {
-    final ThriftReader<F, T> reader = new ThriftReader<>(recordClass);
+    final AbstractReader<T> reader = new ThriftReader<>(recordClass);
     return (P jp) -> reader.read(jp, strict);
   }
 
@@ -149,17 +145,16 @@ public class ThriftDecoders {
    * @param recordClass Thrift record class object
    * @param strict enable strict type checking
    * @param <P> Jackson JsonParser type
-   * @param <F> Thrift record field type
    * @param <T> Thrift record type
    * @param <M> Metadata type
    * @return A function which reads a Thrift record from a JsonParser, in its 'natural' encoding.
    */
-  static public <P extends JsonParser, F extends TFieldIdEnum, T extends TBase<?, F>, M>
-  @NonNull Function<Anoa<P, M>, Anoa<T, M>> jackson(
-      @NonNull AnoaHandler<M> anoaHandler,
-      @NonNull Class<T> recordClass,
+  static public <P extends JsonParser, T extends TBase, M>
+  /*@NonNull*/ Function<Anoa<P, M>, Anoa<T, M>> jackson(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler,
+      /*@NonNull*/ Class<T> recordClass,
       boolean strict) {
-    final ThriftReader<F, T> reader = new ThriftReader<>(recordClass);
-    return anoaHandler.functionChecked((P jp) -> reader.readChecked(jp, strict));
+    final AbstractReader<T> reader = new ThriftReader<>(recordClass);
+    return anoaHandler.functionChecked((P jp) -> (T) reader.readChecked(jp, strict));
   }
 }
