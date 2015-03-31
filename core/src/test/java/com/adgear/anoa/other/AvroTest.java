@@ -39,7 +39,7 @@ public class AvroTest {
 
   @Test
   public void test() throws Exception {
-    AnoaHandler<Throwable> f = AnoaHandler.NO_OP;
+    AnoaHandler<Throwable> f = AnoaHandler.NO_OP_HANDLER;
     try (InputStream inputStream = getClass().getResourceAsStream("/bidreqs.json")) {
       Stream<Anoa<TreeNode, Throwable>> treeNodeStream =
           new JacksonStreams<>(new ObjectMapper(), Optional.<FormatSchema>empty())
@@ -65,8 +65,8 @@ public class AvroTest {
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try (WriteConsumer<BidRequest> consumer = AvroConsumers.batch(BidRequest.class, baos)) {
-      long total = AvroStreams.jackson(AnoaHandler.NO_OP, BidRequest.class, true, jp)
-          .map(AnoaHandler.NO_OP.writeConsumer(consumer))
+      long total = AvroStreams.jackson(AnoaHandler.NO_OP_HANDLER, BidRequest.class, true, jp)
+          .map(AnoaHandler.NO_OP_HANDLER.writeConsumer(consumer))
           .filter(Anoa::isPresent)
           .count();
 

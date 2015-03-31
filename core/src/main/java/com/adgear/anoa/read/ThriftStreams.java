@@ -1,7 +1,5 @@
 package com.adgear.anoa.read;
 
-import checkers.nullness.quals.NonNull;
-
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
 import com.fasterxml.jackson.core.JsonParser;
@@ -37,9 +35,9 @@ public class ThriftStreams {
    * @param inputStream stream from which to deserialize
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> @NonNull Stream<T> compact(
-      @NonNull Supplier<T> supplier,
-      @NonNull InputStream inputStream) {
+  static public <T extends TBase> /*@NonNull*/ Stream<T> compact(
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ InputStream inputStream) {
     return compact(supplier, new TIOStreamTransport(inputStream));
   }
 
@@ -52,10 +50,10 @@ public class ThriftStreams {
    * @param <T> Thrift record type
    * @param <M> Metadata type
    */
-  static public <T extends TBase, M> @NonNull Stream<Anoa<T, M>> compact(
-      @NonNull AnoaHandler<M> anoaHandler,
-      @NonNull Supplier<T> supplier,
-      @NonNull InputStream inputStream) {
+  static public <T extends TBase, M> /*@NonNull*/ Stream<Anoa<T, M>> compact(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler,
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ InputStream inputStream) {
     return compact(anoaHandler, supplier, new TIOStreamTransport(inputStream));
   }
 
@@ -67,9 +65,9 @@ public class ThriftStreams {
    * @param readOnly file open mode
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> @NonNull Stream<T> compact(
-      @NonNull Supplier<T> supplier,
-      @NonNull String fileName,
+  static public <T extends TBase> /*@NonNull*/ Stream<T> compact(
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ String fileName,
       boolean readOnly) {
     try {
       return compact(supplier, new TFileTransport(fileName, readOnly));
@@ -88,10 +86,10 @@ public class ThriftStreams {
    * @param <T> Thrift record type
    * @param <M> Metadata type
    */
-  static public <T extends TBase, M> @NonNull Stream<Anoa<T, M>> compact(
-      @NonNull AnoaHandler<M> anoaHandler,
-      @NonNull Supplier<T> supplier,
-      @NonNull String fileName,
+  static public <T extends TBase, M> /*@NonNull*/ Stream<Anoa<T, M>> compact(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler,
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ String fileName,
       boolean readOnly) {
     try {
       return compact(anoaHandler, supplier, new TFileTransport(fileName, readOnly));
@@ -107,9 +105,9 @@ public class ThriftStreams {
    * @param tTransport Thrift TTransport instance from which to read
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> @NonNull Stream<T> compact(
-      @NonNull Supplier<T> supplier,
-      @NonNull TTransport tTransport) {
+  static public <T extends TBase> /*@NonNull*/ Stream<T> compact(
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ TTransport tTransport) {
     return LookAheadIteratorFactory.thrift(new TCompactProtocol(tTransport), supplier)
         .asStream();
   }
@@ -123,10 +121,10 @@ public class ThriftStreams {
    * @param <T> Thrift record type
    * @param <M> Metadata type
    */
-  static public <T extends TBase, M> @NonNull Stream<Anoa<T, M>> compact(
-      @NonNull AnoaHandler<M> anoaHandler,
-      @NonNull Supplier<T> supplier,
-      @NonNull TTransport tTransport) {
+  static public <T extends TBase, M> /*@NonNull*/ Stream<Anoa<T, M>> compact(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler,
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ TTransport tTransport) {
     return LookAheadIteratorFactory.thrift(anoaHandler, new TCompactProtocol(tTransport), supplier)
         .asStream();
   }
@@ -138,9 +136,9 @@ public class ThriftStreams {
    * @param inputStream stream from which to deserialize
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> @NonNull Stream<T> binary(
-      @NonNull Supplier<T> supplier,
-      @NonNull InputStream inputStream) {
+  static public <T extends TBase> /*@NonNull*/ Stream<T> binary(
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ InputStream inputStream) {
     return binary(supplier, new TIOStreamTransport(new BufferedInputStream(inputStream)));
   }
 
@@ -153,10 +151,10 @@ public class ThriftStreams {
    * @param <T> Thrift record type
    * @param <M> Metadata type
    */
-  static public <T extends TBase, M> @NonNull Stream<Anoa<T, M>> binary(
-      @NonNull AnoaHandler<M> anoaHandler,
-      @NonNull Supplier<T> supplier,
-      @NonNull InputStream inputStream) {
+  static public <T extends TBase, M> /*@NonNull*/ Stream<Anoa<T, M>> binary(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler,
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ InputStream inputStream) {
     return binary(anoaHandler,
                   supplier,
                   new TIOStreamTransport(new BufferedInputStream(inputStream)));
@@ -170,9 +168,9 @@ public class ThriftStreams {
    * @param readOnly file open mode
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> @NonNull Stream<T> binary(
-      @NonNull Supplier<T> supplier,
-      @NonNull String fileName,
+  static public <T extends TBase> /*@NonNull*/ Stream<T> binary(
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ String fileName,
       boolean readOnly) {
     try {
       return binary(supplier, new TFileTransport(fileName, readOnly));
@@ -191,10 +189,10 @@ public class ThriftStreams {
    * @param <T> Thrift record type
    * @param <M> Metadata type
    */
-  static public <T extends TBase, M> @NonNull Stream<Anoa<T, M>> binary(
-      @NonNull AnoaHandler<M> anoaHandler,
-      @NonNull Supplier<T> supplier,
-      @NonNull String fileName,
+  static public <T extends TBase, M> /*@NonNull*/ Stream<Anoa<T, M>> binary(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler,
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ String fileName,
       boolean readOnly) {
     try {
       return binary(anoaHandler, supplier, new TFileTransport(fileName, readOnly));
@@ -210,9 +208,9 @@ public class ThriftStreams {
    * @param tTransport Thrift TTransport instance from which to read
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> @NonNull Stream<T> binary(
-      @NonNull Supplier<T> supplier,
-      @NonNull TTransport tTransport) {
+  static public <T extends TBase> /*@NonNull*/ Stream<T> binary(
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ TTransport tTransport) {
     return LookAheadIteratorFactory.thrift(new TBinaryProtocol(tTransport), supplier).asStream();
   }
 
@@ -225,10 +223,10 @@ public class ThriftStreams {
    * @param <T> Thrift record type
    * @param <M> Metadata type
    */
-  static public <T extends TBase, M> @NonNull Stream<Anoa<T, M>> binary(
-      @NonNull AnoaHandler<M> anoaHandler,
-      @NonNull Supplier<T> supplier,
-      @NonNull TTransport tTransport) {
+  static public <T extends TBase, M> /*@NonNull*/ Stream<Anoa<T, M>> binary(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler,
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ TTransport tTransport) {
     return LookAheadIteratorFactory.thrift(anoaHandler, new TBinaryProtocol(tTransport), supplier)
         .asStream();
   }
@@ -240,9 +238,9 @@ public class ThriftStreams {
    * @param inputStream stream from which to deserialize
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> @NonNull Stream<T> json(
-      @NonNull Supplier<T> supplier,
-      @NonNull InputStream inputStream) {
+  static public <T extends TBase> /*@NonNull*/ Stream<T> json(
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ InputStream inputStream) {
     return json(supplier, new TIOStreamTransport(new BufferedInputStream(inputStream)));
   }
 
@@ -255,10 +253,10 @@ public class ThriftStreams {
    * @param <T> Thrift record type
    * @param <M> Metadata type
    */
-  static public <T extends TBase, M> @NonNull Stream<Anoa<T, M>> json(
-      @NonNull AnoaHandler<M> anoaHandler,
-      @NonNull Supplier<T> supplier,
-      @NonNull InputStream inputStream) {
+  static public <T extends TBase, M> /*@NonNull*/ Stream<Anoa<T, M>> json(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler,
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ InputStream inputStream) {
     return json(anoaHandler,
                 supplier,
                 new TIOStreamTransport(new BufferedInputStream(inputStream)));
@@ -272,9 +270,9 @@ public class ThriftStreams {
    * @param readOnly file open mode
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> @NonNull Stream<T> json(
-      @NonNull Supplier<T> supplier,
-      @NonNull String fileName,
+  static public <T extends TBase> /*@NonNull*/ Stream<T> json(
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ String fileName,
       boolean readOnly) {
     try {
       return json(supplier, new TFileTransport(fileName, readOnly));
@@ -293,10 +291,10 @@ public class ThriftStreams {
    * @param <T> Thrift record type
    * @param <M> Metadata type
    */
-  static public <T extends TBase, M> @NonNull Stream<Anoa<T, M>> json(
-      @NonNull AnoaHandler<M> anoaHandler,
-      @NonNull Supplier<T> supplier,
-      @NonNull String fileName,
+  static public <T extends TBase, M> /*@NonNull*/ Stream<Anoa<T, M>> json(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler,
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ String fileName,
       boolean readOnly) {
     try {
       return json(anoaHandler, supplier, new TFileTransport(fileName, readOnly));
@@ -312,9 +310,9 @@ public class ThriftStreams {
    * @param tTransport Thrift TTransport instance from which to read
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> @NonNull Stream<T> json(
-      @NonNull Supplier<T> supplier,
-      @NonNull TTransport tTransport) {
+  static public <T extends TBase> /*@NonNull*/ Stream<T> json(
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ TTransport tTransport) {
     return LookAheadIteratorFactory.thrift(new TJSONProtocol(tTransport), supplier).asStream();
   }
 
@@ -327,10 +325,10 @@ public class ThriftStreams {
    * @param <T> Thrift record type
    * @param <M> Metadata type
    */
-  static public <T extends TBase, M> @NonNull Stream<Anoa<T, M>> json(
-      @NonNull AnoaHandler<M> anoaHandler,
-      @NonNull Supplier<T> supplier,
-      @NonNull TTransport tTransport) {
+  static public <T extends TBase, M> /*@NonNull*/ Stream<Anoa<T, M>> json(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler,
+      /*@NonNull*/ Supplier<T> supplier,
+      /*@NonNull*/ TTransport tTransport) {
     return LookAheadIteratorFactory.thrift(anoaHandler, new TJSONProtocol(tTransport), supplier).asStream();
   }
 
@@ -342,10 +340,10 @@ public class ThriftStreams {
    * @param jacksonParser JsonParser instance from which to read
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> @NonNull Stream<T> jackson(
-      @NonNull Class<T> recordClass,
+  static public <T extends TBase> /*@NonNull*/ Stream<T> jackson(
+      /*@NonNull*/ Class<T> recordClass,
       boolean strict,
-      @NonNull JsonParser jacksonParser) {
+      /*@NonNull*/ JsonParser jacksonParser) {
     return LookAheadIteratorFactory.jackson(jacksonParser).asStream()
         .map(TreeNode::traverse)
         .map(ThriftDecoders.jackson(recordClass, strict));
@@ -361,11 +359,11 @@ public class ThriftStreams {
    * @param <T> Thrift record type
    * @param <M> Metadata type
    */
-  static public <T extends TBase, M>@NonNull Stream<Anoa<T, M>> jackson(
-      @NonNull AnoaHandler<M> anoaHandler,
-      @NonNull Class<T> recordClass,
+  static public <T extends TBase, M>/*@NonNull*/ Stream<Anoa<T, M>> jackson(
+      /*@NonNull*/ AnoaHandler<M> anoaHandler,
+      /*@NonNull*/ Class<T> recordClass,
       boolean strict,
-      @NonNull JsonParser jacksonParser) {
+      /*@NonNull*/ JsonParser jacksonParser) {
     return LookAheadIteratorFactory.jackson(anoaHandler, jacksonParser).asStream()
         .map(anoaHandler.function(TreeNode::traverse))
         .map(ThriftDecoders.jackson(anoaHandler, recordClass, strict));

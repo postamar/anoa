@@ -1,7 +1,5 @@
 package com.adgear.anoa.read;
 
-import checkers.nullness.quals.NonNull;
-
 import com.fasterxml.jackson.core.FormatSchema;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -17,11 +15,11 @@ class JacksonStreamsBase<
     P extends JsonParser>
     extends JacksonStreams<ObjectNode, M, F, S, P> {
 
-  JacksonStreamsBase(@NonNull M objectMapper) {
+  JacksonStreamsBase(/*@NonNull*/ M objectMapper) {
     this(objectMapper, Optional.<S>empty());
   }
 
-  JacksonStreamsBase(@NonNull M objectMapper, @NonNull Optional<S> schema) {
+  JacksonStreamsBase(/*@NonNull*/ M objectMapper, /*@NonNull*/ Optional<S> schema) {
     super(objectMapper, schema);
     objectMapper.findAndRegisterModules();
   }

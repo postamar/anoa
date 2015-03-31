@@ -34,7 +34,7 @@ public class ThriftTest {
   @Test
   public void test() throws Exception {
     final List<BidRequest> collected = new ArrayList<>();
-    AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP;
+    AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
     try (InputStream inputStream = getClass().getResourceAsStream("/bidreqs.json")) {
       try (JsonParser jp = new JsonFactory(new ObjectMapper()).createParser(inputStream)) {
         long total = ThriftStreams.jackson(anoaHandler, BidRequest.class, true, jp)

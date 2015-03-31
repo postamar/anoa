@@ -7,7 +7,6 @@ import com.adgear.anoa.tools.runnable.Format;
 
 import org.apache.avro.Schema;
 import org.apache.thrift.TBase;
-import org.apache.thrift.TFieldIdEnum;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,7 +27,7 @@ public class DataToolTest {
     return baos.toByteArray();
   }
 
-  static public <F extends TFieldIdEnum, T extends TBase<T, F>> byte[] convert(
+  static public <T extends TBase> byte[] convert(
       Class<T> thriftClass,
       Format in,
       Format out,
@@ -48,7 +47,7 @@ public class DataToolTest {
   public void testJsonToAvro() {
     Assert.assertEquals(
         946,
-        AvroStreams.batch(AnoaHandler.NO_OP, new ByteArrayInputStream(
+        AvroStreams.batch(AnoaHandler.NO_OP_HANDLER, new ByteArrayInputStream(
             convert(schema, Format.JSON, Format.AVRO, bidreqs())))
             .filter(Anoa::isPresent)
             .count());
