@@ -41,7 +41,11 @@ abstract class AvroReader<R extends IndexedRecord> extends AbstractReader<R> {
 
   @Override
   protected R validateTopLevel(R record) {
-    GenericData.get().validate(record.getSchema(), record);
+    if (record instanceof SpecificRecord) {
+      SpecificData.get().validate(record.getSchema(), record);
+    } else {
+      GenericData.get().validate(record.getSchema(), record);
+    }
     return record;
   }
 
