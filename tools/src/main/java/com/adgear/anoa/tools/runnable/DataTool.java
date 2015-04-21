@@ -356,14 +356,13 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
           for (String initStatement : jdbcInitStatements) {
             statement.execute(initStatement);
           }
-          try (ResultSet resultSet = statement.executeQuery(jdbcQuery)) {
-            if (avroSchema == null) {
-              avroSchema = JdbcStreams.induceSchema(resultSet.getMetaData());
-            }
-            runAvro(new JdbcStreams().resultSet(resultSet)
-                        .map(ObjectNode::traverse)
-                        .map(AvroDecoders.jackson(avroSchema, false)));
+          final ResultSet resultSet = statement.executeQuery(jdbcQuery);
+          if (avroSchema == null) {
+            avroSchema = JdbcStreams.induceSchema(resultSet.getMetaData());
           }
+          runAvro(new JdbcStreams().resultSet(resultSet)
+                      .map(ObjectNode::traverse)
+                      .map(AvroDecoders.jackson(avroSchema, false)));
         } catch (SQLException e) {
           throw new RuntimeException(e);
         }
