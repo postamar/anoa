@@ -4,10 +4,10 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
 
-class EnumWriter extends AbstractWriter<Enum> {
+class EnumWriter extends AbstractWriter<Object> {
 
   @Override
-  protected void writeChecked(Enum anEnum, JsonGenerator jacksonGenerator) throws IOException {
+  protected void writeChecked(Object anEnum, JsonGenerator jacksonGenerator) throws IOException {
     jacksonGenerator.writeString(anEnum.toString());
   }
 }
