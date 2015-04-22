@@ -3,7 +3,9 @@ package com.adgear.anoa.read;
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
 import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
@@ -14,6 +16,7 @@ import org.jooq.lambda.SQL;
 import org.jooq.lambda.Unchecked;
 import org.jooq.lambda.fi.util.function.CheckedFunction;
 
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -93,11 +96,26 @@ public class JdbcStreams {
       tb.writeStartObject();
       for (int c = 0; c < n;) {
         tb.writeFieldName(names[c++]);
-        tb.writeObject(resultSet.getObject(c));
+        tb.writeTree(objectToTree(resultSet.getObject(c)));
       }
       tb.writeEndObject();
       return tb.asParser(objectCodec).readValueAsTree();
     };
+  }
+
+  private TreeNode objectToTree(Object object) throws IOException {
+    if (object == null) {
+      return NullNode.getInstance();
+    }
+    TokenBuffer tb = new TokenBuffer(objectCodec, false);
+    try {
+      tb.writeObject(object);
+      return tb.asParser().readValueAsTree();
+    } catch (IOException e) {
+      tb = new TokenBuffer(objectCodec, false);
+    }
+    tb.writeString(object.toString());
+    return tb.asParser().readValueAsTree();
   }
 
   /**
