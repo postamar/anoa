@@ -34,7 +34,9 @@ public class AnoaFieldNuller<T> implements UnaryOperator<T> {
       throws NoSuchFieldException, IllegalAccessException {
     for (String field : fields) {
       ObjectFieldWrapper wrapper = getFieldAtPath(object, field);
-      wrapper.field.set(wrapper.object, null);
+      if (wrapper != null) {
+        wrapper.field.set(wrapper.object, null);
+      }
     }
     return object;
   }
