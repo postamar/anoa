@@ -36,8 +36,9 @@ public class CsvConsumers extends JacksonConsumersBase<
    */
   static public CsvConsumers tsv() {
     return new CsvConsumers(CsvSchema.builder()
-                              .setColumnSeparator('\t')
-                              .build());
+                                .disableQuoteChar()
+                                .setColumnSeparator('\t')
+                                .build());
   }
 
   /**
@@ -45,8 +46,8 @@ public class CsvConsumers extends JacksonConsumersBase<
    */
   static public CsvConsumers csvWithHeader() {
     return new CsvConsumers(CsvSchema.builder()
-                              .setUseHeader(true)
-                              .build());
+                                .setUseHeader(true)
+                                .build());
   }
 
   /**
@@ -54,8 +55,9 @@ public class CsvConsumers extends JacksonConsumersBase<
    */
   static public CsvConsumers tsvWithHeader() {
     return new CsvConsumers(CsvSchema.builder()
-                              .setUseHeader(true)
-                              .setColumnSeparator('\t')
-                              .build());
+                                .setUseHeader(true)
+                                .disableQuoteChar()
+                                .setColumnSeparator('\t')
+                                .build());
   }
 }
