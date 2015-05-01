@@ -37,6 +37,7 @@ public class CsvStreams extends JacksonStreamsBase<
    */
   static public CsvStreams tsv() {
     return new CsvStreams(CsvSchema.builder()
+                              .disableQuoteChar()
                               .setColumnSeparator('\t')
                               .build());
   }
@@ -56,6 +57,7 @@ public class CsvStreams extends JacksonStreamsBase<
   static public CsvStreams tsvWithHeader() {
     return new CsvStreams(CsvSchema.builder()
                               .setUseHeader(true)
+                              .disableQuoteChar()
                               .setColumnSeparator('\t')
                               .build());
   }

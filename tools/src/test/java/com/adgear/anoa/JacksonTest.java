@@ -43,6 +43,7 @@ public class JacksonTest {
     CsvSchema schema = CsvSchema.builder()
         .addColumn("foo").addColumn("bar").addColumn("baz")
         .setColumnSeparator('\t')
+        .disableQuoteChar()
         .setUseHeader(true)
         .build();
 
