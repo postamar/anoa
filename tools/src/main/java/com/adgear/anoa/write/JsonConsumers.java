@@ -3,6 +3,8 @@ package com.adgear.anoa.write;
 import com.fasterxml.jackson.core.FormatSchema;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.PrettyPrinter;
+import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
@@ -15,8 +17,17 @@ public class JsonConsumers extends JacksonConsumersBase<
       FormatSchema,
       JsonGenerator> {
 
+  static final private PrettyPrinter PRETTY_PRINTER = new MinimalPrettyPrinter("\n");
+
   public JsonConsumers() {
     super(new ObjectMapper());
+  }
+
+  @Override
+  public /*@NonNull*/ JsonGenerator with(/*@NonNull*/ JsonGenerator generator) {
+    generator = super.with(generator);
+    generator.setPrettyPrinter(PRETTY_PRINTER);
+    return generator;
   }
 
   public /*@NonNull*/ TokenBuffer generator() {
@@ -26,4 +37,5 @@ public class JsonConsumers extends JacksonConsumersBase<
   public /*@NonNull*/ TokenBufferWriteConsumer to() {
     return new TokenBufferWriteConsumer(generator());
   }
+
 }
