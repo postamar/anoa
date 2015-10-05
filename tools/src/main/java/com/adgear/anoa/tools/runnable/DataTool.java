@@ -320,7 +320,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
       case AVRO:
         GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(declaredAvroSchema);
         try (DataFileStream<GenericRecord> it = new DataFileStream<>(in, reader)) {
-          avroSchema = reader.getSchema();
+          avroSchema = reader.getExpected();
           runAvro(AvroStreams.batch(it));
         } catch (IOException e) {
           throw new UncheckedIOException(e);

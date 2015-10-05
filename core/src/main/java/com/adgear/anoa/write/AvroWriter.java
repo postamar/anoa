@@ -14,19 +14,26 @@ class AvroWriter<R extends IndexedRecord> extends AbstractWriter<R> {
 
   final private LinkedHashMap<Schema.Field,AbstractWriter<Object>> fieldMap;
 
+  private Schema schema;
+
   AvroWriter(Class<R> recordClass) {
     this(SpecificData.get().getSchema(recordClass));
   }
 
   @SuppressWarnings("unchecked")
   AvroWriter(Schema schema) {
-    fieldMap = new LinkedHashMap<>();
+    this.fieldMap = new LinkedHashMap<>();
+    this.schema = schema;
     schema.getFields().stream()
         .forEach(f -> fieldMap.put(f, (AbstractWriter<Object>) createWriter(f.schema())));
   }
 
   @Override
   protected void writeChecked(R record, JsonGenerator jacksonGenerator) throws IOException {
+    if (!record.getSchema().equals(schema)) {
+      throw new IOException("Record does not have correct Avro schema:\n"
+                            + record.getSchema().toString(true));
+    }
     jacksonGenerator.writeStartObject();
     for (Map.Entry<Schema.Field,AbstractWriter<Object>> entry : fieldMap.entrySet()) {
       Schema.Field field = entry.getKey();
