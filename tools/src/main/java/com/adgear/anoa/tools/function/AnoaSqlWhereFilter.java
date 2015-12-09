@@ -20,7 +20,7 @@ public class AnoaSqlWhereFilter<T> implements Predicate<T> {
   /**
    * @param expressionEvaluator a JoSQL ExpressionEvaluator instance.
    */
-  public AnoaSqlWhereFilter(/*@NonNull*/ ExpressionEvaluator expressionEvaluator) {
+  public AnoaSqlWhereFilter(ExpressionEvaluator expressionEvaluator) {
     this.expressionEvaluator = expressionEvaluator;
   }
 
@@ -28,11 +28,11 @@ public class AnoaSqlWhereFilter<T> implements Predicate<T> {
    * @param klazz record Class object
    * @param whereClause SQL WHERE clause, without the WHERE keyword
    */
-  public AnoaSqlWhereFilter(/*@NonNull*/ Class<T> klazz, /*@NonNull*/ String whereClause) {
+  public AnoaSqlWhereFilter(Class<T> klazz, String whereClause) {
     this(Unchecked.supplier(() -> new ExpressionEvaluator(whereClause, klazz)).get());
   }
 
-  public boolean test(/*@NonNull*/ T object) {
+  public boolean test(T object) {
     try {
       return expressionEvaluator.isTrue(object);
     } catch (QueryExecutionException e) {
@@ -40,7 +40,7 @@ public class AnoaSqlWhereFilter<T> implements Predicate<T> {
     }
   }
 
-  public /*@NonNull*/ CheckedPredicate<T> asChecked() {
+  public CheckedPredicate<T> asChecked() {
     return expressionEvaluator::isTrue;
   }
 }

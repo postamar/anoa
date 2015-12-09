@@ -28,89 +28,155 @@ public class AvroDecoders {
   protected AvroDecoders() {
   }
 
-  static protected <R extends IndexedRecord> Supplier<R> ofNullable(Supplier<R> supplier) {
-    return (supplier != null) ? supplier : () -> ((R) null);
+
+  /**
+   * @param schema Avro record schema
+   * @param supplier used for record instantiation
+   * @return A function which deserializes an Avro record from its binary encoding
+   */
+  static public Function<byte[], GenericRecord> binary(
+      Schema schema,
+      Supplier<GenericRecord> supplier) {
+    return binary(new GenericDatumReader<>(schema), supplier);
   }
 
   /**
    * @param schema Avro record schema
-   * @param supplier when not null, used for record instantiation
    * @return A function which deserializes an Avro record from its binary encoding
    */
-  static public /*@NonNull*/ Function<byte[], GenericRecord> binary(
-      /*@NonNull*/ Schema schema,
-      /*@Nullable*/ Supplier<GenericRecord> supplier) {
-    return binary(new GenericDatumReader<>(schema), ofNullable(supplier));
+  static public Function<byte[], GenericRecord> binary(
+      Schema schema) {
+    return binary(new GenericDatumReader<>(schema));
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param schema Avro record schema
-   * @param supplier when not null, used for record instantiation
+   * @param supplier used for record instantiation
    * @param <M> Metadata type
    * @return A function which deserializes an Avro record from its binary encoding
    */
-  static public <M> /*@NonNull*/ Function<Anoa<byte[], M>, Anoa<GenericRecord, M>> binary(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Schema schema,
-      /*@Nullable*/ Supplier<GenericRecord> supplier) {
-    return binary(anoaHandler, new GenericDatumReader<>(schema), ofNullable(supplier));
+  static public <M> Function<Anoa<byte[], M>, Anoa<GenericRecord, M>> binary(
+      AnoaHandler<M> anoaHandler,
+      Schema schema,
+      Supplier<GenericRecord> supplier) {
+    return binary(anoaHandler, new GenericDatumReader<>(schema), supplier);
+  }
+
+  /**
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
+   * @param schema Avro record schema
+   * @param <M> Metadata type
+   * @return A function which deserializes an Avro record from its binary encoding
+   */
+  static public <M> Function<Anoa<byte[], M>, Anoa<GenericRecord, M>> binary(
+      AnoaHandler<M> anoaHandler,
+      Schema schema) {
+    return binary(anoaHandler, new GenericDatumReader<>(schema));
   }
 
   /**
    * @param writer Avro schema with which the record was originally serialized
    * @param reader Avro schema to use for deserialization
-   * @param supplier when not null, used for record instantiation
+   * @param supplier used for record instantiation
    * @return A function which deserializes an Avro record from its binary encoding
    */
-  static public /*@NonNull*/ Function<byte[], GenericRecord> binary(
-      /*@NonNull*/ Schema writer,
-      /*@NonNull*/ Schema reader,
-      /*@Nullable*/ Supplier<GenericRecord> supplier) {
-    return binary(new GenericDatumReader<>(writer, reader), ofNullable(supplier));
+  static public Function<byte[], GenericRecord> binary(
+      Schema writer,
+      Schema reader,
+      Supplier<GenericRecord> supplier) {
+    return binary(new GenericDatumReader<>(writer, reader), supplier);
+  }
+
+  /**
+   * @param writer Avro schema with which the record was originally serialized
+   * @param reader Avro schema to use for deserialization
+   * @return A function which deserializes an Avro record from its binary encoding
+   */
+  static public Function<byte[], GenericRecord> binary(
+      Schema writer,
+      Schema reader) {
+    return binary(new GenericDatumReader<>(writer, reader));
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param writer Avro schema with which the record was originally serialized
    * @param reader Avro schema to use for deserialization
-   * @param supplier when not null, used for record instantiation
+   * @param supplier used for record instantiation
    * @param <M> Metadata type
    * @return A function which deserializes an Avro record from its binary encoding
    */
-  static public <M> /*@NonNull*/ Function<Anoa<byte[], M>, Anoa<GenericRecord, M>> binary(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Schema writer,
-      /*@NonNull*/ Schema reader,
-      /*@Nullable*/ Supplier<GenericRecord> supplier) {
-    return binary(anoaHandler, new GenericDatumReader<>(writer, reader), ofNullable(supplier));
+  static public <M> Function<Anoa<byte[], M>, Anoa<GenericRecord, M>> binary(
+      AnoaHandler<M> anoaHandler,
+      Schema writer,
+      Schema reader,
+      Supplier<GenericRecord> supplier) {
+    return binary(anoaHandler, new GenericDatumReader<>(writer, reader), supplier);
+  }
+
+  /**
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
+   * @param writer Avro schema with which the record was originally serialized
+   * @param reader Avro schema to use for deserialization
+   * @param <M> Metadata type
+   * @return A function which deserializes an Avro record from its binary encoding
+   */
+  static public <M> Function<Anoa<byte[], M>, Anoa<GenericRecord, M>> binary(
+      AnoaHandler<M> anoaHandler,
+      Schema writer,
+      Schema reader) {
+    return binary(anoaHandler, new GenericDatumReader<>(writer, reader));
   }
 
   /**
    * @param recordClass Avro SpecificRecord class object
-   * @param supplier when not null, used for record instantiation
+   * @param supplier used for record instantiation
    * @param <R> Avro SpecificRecord record type
    * @return A function which deserializes an Avro record from its binary encoding
    */
-  static public <R extends SpecificRecord> /*@NonNull*/ Function<byte[], R> binary(
-      /*@NonNull*/ Class<R> recordClass,
-      /*@Nullable*/ Supplier<R> supplier) {
-    return binary(new SpecificDatumReader<>(recordClass), ofNullable(supplier));
+  static public <R extends SpecificRecord> Function<byte[], R> binary(
+      Class<R> recordClass,
+      Supplier<R> supplier) {
+    return binary(new SpecificDatumReader<>(recordClass), supplier);
+  }
+
+  /**
+   * @param recordClass Avro SpecificRecord class object
+   * @param <R> Avro SpecificRecord record type
+   * @return A function which deserializes an Avro record from its binary encoding
+   */
+  static public <R extends SpecificRecord> Function<byte[], R> binary(
+      Class<R> recordClass) {
+    return binary(new SpecificDatumReader<>(recordClass));
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Avro SpecificRecord class object
-   * @param supplier when not null, used for record instantiation
+   * @param supplier used for record instantiation
    * @param <R> Avro SpecificRecord record type
    * @param <M> Metadata type
    * @return A function which deserializes an Avro record from its binary encoding
    */
-  static public <R extends SpecificRecord, M> /*@NonNull*/ Function<Anoa<byte[], M>, Anoa<R, M>> binary(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Class<R> recordClass,
-      /*@Nullable*/ Supplier<R> supplier) {
-    return binary(anoaHandler, new SpecificDatumReader<>(recordClass), ofNullable(supplier));
+  static public <R extends SpecificRecord, M> Function<Anoa<byte[], M>, Anoa<R, M>> binary(
+      AnoaHandler<M> anoaHandler,
+      Class<R> recordClass,
+      Supplier<R> supplier) {
+    return binary(anoaHandler, new SpecificDatumReader<>(recordClass), supplier);
+  }
+
+  /**
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
+   * @param recordClass Avro SpecificRecord class object
+   * @param <R> Avro SpecificRecord record type
+   * @param <M> Metadata type
+   * @return A function which deserializes an Avro record from its binary encoding
+   */
+  static public <R extends SpecificRecord, M> Function<Anoa<byte[], M>, Anoa<R, M>> binary(
+      AnoaHandler<M> anoaHandler,
+      Class<R> recordClass) {
+    return binary(anoaHandler, new SpecificDatumReader<>(recordClass));
   }
 
   static protected class BinaryDecoderWrapper {
@@ -123,9 +189,9 @@ public class AvroDecoders {
     }
   }
 
-  static <R extends IndexedRecord> /*@NonNull*/ Function<byte[], R> binary(
-      /*@NonNull*/ GenericDatumReader<R> reader,
-      /*@NonNull*/ Supplier<R> supplier) {
+  static <R extends IndexedRecord> Function<byte[], R> binary(
+      GenericDatumReader<R> reader,
+      Supplier<R> supplier) {
     BinaryDecoderWrapper decoderWrapper = new BinaryDecoderWrapper();
     return (byte[] in) -> {
       try {
@@ -136,94 +202,174 @@ public class AvroDecoders {
     };
   }
 
-  static <R extends IndexedRecord, M> /*@NonNull*/ Function<Anoa<byte[], M>, Anoa<R, M>> binary(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ GenericDatumReader<R> reader,
-      /*@NonNull*/ Supplier<R> supplier) {
+  static <R extends IndexedRecord> Function<byte[], R> binary(
+      GenericDatumReader<R> reader) {
+    return binary(reader, () -> ((R) null));
+  }
+
+  static <R extends IndexedRecord, M> Function<Anoa<byte[], M>, Anoa<R, M>> binary(
+      AnoaHandler<M> anoaHandler,
+      GenericDatumReader<R> reader,
+      Supplier<R> supplier) {
     BinaryDecoderWrapper decoderWrapper = new BinaryDecoderWrapper();
     return anoaHandler.functionChecked(
         (byte[] in) -> reader.read(supplier.get(), decoderWrapper.getDecoder(in)));
   }
 
+  static <R extends IndexedRecord, M> Function<Anoa<byte[], M>, Anoa<R, M>> binary(
+      AnoaHandler<M> anoaHandler,
+      GenericDatumReader<R> reader) {
+    return binary(anoaHandler, reader, () -> ((R) null));
+  }
+
   /**
    * @param schema Avro record schema
-   * @param supplier when not null, used for record instantiation
+   * @param supplier used for record instantiation
    * @return A function which deserializes an Avro record from its JSON encoding
    */
-  static public /*@NonNull*/ Function<String, GenericRecord> json(
-      /*@NonNull*/ Schema schema,
-      /*@Nullable*/ Supplier<GenericRecord> supplier) {
-    return json(new GenericDatumReader<>(schema), ofNullable(supplier));
+  static public Function<String, GenericRecord> json(
+      Schema schema,
+      Supplier<GenericRecord> supplier) {
+    return json(new GenericDatumReader<>(schema), supplier);
+  }
+
+  /**
+   * @param schema Avro record schema
+   * @return A function which deserializes an Avro record from its JSON encoding
+   */
+  static public Function<String, GenericRecord> json(
+      Schema schema) {
+    return json(new GenericDatumReader<>(schema));
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param schema Avro record schema
-   * @param supplier when not null, used for record instantiation
+   * @param supplier used for record instantiation
    * @param <M> Metadata type
    * @return A function which deserializes an Avro record from its JSON encoding
    */
-  static public <M> /*@NonNull*/ Function<Anoa<String, M>, Anoa<GenericRecord, M>> json(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Schema schema,
-      /*@Nullable*/ Supplier<GenericRecord> supplier) {
-    return json(anoaHandler, new GenericDatumReader<>(schema), ofNullable(supplier));
+  static public <M> Function<Anoa<String, M>, Anoa<GenericRecord, M>> json(
+      AnoaHandler<M> anoaHandler,
+      Schema schema,
+      Supplier<GenericRecord> supplier) {
+    return json(anoaHandler, new GenericDatumReader<>(schema), supplier);
+  }
+
+  /**
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
+   * @param schema Avro record schema
+   * @param <M> Metadata type
+   * @return A function which deserializes an Avro record from its JSON encoding
+   */
+  static public <M> Function<Anoa<String, M>, Anoa<GenericRecord, M>> json(
+      AnoaHandler<M> anoaHandler,
+      Schema schema) {
+    return json(anoaHandler, new GenericDatumReader<>(schema));
   }
 
   /**
    * @param writer Avro schema with which the record was originally serialized
    * @param reader Avro schema to use for deserialization
-   * @param supplier when not null, used for record instantiation
+   * @param supplier used for record instantiation
    * @return A function which deserializes an Avro record from its JSON encoding
    */
-  static public /*@NonNull*/ Function<String, GenericRecord> json(
-      /*@NonNull*/ Schema writer,
-      /*@NonNull*/ Schema reader,
-      /*@Nullable*/ Supplier<GenericRecord> supplier) {
-    return json(new GenericDatumReader<>(writer, reader), ofNullable(supplier));
+  static public Function<String, GenericRecord> json(
+      Schema writer,
+      Schema reader,
+      Supplier<GenericRecord> supplier) {
+    return json(new GenericDatumReader<>(writer, reader), supplier);
+  }
+
+  /**
+   * @param writer Avro schema with which the record was originally serialized
+   * @param reader Avro schema to use for deserialization
+   * @return A function which deserializes an Avro record from its JSON encoding
+   */
+  static public Function<String, GenericRecord> json(
+      Schema writer,
+      Schema reader) {
+    return json(new GenericDatumReader<>(writer, reader));
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param writer Avro schema with which the record was originally serialized
    * @param reader Avro schema to use for deserialization
-   * @param supplier when not null, used for record instantiation
+   * @param supplier used for record instantiation
    * @param <M> Metadata type
    * @return A function which deserializes an Avro record from its JSON encoding
    */
-  static public <M> /*@NonNull*/ Function<Anoa<String, M>, Anoa<GenericRecord, M>> json(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Schema writer,
-      /*@NonNull*/ Schema reader,
-      /*@Nullable*/ Supplier<GenericRecord> supplier) {
-    return json(anoaHandler, new GenericDatumReader<>(writer, reader), ofNullable(supplier));
+  static public <M> Function<Anoa<String, M>, Anoa<GenericRecord, M>> json(
+      AnoaHandler<M> anoaHandler,
+      Schema writer,
+      Schema reader,
+      Supplier<GenericRecord> supplier) {
+    return json(anoaHandler, new GenericDatumReader<>(writer, reader), supplier);
+  }
+
+  /**
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
+   * @param writer Avro schema with which the record was originally serialized
+   * @param reader Avro schema to use for deserialization
+   * @param <M> Metadata type
+   * @return A function which deserializes an Avro record from its JSON encoding
+   */
+  static public <M> Function<Anoa<String, M>, Anoa<GenericRecord, M>> json(
+      AnoaHandler<M> anoaHandler,
+      Schema writer,
+      Schema reader) {
+    return json(anoaHandler, new GenericDatumReader<>(writer, reader));
   }
 
   /**
    * @param recordClass Avro SpecificRecord class object
-   * @param supplier when not null, used for record instantiation
+   * @param supplier used for record instantiation
    * @param <R> Avro SpecificRecord record type
    * @return A function which deserializes an Avro record from its JSON encoding
    */
-  static public <R extends SpecificRecord> /*@NonNull*/ Function<String, R> json(
-      /*@NonNull*/ Class<R> recordClass,
-      /*@Nullable*/ Supplier<R> supplier) {
-    return json(new SpecificDatumReader<>(recordClass), ofNullable(supplier));
+  static public <R extends SpecificRecord> Function<String, R> json(
+      Class<R> recordClass,
+      Supplier<R> supplier) {
+    return json(new SpecificDatumReader<>(recordClass), supplier);
+  }
+
+  /**
+   * @param recordClass Avro SpecificRecord class object
+   * @param <R> Avro SpecificRecord record type
+   * @return A function which deserializes an Avro record from its JSON encoding
+   */
+  static public <R extends SpecificRecord> Function<String, R> json(
+      Class<R> recordClass) {
+    return json(new SpecificDatumReader<>(recordClass));
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Avro SpecificRecord class object
-   * @param supplier when not null, used for record instantiation
+   * @param supplier used for record instantiation
    * @param <R> Avro SpecificRecord record type
    * @param <M> Metadata type
    * @return A function which deserializes an Avro record from its JSON encoding
    */
-  static public <R extends SpecificRecord, M> /*@NonNull*/ Function<Anoa<String, M>, Anoa<R, M>> json(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Class<R> recordClass,
-      /*@Nullable*/ Supplier<R> supplier) {
-    return json(anoaHandler, new SpecificDatumReader<>(recordClass), ofNullable(supplier));
+  static public <R extends SpecificRecord, M> Function<Anoa<String, M>, Anoa<R, M>> json(
+      AnoaHandler<M> anoaHandler,
+      Class<R> recordClass,
+      Supplier<R> supplier) {
+    return json(anoaHandler, new SpecificDatumReader<>(recordClass), supplier);
+  }
+
+  /**
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
+   * @param recordClass Avro SpecificRecord class object
+   * @param <R> Avro SpecificRecord record type
+   * @param <M> Metadata type
+   * @return A function which deserializes an Avro record from its JSON encoding
+   */
+  static public <R extends SpecificRecord, M> Function<Anoa<String, M>, Anoa<R, M>> json(
+      AnoaHandler<M> anoaHandler,
+      Class<R> recordClass) {
+    return json(anoaHandler, new SpecificDatumReader<>(recordClass));
   }
 
   static protected JsonDecoder createJsonDecoder(Schema schema) {
@@ -234,9 +380,9 @@ public class AvroDecoders {
     }
   }
 
-  static <R extends IndexedRecord> /*@NonNull*/ Function<String, R> json(
-      /*@NonNull*/ GenericDatumReader<R> reader,
-      /*@NonNull*/ Supplier<R> supplier) {
+  static <R extends IndexedRecord> Function<String, R> json(
+      GenericDatumReader<R> reader,
+      Supplier<R> supplier) {
     final JsonDecoder jsonDecoder = createJsonDecoder(reader.getSchema());
     return (String in) -> {
       try {
@@ -248,10 +394,15 @@ public class AvroDecoders {
     };
   }
 
-  static <R extends IndexedRecord, M> /*@NonNull*/ Function<Anoa<String, M>, Anoa<R, M>> json(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ GenericDatumReader<R> reader,
-      /*@NonNull*/ Supplier<R> supplier) {
+  static <R extends IndexedRecord> Function<String, R> json(
+      GenericDatumReader<R> reader) {
+    return json(reader, () -> ((R) null));
+  }
+
+  static <R extends IndexedRecord, M> Function<Anoa<String, M>, Anoa<R, M>> json(
+      AnoaHandler<M> anoaHandler,
+      GenericDatumReader<R> reader,
+      Supplier<R> supplier) {
     final JsonDecoder jsonDecoder = createJsonDecoder(reader.getSchema());
     return anoaHandler.functionChecked((String in) -> {
       jsonDecoder.configure(in);
@@ -259,14 +410,21 @@ public class AvroDecoders {
     });
   }
 
+  static <R extends IndexedRecord, M> Function<Anoa<String, M>, Anoa<R, M>> json(
+      AnoaHandler<M> anoaHandler,
+      GenericDatumReader<R> reader) {
+    return json(anoaHandler, reader, () -> ((R) null));
+  }
+
+
   /**
    * @param schema Avro record schema
    * @param strict enable strict type checking
    * @param <P> Jackson JsonParser type
    * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding
    */
-  static public <P extends JsonParser> /*@NonNull*/ Function<P, GenericRecord> jackson(
-      /*@NonNull*/ Schema schema,
+  static public <P extends JsonParser> Function<P, GenericRecord> jackson(
+      Schema schema,
       boolean strict) {
     final AvroReader<GenericRecord> reader = new AvroReader.GenericReader(schema);
     return (P jp) -> reader.read(jp, strict);
@@ -281,9 +439,9 @@ public class AvroDecoders {
    * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding
    */
   static public <P extends JsonParser, M>
-  /*@NonNull*/ Function<Anoa<P, M>, Anoa<GenericRecord, M>> jackson(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Schema schema,
+  Function<Anoa<P, M>, Anoa<GenericRecord, M>> jackson(
+      AnoaHandler<M> anoaHandler,
+      Schema schema,
       boolean strict) {
     final AvroReader<GenericRecord> reader = new AvroReader.GenericReader(schema);
     return anoaHandler.functionChecked((P jp) -> reader.readChecked(jp, strict));
@@ -296,8 +454,8 @@ public class AvroDecoders {
    * @param <R> Avro SpecificRecord record type
    * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding
    */
-  static public <P extends JsonParser, R extends SpecificRecord> /*@NonNull*/ Function<P, R> jackson(
-      /*@NonNull*/ Class<R> recordClass,
+  static public <P extends JsonParser, R extends SpecificRecord> Function<P, R> jackson(
+      Class<R> recordClass,
       boolean strict) {
     final AvroReader<R> reader = new AvroReader.SpecificReader<>(recordClass);
     return (P jp) -> reader.read(jp, strict);
@@ -313,9 +471,9 @@ public class AvroDecoders {
    * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding
    */
   static public <P extends JsonParser, R extends SpecificRecord, M>
-  /*@NonNull*/ Function<Anoa<P, M>, Anoa<R, M>> jackson(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Class<R> recordClass,
+  Function<Anoa<P, M>, Anoa<R, M>> jackson(
+      AnoaHandler<M> anoaHandler,
+      Class<R> recordClass,
       boolean strict) {
     final AvroReader<R> reader = new AvroReader.SpecificReader<>(recordClass);
     return anoaHandler.functionChecked((P jp) -> reader.readChecked(jp, strict));

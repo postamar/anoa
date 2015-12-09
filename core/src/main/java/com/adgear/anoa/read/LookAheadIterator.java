@@ -32,9 +32,9 @@ final public class LookAheadIterator<T> implements Iterator<T> {
    * @param closeable {@link Closeable#close()} will be called at the end of the iteration
    */
   public LookAheadIterator(
-      /*@NonNull*/ Supplier<Boolean> noNext,
-      /*@NonNull*/ Function<Consumer<Boolean>, UnaryOperator<T>> nextFactory,
-      /*@Nullable*/ Closeable closeable) {
+      Supplier<Boolean> noNext,
+      Function<Consumer<Boolean>, UnaryOperator<T>> nextFactory,
+      Closeable closeable) {
     this.next = nextFactory.apply(this::setHasNext);
     this.noNext = noNext;
     this.closeable = closeable;
@@ -46,7 +46,7 @@ final public class LookAheadIterator<T> implements Iterator<T> {
   private boolean hasNext;
   private T nextValue;
 
-  void reset(/*@Nullable*/ T nextValue) {
+  void reset(T nextValue) {
     this.isStale = true;
     this.hasNext = true;
     this.nextValue = nextValue;
@@ -67,7 +67,7 @@ final public class LookAheadIterator<T> implements Iterator<T> {
         nextValue = next.apply(nextValue);
       }
     }
-    if (!hasNext && closeable != null) {
+    if (!hasNext) {
       try {
         closeable.close();
       } catch (IOException e) {
@@ -90,18 +90,28 @@ final public class LookAheadIterator<T> implements Iterator<T> {
   /**
    * Returns a sequential stream wrapping the generated {@code LookAheadIterator} instance.
    */
-  static public <T> /*@NonNull*/ Stream<T> stream(
-      /*@NonNull*/ Supplier<Boolean> noNext,
-      /*@NonNull*/ Function<Consumer<Boolean>, UnaryOperator<T>> nextFactory,
-      /*@Nullable*/ Closeable closeable) {
+  static public <T> Stream<T> stream(
+      Supplier<Boolean> noNext,
+      Function<Consumer<Boolean>, UnaryOperator<T>> nextFactory,
+      Closeable closeable) {
     return new LookAheadIterator<>(noNext, nextFactory, closeable).asStream();
   }
 
-  /*@NonNull*/ Spliterator<T> asSpliterator() {
+  /**
+   * Returns a sequential stream wrapping the generated {@code LookAheadIterator} instance.
+   */
+  static public <T> Stream<T> stream(
+      Supplier<Boolean> noNext,
+      Function<Consumer<Boolean>, UnaryOperator<T>> nextFactory) {
+    return stream(noNext, nextFactory, () -> {});
+  }
+
+
+  Spliterator<T> asSpliterator() {
     return Spliterators.spliteratorUnknownSize(this, Spliterator.NONNULL | Spliterator.ORDERED);
   }
 
-  /*@NonNull*/ Stream<T> asStream() {
+  Stream<T> asStream() {
     return StreamSupport.stream(asSpliterator(), false);
   }
 }

@@ -58,7 +58,9 @@ public class JacksonConsumers<
    * @param schema Jackson format schema (optional)
    */
   @SuppressWarnings("unchecked")
-  public JacksonConsumers(/*@NonNull*/ C objectCodec, /*@NonNull*/ Optional<S> schema) {
+  public JacksonConsumers(
+      C objectCodec,
+      Optional<S> schema) {
     this.objectCodec = objectCodec;
     this.factory = (F) objectCodec.getFactory();
     this.factory.setCodec(objectCodec);
@@ -66,7 +68,8 @@ public class JacksonConsumers<
   }
 
   @SuppressWarnings("unchecked")
-  public /*@NonNull*/ G generator(/*@NonNull*/ Writer writer) {
+  public G generator(
+      Writer writer) {
     try {
       return with((G) factory.createGenerator(new BufferedWriter(writer)));
     } catch (IOException e) {
@@ -75,7 +78,8 @@ public class JacksonConsumers<
   }
 
   @SuppressWarnings("unchecked")
-  public /*@NonNull*/ G generator(/*@NonNull*/ OutputStream outputStream) {
+  public G generator(
+      OutputStream outputStream) {
     try {
       return with((G) factory.createGenerator(new BufferedOutputStream(outputStream),
                                               JsonEncoding.UTF8));
@@ -85,7 +89,8 @@ public class JacksonConsumers<
   }
 
   @SuppressWarnings("unchecked")
-  public /*@NonNull*/ G generator(/*@NonNull*/ File file) {
+  public G generator(
+      File file) {
     try {
       return with((G) factory.createGenerator(file, JsonEncoding.UTF8));
     } catch (IOException e) {
@@ -96,24 +101,24 @@ public class JacksonConsumers<
   /**
    * @return the generator passed as argument, after setting the current format schema
    */
-  public /*@NonNull*/ G with(/*@NonNull*/ G generator) {
+  public G with(G generator) {
     schema.ifPresent(generator::setSchema);
     return generator;
   }
 
-  public /*@NonNull*/ WriteConsumer<N> to(/*@NonNull*/ G generator) {
+  public WriteConsumer<N> to(G generator) {
     return new TreeNodeWriteConsumer<>(generator);
   }
 
-  public /*@NonNull*/ WriteConsumer<N> to(/*@NonNull*/ Writer writer) {
+  public WriteConsumer<N> to(Writer writer) {
     return to(generator(writer));
   }
 
-  public /*@NonNull*/ WriteConsumer<N> to(/*@NonNull*/ OutputStream outputStream) {
+  public WriteConsumer<N> to(OutputStream outputStream) {
     return to(generator(outputStream));
   }
 
-  public /*@NonNull*/ WriteConsumer<N> to(/*@NonNull*/ File file) {
+  public WriteConsumer<N> to(File file) {
     return to(generator(file));
   }
 

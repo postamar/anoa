@@ -55,7 +55,7 @@ public class JdbcStreams {
    * @param resultSet the JDBC result set to scan
    * @return A stream of Jackson records which map to the result set rows.
    */
-  public /*@NonNull*/ Stream<ObjectNode> resultSet(/*@NonNull*/ ResultSet resultSet) {
+  public Stream<ObjectNode> resultSet(ResultSet resultSet) {
     final Function<ResultSet, ObjectNode> fn;
     try {
       fn = Unchecked.function(rowFn(resultSet.getMetaData()));
@@ -72,9 +72,9 @@ public class JdbcStreams {
    * @param <M> Metadata type
    * @return A stream of Jackson records which map to the result set rows.
    */
-  public <M> /*@NonNull*/ Stream<Anoa<ObjectNode, M>> resultSet(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ ResultSet resultSet) {
+  public <M> Stream<Anoa<ObjectNode, M>> resultSet(
+      AnoaHandler<M> anoaHandler,
+      ResultSet resultSet) {
     final Function<Anoa<ResultSet, M>, Anoa<ObjectNode, M>> fn;
     try {
       fn = anoaHandler.functionChecked(rowFn(resultSet.getMetaData()));
@@ -123,7 +123,7 @@ public class JdbcStreams {
    * @return equivalent Avro Schema
    * @throws SQLException
    */
-  static public /*@NonNull*/ Schema induceSchema(/*@NonNull*/ ResultSetMetaData rsmd) throws SQLException {
+  static public Schema induceSchema(ResultSetMetaData rsmd) throws SQLException {
     List<Schema.Field> fields = IntStream.range(1, rsmd.getColumnCount() + 1)
         .mapToObj(Unchecked.intFunction(c -> {
           String label = rsmd.getColumnLabel(c);

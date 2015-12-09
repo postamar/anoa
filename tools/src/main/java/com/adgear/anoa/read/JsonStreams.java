@@ -48,8 +48,8 @@ public class JsonStreams extends JacksonStreamsBase<
    * @param <M> Metadata type
    * @return Object-mapping function appliable to TokenBuffer instances
    */
-  public <M> /*@NonNull*/ Function<Anoa<TokenBuffer, M>, Anoa<ObjectNode, M>> tokenBuffer(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler) {
+  public <M> Function<Anoa<TokenBuffer, M>, Anoa<ObjectNode, M>> tokenBuffer(
+      AnoaHandler<M> anoaHandler) {
     return anoaHandler.functionChecked((TokenBuffer tb) -> parser(tb).readValueAsTree());
   }
 }

@@ -24,17 +24,17 @@ public class JsonConsumers extends JacksonConsumersBase<
   }
 
   @Override
-  public /*@NonNull*/ JsonGenerator with(/*@NonNull*/ JsonGenerator generator) {
+  public JsonGenerator with(JsonGenerator generator) {
     generator = super.with(generator);
     generator.setPrettyPrinter(PRETTY_PRINTER);
     return generator;
   }
 
-  public /*@NonNull*/ TokenBuffer generator() {
+  public TokenBuffer generator() {
     return (TokenBuffer) with(new TokenBuffer(objectCodec, false));
   }
 
-  public /*@NonNull*/ TokenBufferWriteConsumer to() {
+  public TokenBufferWriteConsumer to() {
     return new TokenBufferWriteConsumer(generator());
   }
 

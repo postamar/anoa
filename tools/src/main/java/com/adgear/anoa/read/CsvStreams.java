@@ -21,7 +21,7 @@ public class CsvStreams extends JacksonStreamsBase<
   /**
    * @param csvSchema format schema to use
    */
-  public CsvStreams(/*@NonNull*/ CsvSchema csvSchema) {
+  public CsvStreams(CsvSchema csvSchema) {
     super(new CsvMapper(new CsvFactory()), Optional.of(csvSchema));
   }
 

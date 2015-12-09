@@ -26,8 +26,8 @@ public class ThriftConsumers {
    * @param outputStream stream to write into
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> /*@NonNull*/ WriteConsumer<T> compact(
-      /*@NonNull*/ OutputStream outputStream) {
+  static public <T extends TBase> WriteConsumer<T> compact(
+      OutputStream outputStream) {
     return compact(new TIOStreamTransport(new BufferedOutputStream(outputStream)));
   }
 
@@ -37,8 +37,8 @@ public class ThriftConsumers {
    * @param fileName name of file to write into
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> /*@NonNull*/ WriteConsumer<T> compact(
-      /*@NonNull*/ String fileName) {
+  static public <T extends TBase> WriteConsumer<T> compact(
+      String fileName) {
     try {
       return compact(new TFileTransport(fileName, false));
     } catch (IOException e) {
@@ -52,8 +52,8 @@ public class ThriftConsumers {
    * @param tTransport the {@link org.apache.thrift.transport.TTransport} instance to write into
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> /*@NonNull*/ WriteConsumer<T> compact(
-      /*@NonNull*/ TTransport tTransport) {
+  static public <T extends TBase> WriteConsumer<T> compact(
+      TTransport tTransport) {
     return new ThriftWriteConsumer<>(tTransport, TCompactProtocol::new);
   }
 
@@ -63,8 +63,8 @@ public class ThriftConsumers {
    * @param outputStream stream to write into
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> /*@NonNull*/ WriteConsumer<T> binary(
-      /*@NonNull*/ OutputStream outputStream) {
+  static public <T extends TBase> WriteConsumer<T> binary(
+      OutputStream outputStream) {
     return binary(new TIOStreamTransport(new BufferedOutputStream(outputStream)));
   }
 
@@ -74,8 +74,8 @@ public class ThriftConsumers {
    * @param fileName name of file to write into
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> /*@NonNull*/ WriteConsumer<T> binary(
-      /*@NonNull*/ String fileName) {
+  static public <T extends TBase> WriteConsumer<T> binary(
+      String fileName) {
     try {
       return binary(new TFileTransport(fileName, false));
     } catch (IOException e) {
@@ -89,8 +89,8 @@ public class ThriftConsumers {
    * @param tTransport the {@link org.apache.thrift.transport.TTransport} instance to write into
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> /*@NonNull*/ WriteConsumer<T> binary(
-      /*@NonNull*/ TTransport tTransport) {
+  static public <T extends TBase> WriteConsumer<T> binary(
+      TTransport tTransport) {
     return new ThriftWriteConsumer<>(tTransport, TBinaryProtocol::new);
   }
 
@@ -100,8 +100,8 @@ public class ThriftConsumers {
    * @param outputStream stream to write into
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> /*@NonNull*/ WriteConsumer<T> json(
-      /*@NonNull*/ OutputStream outputStream) {
+  static public <T extends TBase> WriteConsumer<T> json(
+      OutputStream outputStream) {
     return json(new TIOStreamTransport(new BufferedOutputStream(outputStream)));
   }
 
@@ -111,8 +111,8 @@ public class ThriftConsumers {
    * @param fileName name of file to write into
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> /*@NonNull*/ WriteConsumer<T> json(
-      /*@NonNull*/ String fileName) {
+  static public <T extends TBase> WriteConsumer<T> json(
+      String fileName) {
     try {
       return json(new TFileTransport(fileName, false));
     } catch (IOException e) {
@@ -126,8 +126,8 @@ public class ThriftConsumers {
    * @param tTransport the {@link org.apache.thrift.transport.TTransport} instance to write into
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> /*@NonNull*/ WriteConsumer<T> json(
-      /*@NonNull*/ TTransport tTransport) {
+  static public <T extends TBase> WriteConsumer<T> json(
+      TTransport tTransport) {
     return new ThriftWriteConsumer<>(tTransport, TJSONProtocol::new);
   }
 
@@ -138,9 +138,9 @@ public class ThriftConsumers {
    * @param jacksonGenerator JsonGenerator instance to write into
    * @param <T> Thrift record type
    */
-  static public <T extends TBase> /*@NonNull*/ WriteConsumer<T> jackson(
-      /*@NonNull*/ Class<T> recordClass,
-      /*@NonNull*/ JsonGenerator jacksonGenerator) {
+  static public <T extends TBase> WriteConsumer<T> jackson(
+      Class<T> recordClass,
+      JsonGenerator jacksonGenerator) {
     return new JacksonWriteConsumer<>(jacksonGenerator, new ThriftWriter<>(recordClass));
   }
 }

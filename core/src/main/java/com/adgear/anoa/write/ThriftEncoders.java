@@ -29,7 +29,7 @@ public class ThriftEncoders {
    * @param <T> Thrift record type
    * @return A function for serializing Thrift records as compact binary blobs.
    */
-  static public <T extends TBase> /*@NonNull*/ Function<T, byte[]> compact() {
+  static public <T extends TBase> Function<T, byte[]> compact() {
     return fn(TCompactProtocol::new);
   }
 
@@ -39,8 +39,8 @@ public class ThriftEncoders {
    * @param <M> Metadata type
    * @return A function for serializing Thrift records as compact binary blobs.
    */
-  static public <T extends TBase, M> /*@NonNull*/ Function<Anoa<T, M>, Anoa<byte[], M>> compact(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler) {
+  static public <T extends TBase, M> Function<Anoa<T, M>, Anoa<byte[], M>> compact(
+      AnoaHandler<M> anoaHandler) {
     return fn(anoaHandler, TCompactProtocol::new);
   }
 
@@ -48,7 +48,7 @@ public class ThriftEncoders {
    * @param <T> Thrift record type
    * @return A function for serializing Thrift records as compact binary blobs.
    */
-  static public <T extends TBase> /*@NonNull*/ Function<T, byte[]> binary() {
+  static public <T extends TBase> Function<T, byte[]> binary() {
     return fn(TBinaryProtocol::new);
   }
 
@@ -58,8 +58,8 @@ public class ThriftEncoders {
    * @param <M> Metadata type
    * @return A function for serializing Thrift records as standard binary blobs.
    */
-  static public <T extends TBase, M> /*@NonNull*/ Function<Anoa<T, M>, Anoa<byte[], M>> binary(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler) {
+  static public <T extends TBase, M> Function<Anoa<T, M>, Anoa<byte[], M>> binary(
+      AnoaHandler<M> anoaHandler) {
     return fn(anoaHandler, TBinaryProtocol::new);
   }
 
@@ -67,7 +67,7 @@ public class ThriftEncoders {
    * @param <T> Thrift record type
    * @return A function for serializing Thrift records in Thrift JSON format.
    */
-  static public <T extends TBase> /*@NonNull*/ Function<T, byte[]> json() {
+  static public <T extends TBase> Function<T, byte[]> json() {
     return fn(TJSONProtocol::new);
   }
 
@@ -77,13 +77,13 @@ public class ThriftEncoders {
    * @param <M> Metadata type
    * @return A function for serializing Thrift records in Thrift JSON format.
    */
-  static public <T extends TBase, M> /*@NonNull*/ Function<Anoa<T, M>, Anoa<byte[], M>> json(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler) {
+  static public <T extends TBase, M> Function<Anoa<T, M>, Anoa<byte[], M>> json(
+      AnoaHandler<M> anoaHandler) {
     return fn(anoaHandler, TJSONProtocol::new);
   }
 
-  static <T extends TBase> /*@NonNull*/ Function<T, byte[]> fn(
-      /*@NonNull*/ Function<TTransport, TProtocol> protocolFactory) {
+  static <T extends TBase> Function<T, byte[]> fn(
+      Function<TTransport, TProtocol> protocolFactory) {
     TMemoryOutputTransport tTransport = new TMemoryOutputTransport();
     TProtocol tProtocol = protocolFactory.apply(tTransport);
     return (T t) -> {
@@ -97,9 +97,9 @@ public class ThriftEncoders {
     };
   }
 
-  static <T extends TBase, M> /*@NonNull*/ Function<Anoa<T, M>, Anoa<byte[], M>> fn(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Function<TTransport, TProtocol> protocolFactory) {
+  static <T extends TBase, M> Function<Anoa<T, M>, Anoa<byte[], M>> fn(
+      AnoaHandler<M> anoaHandler,
+      Function<TTransport, TProtocol> protocolFactory) {
     TMemoryOutputTransport tTransport = new TMemoryOutputTransport();
     TProtocol tProtocol = protocolFactory.apply(tTransport);
     return anoaHandler.functionChecked((T record) -> {
@@ -117,10 +117,9 @@ public class ThriftEncoders {
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
    * into it.
    */
-  static public <T extends TBase, G extends JsonGenerator>
-  /*@NonNull*/ Function<T, G> jackson(
-      /*@NonNull*/ Class<T> recordClass,
-      /*@NonNull*/ Supplier<G> supplier) {
+  static public <T extends TBase, G extends JsonGenerator> Function<T, G> jackson(
+      Class<T> recordClass,
+      Supplier<G> supplier) {
     AbstractWriter<T> thriftWriter = new ThriftWriter<>(recordClass);
     return (T record) -> {
       G jg = supplier.get();
@@ -140,10 +139,10 @@ public class ThriftEncoders {
    * into it.
    */
   static public <T extends TBase, G extends JsonGenerator, M>
-  /*@NonNull*/ Function<Anoa<T, M>, Anoa<G, M>> jackson(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Class<T> recordClass,
-      /*@NonNull*/ Supplier<G> supplier) {
+  Function<Anoa<T, M>, Anoa<G, M>> jackson(
+      AnoaHandler<M> anoaHandler,
+      Class<T> recordClass,
+      Supplier<G> supplier) {
     AbstractWriter<T> thriftWriter = new ThriftWriter<>(recordClass);
     return anoaHandler.functionChecked((T record) -> {
       G jg = supplier.get();

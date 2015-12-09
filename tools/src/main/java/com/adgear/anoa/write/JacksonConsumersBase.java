@@ -15,11 +15,11 @@ class JacksonConsumersBase<
     G extends JsonGenerator>
   extends JacksonConsumers<ObjectNode, M, F, S, G> {
 
-  JacksonConsumersBase(/*@NonNull*/ M objectMapper) {
+  JacksonConsumersBase(M objectMapper) {
     this(objectMapper, Optional.<S>empty());
   }
 
-  JacksonConsumersBase(/*@NonNull*/ M objectMapper, /*@NonNull*/ Optional<S> schema) {
+  JacksonConsumersBase(M objectMapper, Optional<S> schema) {
     super(objectMapper, schema);
     objectMapper.findAndRegisterModules();
   }
