@@ -49,7 +49,7 @@ final public class Anoa<T, M> {
    * @see Optional#empty()
    */
   @SuppressWarnings("unchecked")
-  static public <T, M> /*@NonNull*/ Anoa<T, M> empty() {
+  static public <T, M> Anoa<T, M> empty() {
     return EMPTY;
   }
 
@@ -60,8 +60,8 @@ final public class Anoa<T, M> {
    * @see Optional#empty()
    */
   @SuppressWarnings("unchecked")
-  static public <T, M> /*@NonNull*/ Anoa<T, M> empty(
-      /*@NonNull*/ Stream<M> metadata) {
+  static public <T, M> Anoa<T, M> empty(
+      Stream<M> metadata) {
     Objects.requireNonNull(metadata);
     return ofNullable(null, metadata);
   }
@@ -73,8 +73,8 @@ final public class Anoa<T, M> {
    * @see Optional#of(Object)
    */
   @SuppressWarnings("unchecked")
-  static public <T, M> /*@NonNull*/ Anoa<T, M> of(
-      /*@NonNull*/ T value) {
+  static public <T, M> Anoa<T, M> of(
+      T value) {
     Objects.requireNonNull(value);
     return ofNullable(value);
   }
@@ -86,9 +86,9 @@ final public class Anoa<T, M> {
    * @see Optional#of(Object)
    */
   @SuppressWarnings("unchecked")
-  static public <T, M> /*@NonNull*/ Anoa<T, M> of(
-      /*@NonNull*/ T value,
-      /*@NonNull*/ Stream<M> metadata) {
+  static public <T, M> Anoa<T, M> of(
+      T value,
+      Stream<M> metadata) {
     Objects.requireNonNull(value);
     Objects.requireNonNull(metadata);
     return ofNullable(value, metadata);
@@ -100,7 +100,7 @@ final public class Anoa<T, M> {
    * @see Optional#ofNullable(Object)
    */
   @SuppressWarnings("unchecked")
-  static public <T, M> /*@NonNull*/ Anoa<T, M> ofNullable(
+  static public <T, M> Anoa<T, M> ofNullable(
       /*@Nullable*/ T value) {
     return new Anoa<>(value, (M[]) EMPTY.meta);
   }
@@ -112,9 +112,9 @@ final public class Anoa<T, M> {
    * @see Optional#ofNullable(Object)
    */
   @SuppressWarnings("unchecked")
-  static public <T, M> /*@NonNull*/ Anoa<T, M> ofNullable(
+  static public <T, M> Anoa<T, M> ofNullable(
       /*@Nullable*/ T value,
-      /*@NonNull*/ Stream<M> metadata) {
+      Stream<M> metadata) {
     Objects.requireNonNull(metadata);
     return new Anoa<>(value, (M[]) metadata.toArray());
   }
@@ -122,7 +122,7 @@ final public class Anoa<T, M> {
   /**
    * Returns a stream of metadata elements decorating this {@code Anoa}
    */
-  public /*@NonNull*/ Stream</*@NonNull*/ M> meta() {
+  public Stream<M> meta() {
     return Arrays.stream(meta);
   }
 
@@ -247,7 +247,7 @@ final public class Anoa<T, M> {
    * @return the value, if present, otherwise {@code other}
    * @see Optional#orElse(Object)
    */
-  public T orElse(/*@Nullable*/ T other) {
+  public T orElse(T other) {
     return (value != null) ? value : other;
   }
 
@@ -260,7 +260,7 @@ final public class Anoa<T, M> {
    * @throws NullPointerException if value is not present and {@code other} is null
    * @see Optional#orElseGet(Supplier)
    */
-  public T orElseGet(/*@NonNull*/ Supplier</*@Nullable*/ ? extends T> other) {
+  public T orElseGet(Supplier<? extends T> other) {
     return (value != null) ? value : other.get();
   }
 

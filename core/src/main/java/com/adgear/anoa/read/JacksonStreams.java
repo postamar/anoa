@@ -67,54 +67,78 @@ public class JacksonStreams<
   }
 
   @SuppressWarnings("unchecked")
+  protected P parserChecked(InputStream inputStream) throws IOException {
+    return with((P) factory.createParser(new BufferedInputStream(inputStream)));
+  }
+
   public P parser(InputStream inputStream) {
     try {
-      return with((P) factory.createParser(new BufferedInputStream(inputStream)));
+      return parserChecked(inputStream);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
   @SuppressWarnings("unchecked")
+  protected P parserChecked(Reader reader) throws IOException {
+    return with((P) factory.createParser(new BufferedReader(reader)));
+  }
+
   public P parser(Reader reader) {
     try {
-      return with((P) factory.createParser(new BufferedReader(reader)));
+      return parserChecked(reader);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
   @SuppressWarnings("unchecked")
+  protected P parserChecked(byte[] bytes) throws IOException {
+    return with((P) factory.createParser(bytes));
+  }
+
   public P parser(byte[] bytes) {
     try {
-      return with((P) factory.createParser(bytes));
+      return parserChecked(bytes);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
   @SuppressWarnings("unchecked")
+  protected P parserChecked(String string) throws IOException {
+    return with((P) factory.createParser(string));
+  }
+
   public P parser(String string) {
     try {
-      return with((P) factory.createParser(string));
+      return parserChecked(string);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
   @SuppressWarnings("unchecked")
+  protected P parserChecked(File file) throws IOException {
+    return with((P) factory.createParser(file));
+  }
+
   public P parser(File file) {
     try {
-      return with((P) factory.createParser(file));
+      return parserChecked(file);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
   @SuppressWarnings("unchecked")
+  public P parserChecked(URL url) throws IOException {
+    return with((P) factory.createParser(url));
+  }
+
   public P parser(URL url) {
     try {
-      return with((P) factory.createParser(url));
+      return parserChecked(url);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -127,6 +151,18 @@ public class JacksonStreams<
     parser.setCodec(objectCodec);
     schema.ifPresent(parser::setSchema);
     return parser;
+  }
+
+  protected N decodeChecked(P parser) throws IOException {
+    return parser.readValueAsTree();
+  }
+
+  public N decode(P parser) {
+    try {
+      return decodeChecked(parser);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 
   public Stream<N> from(P parser) {
@@ -184,4 +220,5 @@ public class JacksonStreams<
   public <M> Stream<Anoa<N, M>> from(AnoaHandler<M> anoaHandler, URL url) {
     return from(anoaHandler, parser(url));
   }
+
 }

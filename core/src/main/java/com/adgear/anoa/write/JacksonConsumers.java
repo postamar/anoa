@@ -68,31 +68,43 @@ public class JacksonConsumers<
   }
 
   @SuppressWarnings("unchecked")
-  public G generator(
-      Writer writer) {
-    try {
-      return with((G) factory.createGenerator(new BufferedWriter(writer)));
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
+  protected G generatorChecked(OutputStream outputStream) throws IOException {
+    return with((G) factory.createGenerator(new BufferedOutputStream(outputStream),
+                                            JsonEncoding.UTF8));
   }
 
-  @SuppressWarnings("unchecked")
   public G generator(
       OutputStream outputStream) {
     try {
-      return with((G) factory.createGenerator(new BufferedOutputStream(outputStream),
-                                              JsonEncoding.UTF8));
+      return generatorChecked(outputStream);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
   @SuppressWarnings("unchecked")
+  protected G generatorChecked(Writer writer) throws IOException {
+    return with((G) factory.createGenerator(new BufferedWriter(writer)));
+  }
+
+  public G generator(
+      Writer writer) {
+    try {
+      return generatorChecked(writer);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  protected G generatorChecked(File file) throws IOException {
+    return with((G) factory.createGenerator(file, JsonEncoding.UTF8));
+  }
+
   public G generator(
       File file) {
     try {
-      return with((G) factory.createGenerator(file, JsonEncoding.UTF8));
+      return generatorChecked(file);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }

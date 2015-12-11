@@ -43,6 +43,18 @@ public interface WriteConsumer<T> extends Closeable, Flushable, Consumer<T> {
   }
 
   /**
+   * Calls {@link Flushable#flush()}, rethrowing any {@link IOException} as an
+   * {@link UncheckedIOException}
+   */
+  default void flushUnchecked() {
+    try {
+      flush();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  /**
    * Default implementation of {@link Closeable#close} calls {@link Flushable#flush}
    *
    * @throws IOException raised when close fails
