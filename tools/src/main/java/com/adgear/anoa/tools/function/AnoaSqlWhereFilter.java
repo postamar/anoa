@@ -25,7 +25,7 @@ public class AnoaSqlWhereFilter<T> implements Predicate<T> {
   }
 
   /**
-   * @param klazz record Class object
+   * @param klazz       record Class object
    * @param whereClause SQL WHERE clause, without the WHERE keyword
    */
   public AnoaSqlWhereFilter(Class<T> klazz, String whereClause) {

@@ -24,9 +24,9 @@ public class ThriftDecoders {
   protected ThriftDecoders() {
   }
 
-  /** 
+  /**
    * @param supplier provides the returned Thrift record instances
-   * @param <T> Thrift record type 
+   * @param <T>      Thrift record type
    * @return A function which deserializes a Thrift record from its compact binary encoding
    */
   static public <T extends TBase> Function<byte[], T> compact(
@@ -36,10 +36,10 @@ public class ThriftDecoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param supplier provides the returned Thrift record instances
-   * @param <T> Thrift record type
-   * @param <M> Metadata type 
-   * @return A function which deserializes a Thrift record from its compact binary encoding 
+   * @param supplier    provides the returned Thrift record instances
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
+   * @return A function which deserializes a Thrift record from its compact binary encoding
    */
   static public <T extends TBase, M>
   Function<Anoa<byte[], M>, Anoa<T, M>> compact(
@@ -50,7 +50,7 @@ public class ThriftDecoders {
 
   /**
    * @param supplier provides the returned Thrift record instances
-   * @param <T> Thrift record type
+   * @param <T>      Thrift record type
    * @return A function which deserializes a Thrift record from its standard binary encoding
    */
   static public <T extends TBase> Function<byte[], T> binary(
@@ -60,9 +60,9 @@ public class ThriftDecoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param supplier provides the returned Thrift record instances
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param supplier    provides the returned Thrift record instances
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
    * @return A function which deserializes a Thrift record from its standard binary encoding
    */
   static public <T extends TBase, M>
@@ -74,7 +74,7 @@ public class ThriftDecoders {
 
   /**
    * @param supplier provides the returned Thrift record instances
-   * @param <T> Thrift record type
+   * @param <T>      Thrift record type
    * @return A function which deserializes a Thrift record from its Thrift JSON encoding
    */
   static public <T extends TBase> Function<byte[], T> json(
@@ -84,9 +84,9 @@ public class ThriftDecoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param supplier provides the returned Thrift record instances
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param supplier    provides the returned Thrift record instances
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
    * @return A function which deserializes a Thrift record from its Thrift JSON encoding
    */
   static public <T extends TBase, M>
@@ -125,11 +125,11 @@ public class ThriftDecoders {
     });
   }
 
-  /** 
+  /**
    * @param recordClass Thrift record class object
-   * @param strict enable strict type checking
-   * @param <P> Jackson JsonParser type
-   * @param <T> Thrift record type
+   * @param strict      enable strict type checking
+   * @param <P>         Jackson JsonParser type
+   * @param <T>         Thrift record type
    * @return A function which reads a Thrift record from a JsonParser, in its 'natural' encoding.
    */
   static public <P extends JsonParser, T extends TBase>
@@ -140,13 +140,13 @@ public class ThriftDecoders {
     return (P jp) -> reader.read(jp, strict);
   }
 
-  /** 
+  /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Thrift record class object
-   * @param strict enable strict type checking
-   * @param <P> Jackson JsonParser type
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param strict      enable strict type checking
+   * @param <P>         Jackson JsonParser type
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
    * @return A function which reads a Thrift record from a JsonParser, in its 'natural' encoding.
    */
   static public <P extends JsonParser, T extends TBase, M>

@@ -13,7 +13,8 @@ class BooleanReader extends AbstractReader<Boolean> {
   }
 
   @Override
-  protected Boolean readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
+  protected Boolean readStrict(JsonParser jacksonParser)
+      throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_TRUE:
         return true;
@@ -22,7 +23,8 @@ class BooleanReader extends AbstractReader<Boolean> {
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaJacksonTypeException("Token is not boolean: " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException(
+            "Token is not boolean: " + jacksonParser.getCurrentToken());
     }
   }
 }

@@ -28,7 +28,8 @@ class ListReader extends AbstractReader<ArrayList<Object>> {
   }
 
   @Override
-  protected ArrayList<Object> readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
+  protected ArrayList<Object> readStrict(JsonParser jacksonParser)
+      throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;

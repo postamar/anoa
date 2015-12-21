@@ -31,9 +31,9 @@ public class ThriftStreams {
   /**
    * Stream from Thrift compact binary representations
    *
-   * @param supplier Thrift record instance supplier
+   * @param supplier    Thrift record instance supplier
    * @param inputStream stream from which to deserialize
-   * @param <T> Thrift record type
+   * @param <T>         Thrift record type
    */
   static public <T extends TBase> Stream<T> compact(
       Supplier<T> supplier,
@@ -45,10 +45,10 @@ public class ThriftStreams {
    * Stream from Thrift compact binary representations
    *
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param supplier Thrift record instance supplier
+   * @param supplier    Thrift record instance supplier
    * @param inputStream stream from which to deserialize
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
    */
   static public <T extends TBase, M> Stream<Anoa<T, M>> compact(
       AnoaHandler<M> anoaHandler,
@@ -63,7 +63,7 @@ public class ThriftStreams {
    * @param supplier Thrift record instance supplier
    * @param fileName name of file from which to read
    * @param readOnly file open mode
-   * @param <T> Thrift record type
+   * @param <T>      Thrift record type
    */
   static public <T extends TBase> Stream<T> compact(
       Supplier<T> supplier,
@@ -80,11 +80,11 @@ public class ThriftStreams {
    * Stream from Thrift compact binary representations
    *
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param supplier Thrift record instance supplier
-   * @param fileName name of file from which to read
-   * @param readOnly file open mode
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param supplier    Thrift record instance supplier
+   * @param fileName    name of file from which to read
+   * @param readOnly    file open mode
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
    */
   static public <T extends TBase, M> Stream<Anoa<T, M>> compact(
       AnoaHandler<M> anoaHandler,
@@ -101,9 +101,9 @@ public class ThriftStreams {
   /**
    * Stream from Thrift compact binary representations
    *
-   * @param supplier Thrift record instance supplier
+   * @param supplier   Thrift record instance supplier
    * @param tTransport Thrift TTransport instance from which to read
-   * @param <T> Thrift record type
+   * @param <T>        Thrift record type
    */
   static public <T extends TBase> Stream<T> compact(
       Supplier<T> supplier,
@@ -116,10 +116,10 @@ public class ThriftStreams {
    * Stream from Thrift compact binary representations
    *
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param supplier Thrift record instance supplier
-   * @param tTransport Thrift TTransport instance from which to read
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param supplier    Thrift record instance supplier
+   * @param tTransport  Thrift TTransport instance from which to read
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
    */
   static public <T extends TBase, M> Stream<Anoa<T, M>> compact(
       AnoaHandler<M> anoaHandler,
@@ -132,9 +132,9 @@ public class ThriftStreams {
   /**
    * Stream from Thrift standard binary representations
    *
-   * @param supplier Thrift record instance supplier
+   * @param supplier    Thrift record instance supplier
    * @param inputStream stream from which to deserialize
-   * @param <T> Thrift record type
+   * @param <T>         Thrift record type
    */
   static public <T extends TBase> Stream<T> binary(
       Supplier<T> supplier,
@@ -146,10 +146,10 @@ public class ThriftStreams {
    * Stream from Thrift standard binary representations
    *
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param supplier Thrift record instance supplier
+   * @param supplier    Thrift record instance supplier
    * @param inputStream stream from which to deserialize
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
    */
   static public <T extends TBase, M> Stream<Anoa<T, M>> binary(
       AnoaHandler<M> anoaHandler,
@@ -166,7 +166,7 @@ public class ThriftStreams {
    * @param supplier Thrift record instance supplier
    * @param fileName name of file from which to read
    * @param readOnly file open mode
-   * @param <T> Thrift record type
+   * @param <T>      Thrift record type
    */
   static public <T extends TBase> Stream<T> binary(
       Supplier<T> supplier,
@@ -183,11 +183,11 @@ public class ThriftStreams {
    * Stream from Thrift standard binary representations
    *
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param supplier Thrift record instance supplier
-   * @param fileName name of file from which to read
-   * @param readOnly file open mode
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param supplier    Thrift record instance supplier
+   * @param fileName    name of file from which to read
+   * @param readOnly    file open mode
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
    */
   static public <T extends TBase, M> Stream<Anoa<T, M>> binary(
       AnoaHandler<M> anoaHandler,
@@ -204,9 +204,9 @@ public class ThriftStreams {
   /**
    * Stream from Thrift standard binary representations
    *
-   * @param supplier Thrift record instance supplier
+   * @param supplier   Thrift record instance supplier
    * @param tTransport Thrift TTransport instance from which to read
-   * @param <T> Thrift record type
+   * @param <T>        Thrift record type
    */
   static public <T extends TBase> Stream<T> binary(
       Supplier<T> supplier,
@@ -218,10 +218,10 @@ public class ThriftStreams {
    * Stream from Thrift standard binary representations
    *
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param supplier Thrift record instance supplier
-   * @param tTransport Thrift TTransport instance from which to read
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param supplier    Thrift record instance supplier
+   * @param tTransport  Thrift TTransport instance from which to read
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
    */
   static public <T extends TBase, M> Stream<Anoa<T, M>> binary(
       AnoaHandler<M> anoaHandler,
@@ -234,9 +234,9 @@ public class ThriftStreams {
   /**
    * Stream from Thrift JSON representations
    *
-   * @param supplier Thrift record instance supplier
+   * @param supplier    Thrift record instance supplier
    * @param inputStream stream from which to deserialize
-   * @param <T> Thrift record type
+   * @param <T>         Thrift record type
    */
   static public <T extends TBase> Stream<T> json(
       Supplier<T> supplier,
@@ -248,10 +248,10 @@ public class ThriftStreams {
    * Stream from Thrift JSON representations
    *
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param supplier Thrift record instance supplier
+   * @param supplier    Thrift record instance supplier
    * @param inputStream stream from which to deserialize
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
    */
   static public <T extends TBase, M> Stream<Anoa<T, M>> json(
       AnoaHandler<M> anoaHandler,
@@ -268,7 +268,7 @@ public class ThriftStreams {
    * @param supplier Thrift record instance supplier
    * @param fileName name of file from which to read
    * @param readOnly file open mode
-   * @param <T> Thrift record type
+   * @param <T>      Thrift record type
    */
   static public <T extends TBase> Stream<T> json(
       Supplier<T> supplier,
@@ -285,11 +285,11 @@ public class ThriftStreams {
    * Stream from Thrift JSON representations
    *
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param supplier Thrift record instance supplier
-   * @param fileName name of file from which to read
-   * @param readOnly file open mode
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param supplier    Thrift record instance supplier
+   * @param fileName    name of file from which to read
+   * @param readOnly    file open mode
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
    */
   static public <T extends TBase, M> Stream<Anoa<T, M>> json(
       AnoaHandler<M> anoaHandler,
@@ -306,9 +306,9 @@ public class ThriftStreams {
   /**
    * Stream from Thrift JSON representations
    *
-   * @param supplier Thrift record instance supplier
+   * @param supplier   Thrift record instance supplier
    * @param tTransport Thrift TTransport instance from which to read
-   * @param <T> Thrift record type
+   * @param <T>        Thrift record type
    */
   static public <T extends TBase> Stream<T> json(
       Supplier<T> supplier,
@@ -320,25 +320,26 @@ public class ThriftStreams {
    * Stream from Thrift JSON representations
    *
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param supplier Thrift record instance supplier
-   * @param tTransport Thrift TTransport instance from which to read
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param supplier    Thrift record instance supplier
+   * @param tTransport  Thrift TTransport instance from which to read
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
    */
   static public <T extends TBase, M> Stream<Anoa<T, M>> json(
       AnoaHandler<M> anoaHandler,
       Supplier<T> supplier,
       TTransport tTransport) {
-    return LookAheadIteratorFactory.thrift(anoaHandler, new TJSONProtocol(tTransport), supplier).asStream();
+    return LookAheadIteratorFactory.thrift(anoaHandler, new TJSONProtocol(tTransport), supplier)
+        .asStream();
   }
 
   /**
    * Stream with 'natural' object-mapping from JsonParser instance
    *
-   * @param recordClass Thrift record class object
-   * @param strict enable strict type checking
+   * @param recordClass   Thrift record class object
+   * @param strict        enable strict type checking
    * @param jacksonParser JsonParser instance from which to read
-   * @param <T> Thrift record type
+   * @param <T>           Thrift record type
    */
   static public <T extends TBase> Stream<T> jackson(
       Class<T> recordClass,
@@ -352,14 +353,14 @@ public class ThriftStreams {
   /**
    * Stream with 'natural' object-mapping from JsonParser instance
    *
-   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param recordClass Thrift record class object
-   * @param strict enable strict type checking
+   * @param anoaHandler   {@code AnoaHandler} instance to use for exception handling
+   * @param recordClass   Thrift record class object
+   * @param strict        enable strict type checking
    * @param jacksonParser JsonParser instance from which to read
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param <T>           Thrift record type
+   * @param <M>           Metadata type
    */
-  static public <T extends TBase, M>Stream<Anoa<T, M>> jackson(
+  static public <T extends TBase, M> Stream<Anoa<T, M>> jackson(
       AnoaHandler<M> anoaHandler,
       Class<T> recordClass,
       boolean strict,

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import java.io.IOException;
 import java.util.Map;
 
-class MapWriter<V> extends AbstractWriter<Map<CharSequence,V>> {
+class MapWriter<V> extends AbstractWriter<Map<CharSequence, V>> {
 
   final AbstractWriter<V> valueElementWriter;
 
@@ -14,9 +14,10 @@ class MapWriter<V> extends AbstractWriter<Map<CharSequence,V>> {
   }
 
   @Override
-  protected void writeChecked(Map<CharSequence, V> map, JsonGenerator jacksonGenerator) throws IOException {
+  protected void writeChecked(Map<CharSequence, V> map, JsonGenerator jacksonGenerator)
+      throws IOException {
     jacksonGenerator.writeStartObject();
-    for (Map.Entry<CharSequence,V> entry : map.entrySet()) {
+    for (Map.Entry<CharSequence, V> entry : map.entrySet()) {
       jacksonGenerator.writeFieldName(entry.getKey().toString());
       if (entry.getValue() == null) {
         jacksonGenerator.writeNull();

@@ -30,6 +30,14 @@ public class AvroGrep<R extends SpecificRecord> implements Runnable {
     this.outputStream = outputStream;
   }
 
+  static public void main(String[] args) throws Exception {
+    new AvroGrep<>(AnoaReflectionUtils.getAvroClass(System.getProperty("recordClass")),
+                   System.getProperty("filterExpression"),
+                   System.in,
+                   System.out)
+        .run();
+  }
+
   @Override
   public void run() {
     AnoaSqlWhereFilter<R> predicate = new AnoaSqlWhereFilter<>(recordClass, filterExpression);
@@ -40,13 +48,5 @@ public class AvroGrep<R extends SpecificRecord> implements Runnable {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-  }
-
-  static public void main(String[] args) throws Exception {
-    new AvroGrep<>(AnoaReflectionUtils.getAvroClass(System.getProperty("recordClass")),
-                   System.getProperty("filterExpression"),
-                   System.in,
-                   System.out)
-        .run();
   }
 }

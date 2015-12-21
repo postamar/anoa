@@ -18,6 +18,8 @@ import thrift.com.adgear.avro.openrtb.BidRequest;
 
 public class DataToolTest {
 
+  final private Schema schema = com.adgear.avro.openrtb.BidRequest.getClassSchema();
+
   static public byte[] convert(Schema schema,
                                Format in,
                                Format out,
@@ -40,8 +42,6 @@ public class DataToolTest {
   private InputStream bidreqs() {
     return getClass().getResourceAsStream("/bidreqs.json");
   }
-
-  final private Schema schema = com.adgear.avro.openrtb.BidRequest.getClassSchema();
 
   @Test
   public void testJsonToAvro() {

@@ -33,6 +33,11 @@ import java.util.stream.Stream;
 public class JdbcStreams {
 
   /**
+   * Object mapper used by this instance
+   */
+  final public ObjectCodec objectCodec;
+
+  /**
    * Create with default object mapper
    */
   public JdbcStreams() {
@@ -47,81 +52,8 @@ public class JdbcStreams {
   }
 
   /**
-   * Object mapper used by this instance
-   */
-  final public ObjectCodec objectCodec;
-
-  /**
-   * @param resultSet the JDBC result set to scan
-   * @return A stream of Jackson records which map to the result set rows.
-   */
-  public Stream<ObjectNode> resultSet(ResultSet resultSet) {
-    final Function<ResultSet, ObjectNode> fn;
-    try {
-      fn = Unchecked.function(rowFn(resultSet.getMetaData()));
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-    return SQL.seq(resultSet, fn);
-  }
-
-  /**
-   *
-   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param resultSet the JDBC result set to scan
-   * @param <M> Metadata type
-   * @return A stream of Jackson records which map to the result set rows.
-   */
-  public <M> Stream<Anoa<ObjectNode, M>> resultSet(
-      AnoaHandler<M> anoaHandler,
-      ResultSet resultSet) {
-    final Function<Anoa<ResultSet, M>, Anoa<ObjectNode, M>> fn;
-    try {
-      fn = anoaHandler.functionChecked(rowFn(resultSet.getMetaData()));
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-    return SQL.seq(resultSet, fn.compose(anoaHandler::ofNullable));
-  }
-
-  protected CheckedFunction<ResultSet, ObjectNode> rowFn(
-      ResultSetMetaData rsmd) throws SQLException {
-    int n = rsmd.getColumnCount();
-    String[] names = new String[n];
-    for (int c = 0; c < n; c++) {
-      names[c] = rsmd.getColumnLabel(c + 1);
-    }
-    return (ResultSet resultSet) -> {
-      TokenBuffer tb = new TokenBuffer(objectCodec, false);
-      tb.writeStartObject();
-      for (int c = 0; c < n;) {
-        tb.writeFieldName(names[c++]);
-        tb.writeTree(objectToTree(resultSet.getObject(c)));
-      }
-      tb.writeEndObject();
-      return tb.asParser(objectCodec).readValueAsTree();
-    };
-  }
-
-  private TreeNode objectToTree(Object object) throws IOException {
-    if (object == null) {
-      return NullNode.getInstance();
-    }
-    TokenBuffer tb = new TokenBuffer(objectCodec, false);
-    try {
-      tb.writeObject(object);
-      return tb.asParser().readValueAsTree();
-    } catch (IOException e) {
-      tb = new TokenBuffer(objectCodec, false);
-    }
-    tb.writeString(object.toString());
-    return tb.asParser().readValueAsTree();
-  }
-
-  /**
    * @param rsmd JDBC Result Set metadata
    * @return equivalent Avro Schema
-   * @throws SQLException
    */
   static public Schema induceSchema(ResultSetMetaData rsmd) throws SQLException {
     List<Schema.Field> fields = IntStream.range(1, rsmd.getColumnCount() + 1)
@@ -176,5 +108,71 @@ public class JdbcStreams {
       default:
         return Schema.Type.STRING;
     }
+  }
+
+  /**
+   * @param resultSet the JDBC result set to scan
+   * @return A stream of Jackson records which map to the result set rows.
+   */
+  public Stream<ObjectNode> resultSet(ResultSet resultSet) {
+    final Function<ResultSet, ObjectNode> fn;
+    try {
+      fn = Unchecked.function(rowFn(resultSet.getMetaData()));
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+    return SQL.seq(resultSet, fn);
+  }
+
+  /**
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
+   * @param resultSet   the JDBC result set to scan
+   * @param <M>         Metadata type
+   * @return A stream of Jackson records which map to the result set rows.
+   */
+  public <M> Stream<Anoa<ObjectNode, M>> resultSet(
+      AnoaHandler<M> anoaHandler,
+      ResultSet resultSet) {
+    final Function<Anoa<ResultSet, M>, Anoa<ObjectNode, M>> fn;
+    try {
+      fn = anoaHandler.functionChecked(rowFn(resultSet.getMetaData()));
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+    return SQL.seq(resultSet, fn.compose(anoaHandler::ofNullable));
+  }
+
+  protected CheckedFunction<ResultSet, ObjectNode> rowFn(
+      ResultSetMetaData rsmd) throws SQLException {
+    int n = rsmd.getColumnCount();
+    String[] names = new String[n];
+    for (int c = 0; c < n; c++) {
+      names[c] = rsmd.getColumnLabel(c + 1);
+    }
+    return (ResultSet resultSet) -> {
+      TokenBuffer tb = new TokenBuffer(objectCodec, false);
+      tb.writeStartObject();
+      for (int c = 0; c < n; ) {
+        tb.writeFieldName(names[c++]);
+        tb.writeTree(objectToTree(resultSet.getObject(c)));
+      }
+      tb.writeEndObject();
+      return tb.asParser(objectCodec).readValueAsTree();
+    };
+  }
+
+  private TreeNode objectToTree(Object object) throws IOException {
+    if (object == null) {
+      return NullNode.getInstance();
+    }
+    TokenBuffer tb = new TokenBuffer(objectCodec, false);
+    try {
+      tb.writeObject(object);
+      return tb.asParser().readValueAsTree();
+    } catch (IOException e) {
+      tb = new TokenBuffer(objectCodec, false);
+    }
+    tb.writeString(object.toString());
+    return tb.asParser().readValueAsTree();
   }
 }

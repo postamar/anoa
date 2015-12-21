@@ -20,11 +20,10 @@ import java.util.stream.Stream;
  * value itself, or documenting any exceptions handled during the transformation of the value. For
  * the latter use case, consider using the factory class {@code AnoaHandler}.
  *
- * <p>This is a
- * <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/doc-files/ValueBased.html">
- *   value-based</a> class; use of identity-sensitive operations (including reference equality
- * ({@code ==}), identity hash code, or synchronization) on instances of {@code Anoa} may have
- * unpredictable results and should be avoided.
+ * <p>This is a <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/doc-files/ValueBased.html">
+ * value-based</a> class; use of identity-sensitive operations (including reference equality ({@code
+ * ==}), identity hash code, or synchronization) on instances of {@code Anoa} may have unpredictable
+ * results and should be avoided.
  *
  * @param <T> Value type
  * @param <M> Metadata type
@@ -177,12 +176,12 @@ final public class Anoa<T, M> {
   }
 
   /**
-   * If a value is present, and the value matches the given predicate, return an {@code
-   * Anoa} describing the value, otherwise return a valueless {@code Anoa}.
+   * If a value is present, and the value matches the given predicate, return an {@code Anoa}
+   * describing the value, otherwise return a valueless {@code Anoa}.
    *
    * @param predicate a predicate to apply to the value, if present
-   * @return an {@code Anoa} describing the value of this {@code Anoa} if a value is
-   * present and the value matches the given predicate, otherwise a valueless {@code Anoa}
+   * @return an {@code Anoa} describing the value of this {@code Anoa} if a value is present and the
+   * value matches the given predicate, otherwise a valueless {@code Anoa}
    * @throws NullPointerException if the predicate is null
    * @see Optional#filter(Predicate)
    */
@@ -195,13 +194,13 @@ final public class Anoa<T, M> {
   }
 
   /**
-   * If a value is present, apply the provided mapping function to it, return that result wrapped
-   * in an {@code Anoa}, otherwise return a valueless {@code Anoa}.
+   * If a value is present, apply the provided mapping function to it, return that result wrapped in
+   * an {@code Anoa}, otherwise return a valueless {@code Anoa}.
    *
-   * @param <U> The type parameter to the {@code Anoa} returned by
+   * @param <U>    The type parameter to the {@code Anoa} returned by
    * @param mapper a mapping function to apply to the value, if present
-   * @return the result of applying an {@code Anoa}-bearing mapping function to the value of
-   * this {@code Anoa}, if a value is present, otherwise  a valueless {@code Anoa}
+   * @return the result of applying an {@code Anoa}-bearing mapping function to the value of this
+   * {@code Anoa}, if a value is present, otherwise  a valueless {@code Anoa}
    * @throws NullPointerException if the mapping function is null or returns a null result
    * @see Optional#map(Function)
    */
@@ -217,13 +216,13 @@ final public class Anoa<T, M> {
   }
 
   /**
-   * If a value is present, apply the provided {@code Anoa}-bearing mapping function to it,
-   * return that result, otherwise return  a valueless {@code Anoa}.
+   * If a value is present, apply the provided {@code Anoa}-bearing mapping function to it, return
+   * that result, otherwise return  a valueless {@code Anoa}.
    *
    * @param <U>    The type parameter to the {@code Anoa} returned by
    * @param mapper a mapping function to apply to the value, if present
-   * @return the result of applying an {@code Anoa}-bearing mapping function to the value of
-   * this {@code Anoa}, if a value is present, otherwise  a valueless {@code Anoa}
+   * @return the result of applying an {@code Anoa}-bearing mapping function to the value of this
+   * {@code Anoa}, if a value is present, otherwise  a valueless {@code Anoa}
    * @throws NullPointerException if the mapping function is null or returns a null result
    * @see Optional#flatMap(Function)
    */
@@ -268,10 +267,10 @@ final public class Anoa<T, M> {
    * Return the contained value, if present, otherwise throw an exception to be created by the
    * provided supplier.
    *
-   * @param <X> Type of the exception to be thrown
+   * @param <X>               Type of the exception to be thrown
    * @param exceptionSupplier The supplier which will return the exception to be thrown
    * @return the present value
-   * @throws X if there is no value present
+   * @throws X                    if there is no value present
    * @throws NullPointerException if no value is present and {@code exceptionSupplier} is null
    * @see Optional#orElseThrow(Supplier)
    */
@@ -284,13 +283,10 @@ final public class Anoa<T, M> {
 
   /**
    * Indicates whether some other object is "equal to" this Anoa. The other object is considered
-   * equal if it is also an {@code Anoa} and:
-   * <ul>
-   * <li>both instances have no value present, or both instances have values which are "equal to"
-   * each other via {@code equals()}, and;
-   * <li>both instances have no metadata present, or both instances have metadata which is "equal
-   * to" each other via {@code equals()}.
-   * </ul>
+   * equal if it is also an {@code Anoa} and: <ul> <li>both instances have no value present, or both
+   * instances have values which are "equal to" each other via {@code equals()}, and; <li>both
+   * instances have no metadata present, or both instances have metadata which is "equal to" each
+   * other via {@code equals()}. </ul>
    *
    * @param obj an object to be tested for equality
    * @return {@code true} if the other object is "equal to" this object, otherwise {@code false}

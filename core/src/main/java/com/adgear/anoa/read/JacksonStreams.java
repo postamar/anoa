@@ -56,7 +56,7 @@ public class JacksonStreams<
 
   /**
    * @param objectCodec Jackson object mapper instance
-   * @param schema Jackson format schema (optional)
+   * @param schema      Jackson format schema (optional)
    */
   @SuppressWarnings("unchecked")
   public JacksonStreams(C objectCodec, Optional<S> schema) {

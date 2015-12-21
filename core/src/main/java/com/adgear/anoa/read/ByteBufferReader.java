@@ -17,7 +17,8 @@ class ByteBufferReader extends AbstractReader<ByteBuffer> {
   }
 
   @Override
-  protected ByteBuffer readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
+  protected ByteBuffer readStrict(JsonParser jacksonParser)
+      throws AnoaJacksonTypeException, IOException {
     final byte[] array = byteArrayReader.readStrict(jacksonParser);
     return (array == null) ? null : ByteBuffer.wrap(array);
   }

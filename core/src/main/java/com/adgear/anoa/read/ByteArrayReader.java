@@ -37,13 +37,15 @@ class ByteArrayReader extends AbstractReader<byte[]> {
   }
 
   @Override
-  protected byte[] readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
+  protected byte[] readStrict(JsonParser jacksonParser)
+      throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_STRING:
         try {
           return jacksonParser.getBinaryValue();
         } catch (IOException e) {
-          throw new AnoaJacksonTypeException("String is not base64 encoded bytes: " + jacksonParser.getText());
+          throw new AnoaJacksonTypeException(
+              "String is not base64 encoded bytes: " + jacksonParser.getText());
         }
       case VALUE_EMBEDDED_OBJECT:
         final Object object = jacksonParser.getEmbeddedObject();
@@ -52,12 +54,14 @@ class ByteArrayReader extends AbstractReader<byte[]> {
         } else if (object instanceof ByteBuffer) {
           return ((ByteBuffer) object).array();
         } else {
-          throw new AnoaJacksonTypeException("Token is not byte[]: " + jacksonParser.getCurrentToken());
+          throw new AnoaJacksonTypeException(
+              "Token is not byte[]: " + jacksonParser.getCurrentToken());
         }
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaJacksonTypeException("Token is not string or byte[]: " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException(
+            "Token is not string or byte[]: " + jacksonParser.getCurrentToken());
     }
   }
 }

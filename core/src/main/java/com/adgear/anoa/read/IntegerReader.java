@@ -13,14 +13,16 @@ class IntegerReader extends AbstractReader<Integer> {
   }
 
   @Override
-  protected Integer readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
+  protected Integer readStrict(JsonParser jacksonParser)
+      throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_NUMBER_INT:
         return jacksonParser.getIntValue();
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaJacksonTypeException("Token is not integer: " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException(
+            "Token is not integer: " + jacksonParser.getCurrentToken());
     }
   }
 }

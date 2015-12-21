@@ -17,8 +17,8 @@ import java.io.Writer;
 import java.util.Optional;
 
 /**
- * Utility class for generating {@code WriteConsumer} instances to write Jackson
- * {@link com.fasterxml.jackson.core.TreeNode} instances.
+ * Utility class for generating {@code WriteConsumer} instances to write Jackson {@link
+ * com.fasterxml.jackson.core.TreeNode} instances.
  *
  * Intended to be used as a base class, subclasses should wrap appropriate Jackson databinding types
  * together; see the anoa-tools module for examples.
@@ -28,7 +28,6 @@ import java.util.Optional;
  * @param <F> Factory type
  * @param <S> Schema type
  * @param <G> Generator type
- *
  */
 public class JacksonConsumers<
     N extends TreeNode,
@@ -53,9 +52,8 @@ public class JacksonConsumers<
   final public Optional<S> schema;
 
   /**
-   *
    * @param objectCodec Jackson object mapper instance
-   * @param schema Jackson format schema (optional)
+   * @param schema      Jackson format schema (optional)
    */
   @SuppressWarnings("unchecked")
   public JacksonConsumers(

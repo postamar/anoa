@@ -18,6 +18,12 @@ import java.io.IOException;
 
 class AvroFieldWrapper {
 
+  final int index;
+  final Schema.Field field;
+  final boolean unboxed;
+  final Object defaultValue;
+  final AbstractReader<?> reader;
+
   AvroFieldWrapper(int index, Schema.Field field) {
     this.index = index;
     this.field = field;
@@ -33,33 +39,6 @@ class AvroFieldWrapper {
         break;
       default:
         this.unboxed = false;
-    }
-  }
-
-  final int index;
-  final Schema.Field field;
-  final boolean unboxed;
-  final Object defaultValue;
-  final AbstractReader<?> reader;
-
-  Object defaultValueCopy() {
-    return SpecificData.get().deepCopy(field.schema(), defaultValue);
-  }
-
-  @SuppressWarnings("unchecked")
-  private Object readDefaultValue(Schema.Field field) {
-    if (field.defaultValue() == null || NullNode.getInstance().equals(field.defaultValue())) {
-      return null;
-    }
-    try {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
-      ResolvingGrammarGenerator.encode(encoder, field.schema(), field.defaultValue());
-      encoder.flush();
-      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);
-      return SpecificData.get().createDatumReader(field.schema()).read(null, decoder);
-    } catch (IOException e) {
-      throw new AvroRuntimeException(e);
     }
   }
 
@@ -103,5 +82,26 @@ class AvroFieldWrapper {
         }
     }
     throw new RuntimeException("Unsupported Avro schema: " + schema);
+  }
+
+  Object defaultValueCopy() {
+    return SpecificData.get().deepCopy(field.schema(), defaultValue);
+  }
+
+  @SuppressWarnings("unchecked")
+  private Object readDefaultValue(Schema.Field field) {
+    if (field.defaultValue() == null || NullNode.getInstance().equals(field.defaultValue())) {
+      return null;
+    }
+    try {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
+      ResolvingGrammarGenerator.encode(encoder, field.schema(), field.defaultValue());
+      encoder.flush();
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);
+      return SpecificData.get().createDatumReader(field.schema()).read(null, decoder);
+    } catch (IOException e) {
+      throw new AvroRuntimeException(e);
+    }
   }
 }

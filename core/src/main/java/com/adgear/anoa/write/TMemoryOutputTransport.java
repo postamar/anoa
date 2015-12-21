@@ -3,8 +3,6 @@ package com.adgear.anoa.write;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 
-import java.io.ByteArrayOutputStream;
-
 class TMemoryOutputTransport extends TTransport {
 
   final ByteArrayOutputStream baos = new ByteArrayOutputStream();

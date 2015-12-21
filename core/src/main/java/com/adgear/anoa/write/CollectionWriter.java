@@ -14,7 +14,8 @@ class CollectionWriter<E> extends AbstractWriter<Collection<E>> {
   }
 
   @Override
-  protected void writeChecked(Collection<E> array, JsonGenerator jacksonGenerator) throws IOException {
+  protected void writeChecked(Collection<E> array, JsonGenerator jacksonGenerator)
+      throws IOException {
     jacksonGenerator.writeStartArray(array.size());
     for (E element : array) {
       if (element == null) {

@@ -15,7 +15,7 @@ public interface Handler0<M> extends Function<Throwable, M[]> {
    * meta-datum.
    *
    * @param mapToMetaDatum exception handler
-   * @param <M> Metadata type
+   * @param <M>            Metadata type
    * @return an instance wrapping the result of {@code mapToMetaDatum} in an array.
    */
   static <M> /*@NonNull*/ Handler0<M> of(

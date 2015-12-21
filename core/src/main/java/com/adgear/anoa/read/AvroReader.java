@@ -24,8 +24,6 @@ abstract class AvroReader<R extends IndexedRecord> extends AbstractReader<R> {
   final protected List<AvroFieldWrapper> fieldWrappers;
   final private Map<String, Optional<AvroFieldWrapper>> fieldLookUp;
 
-  abstract protected R newInstance() throws Exception;
-
   @SuppressWarnings("unchecked")
   private AvroReader(Schema schema) {
     this.fieldLookUp = new HashMap<>();
@@ -38,6 +36,8 @@ abstract class AvroReader<R extends IndexedRecord> extends AbstractReader<R> {
       field.aliases().stream().forEach(alias -> fieldLookUp.put(alias, Optional.of(fieldWrapper)));
     }
   }
+
+  abstract protected R newInstance() throws Exception;
 
   @Override
   protected R validateTopLevel(R record) {
@@ -61,9 +61,10 @@ abstract class AvroReader<R extends IndexedRecord> extends AbstractReader<R> {
       doMap(jacksonParser, (fieldName, p) -> {
         Optional<AvroFieldWrapper> cacheValue = fieldLookUp.get(fieldName);
         if (cacheValue == null) {
-          final Optional<Map.Entry<String, Optional<AvroFieldWrapper>>> found = fieldLookUp.entrySet().stream()
-              .filter(e -> (0 == fieldName.compareToIgnoreCase(e.getKey())))
-              .findAny();
+          final Optional<Map.Entry<String, Optional<AvroFieldWrapper>>> found =
+              fieldLookUp.entrySet().stream()
+                  .filter(e -> (0 == fieldName.compareToIgnoreCase(e.getKey())))
+                  .findAny();
           cacheValue = found.flatMap(Map.Entry::getValue);
           fieldLookUp.put(fieldName, cacheValue);
         }

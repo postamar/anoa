@@ -30,7 +30,7 @@ public class AvroDecoders {
 
 
   /**
-   * @param schema Avro record schema
+   * @param schema   Avro record schema
    * @param supplier used for record instantiation
    * @return A function which deserializes an Avro record from its binary encoding
    */
@@ -51,9 +51,9 @@ public class AvroDecoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param schema Avro record schema
-   * @param supplier used for record instantiation
-   * @param <M> Metadata type
+   * @param schema      Avro record schema
+   * @param supplier    used for record instantiation
+   * @param <M>         Metadata type
    * @return A function which deserializes an Avro record from its binary encoding
    */
   static public <M> Function<Anoa<byte[], M>, Anoa<GenericRecord, M>> binary(
@@ -65,8 +65,8 @@ public class AvroDecoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param schema Avro record schema
-   * @param <M> Metadata type
+   * @param schema      Avro record schema
+   * @param <M>         Metadata type
    * @return A function which deserializes an Avro record from its binary encoding
    */
   static public <M> Function<Anoa<byte[], M>, Anoa<GenericRecord, M>> binary(
@@ -76,8 +76,8 @@ public class AvroDecoders {
   }
 
   /**
-   * @param writer Avro schema with which the record was originally serialized
-   * @param reader Avro schema to use for deserialization
+   * @param writer   Avro schema with which the record was originally serialized
+   * @param reader   Avro schema to use for deserialization
    * @param supplier used for record instantiation
    * @return A function which deserializes an Avro record from its binary encoding
    */
@@ -101,10 +101,10 @@ public class AvroDecoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param writer Avro schema with which the record was originally serialized
-   * @param reader Avro schema to use for deserialization
-   * @param supplier used for record instantiation
-   * @param <M> Metadata type
+   * @param writer      Avro schema with which the record was originally serialized
+   * @param reader      Avro schema to use for deserialization
+   * @param supplier    used for record instantiation
+   * @param <M>         Metadata type
    * @return A function which deserializes an Avro record from its binary encoding
    */
   static public <M> Function<Anoa<byte[], M>, Anoa<GenericRecord, M>> binary(
@@ -117,9 +117,9 @@ public class AvroDecoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param writer Avro schema with which the record was originally serialized
-   * @param reader Avro schema to use for deserialization
-   * @param <M> Metadata type
+   * @param writer      Avro schema with which the record was originally serialized
+   * @param reader      Avro schema to use for deserialization
+   * @param <M>         Metadata type
    * @return A function which deserializes an Avro record from its binary encoding
    */
   static public <M> Function<Anoa<byte[], M>, Anoa<GenericRecord, M>> binary(
@@ -131,8 +131,8 @@ public class AvroDecoders {
 
   /**
    * @param recordClass Avro SpecificRecord class object
-   * @param supplier used for record instantiation
-   * @param <R> Avro SpecificRecord record type
+   * @param supplier    used for record instantiation
+   * @param <R>         Avro SpecificRecord record type
    * @return A function which deserializes an Avro record from its binary encoding
    */
   static public <R extends SpecificRecord> Function<byte[], R> binary(
@@ -143,7 +143,7 @@ public class AvroDecoders {
 
   /**
    * @param recordClass Avro SpecificRecord class object
-   * @param <R> Avro SpecificRecord record type
+   * @param <R>         Avro SpecificRecord record type
    * @return A function which deserializes an Avro record from its binary encoding
    */
   static public <R extends SpecificRecord> Function<byte[], R> binary(
@@ -154,9 +154,9 @@ public class AvroDecoders {
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Avro SpecificRecord class object
-   * @param supplier used for record instantiation
-   * @param <R> Avro SpecificRecord record type
-   * @param <M> Metadata type
+   * @param supplier    used for record instantiation
+   * @param <R>         Avro SpecificRecord record type
+   * @param <M>         Metadata type
    * @return A function which deserializes an Avro record from its binary encoding
    */
   static public <R extends SpecificRecord, M> Function<Anoa<byte[], M>, Anoa<R, M>> binary(
@@ -169,24 +169,14 @@ public class AvroDecoders {
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Avro SpecificRecord class object
-   * @param <R> Avro SpecificRecord record type
-   * @param <M> Metadata type
+   * @param <R>         Avro SpecificRecord record type
+   * @param <M>         Metadata type
    * @return A function which deserializes an Avro record from its binary encoding
    */
   static public <R extends SpecificRecord, M> Function<Anoa<byte[], M>, Anoa<R, M>> binary(
       AnoaHandler<M> anoaHandler,
       Class<R> recordClass) {
     return binary(anoaHandler, new SpecificDatumReader<>(recordClass));
-  }
-
-  static protected class BinaryDecoderWrapper {
-
-    protected BinaryDecoder decoder = null;
-
-    protected BinaryDecoder getDecoder(byte[] bytes) {
-      decoder = DecoderFactory.get().binaryDecoder(bytes, decoder);
-      return decoder;
-    }
   }
 
   static <R extends IndexedRecord> Function<byte[], R> binary(
@@ -223,7 +213,7 @@ public class AvroDecoders {
   }
 
   /**
-   * @param schema Avro record schema
+   * @param schema   Avro record schema
    * @param supplier used for record instantiation
    * @return A function which deserializes an Avro record from its JSON encoding
    */
@@ -244,9 +234,9 @@ public class AvroDecoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param schema Avro record schema
-   * @param supplier used for record instantiation
-   * @param <M> Metadata type
+   * @param schema      Avro record schema
+   * @param supplier    used for record instantiation
+   * @param <M>         Metadata type
    * @return A function which deserializes an Avro record from its JSON encoding
    */
   static public <M> Function<Anoa<String, M>, Anoa<GenericRecord, M>> json(
@@ -258,8 +248,8 @@ public class AvroDecoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param schema Avro record schema
-   * @param <M> Metadata type
+   * @param schema      Avro record schema
+   * @param <M>         Metadata type
    * @return A function which deserializes an Avro record from its JSON encoding
    */
   static public <M> Function<Anoa<String, M>, Anoa<GenericRecord, M>> json(
@@ -269,8 +259,8 @@ public class AvroDecoders {
   }
 
   /**
-   * @param writer Avro schema with which the record was originally serialized
-   * @param reader Avro schema to use for deserialization
+   * @param writer   Avro schema with which the record was originally serialized
+   * @param reader   Avro schema to use for deserialization
    * @param supplier used for record instantiation
    * @return A function which deserializes an Avro record from its JSON encoding
    */
@@ -294,10 +284,10 @@ public class AvroDecoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param writer Avro schema with which the record was originally serialized
-   * @param reader Avro schema to use for deserialization
-   * @param supplier used for record instantiation
-   * @param <M> Metadata type
+   * @param writer      Avro schema with which the record was originally serialized
+   * @param reader      Avro schema to use for deserialization
+   * @param supplier    used for record instantiation
+   * @param <M>         Metadata type
    * @return A function which deserializes an Avro record from its JSON encoding
    */
   static public <M> Function<Anoa<String, M>, Anoa<GenericRecord, M>> json(
@@ -310,9 +300,9 @@ public class AvroDecoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param writer Avro schema with which the record was originally serialized
-   * @param reader Avro schema to use for deserialization
-   * @param <M> Metadata type
+   * @param writer      Avro schema with which the record was originally serialized
+   * @param reader      Avro schema to use for deserialization
+   * @param <M>         Metadata type
    * @return A function which deserializes an Avro record from its JSON encoding
    */
   static public <M> Function<Anoa<String, M>, Anoa<GenericRecord, M>> json(
@@ -324,8 +314,8 @@ public class AvroDecoders {
 
   /**
    * @param recordClass Avro SpecificRecord class object
-   * @param supplier used for record instantiation
-   * @param <R> Avro SpecificRecord record type
+   * @param supplier    used for record instantiation
+   * @param <R>         Avro SpecificRecord record type
    * @return A function which deserializes an Avro record from its JSON encoding
    */
   static public <R extends SpecificRecord> Function<String, R> json(
@@ -336,7 +326,7 @@ public class AvroDecoders {
 
   /**
    * @param recordClass Avro SpecificRecord class object
-   * @param <R> Avro SpecificRecord record type
+   * @param <R>         Avro SpecificRecord record type
    * @return A function which deserializes an Avro record from its JSON encoding
    */
   static public <R extends SpecificRecord> Function<String, R> json(
@@ -347,9 +337,9 @@ public class AvroDecoders {
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Avro SpecificRecord class object
-   * @param supplier used for record instantiation
-   * @param <R> Avro SpecificRecord record type
-   * @param <M> Metadata type
+   * @param supplier    used for record instantiation
+   * @param <R>         Avro SpecificRecord record type
+   * @param <M>         Metadata type
    * @return A function which deserializes an Avro record from its JSON encoding
    */
   static public <R extends SpecificRecord, M> Function<Anoa<String, M>, Anoa<R, M>> json(
@@ -362,8 +352,8 @@ public class AvroDecoders {
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Avro SpecificRecord class object
-   * @param <R> Avro SpecificRecord record type
-   * @param <M> Metadata type
+   * @param <R>         Avro SpecificRecord record type
+   * @param <M>         Metadata type
    * @return A function which deserializes an Avro record from its JSON encoding
    */
   static public <R extends SpecificRecord, M> Function<Anoa<String, M>, Anoa<R, M>> json(
@@ -416,11 +406,10 @@ public class AvroDecoders {
     return json(anoaHandler, reader, () -> ((R) null));
   }
 
-
   /**
    * @param schema Avro record schema
    * @param strict enable strict type checking
-   * @param <P> Jackson JsonParser type
+   * @param <P>    Jackson JsonParser type
    * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding
    */
   static public <P extends JsonParser> Function<P, GenericRecord> jackson(
@@ -432,10 +421,10 @@ public class AvroDecoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param schema Avro record Schema
-   * @param strict enable strict type checking
-   * @param <P> Jackson JsonParser type
-   * @param <M> Metadata type
+   * @param schema      Avro record Schema
+   * @param strict      enable strict type checking
+   * @param <P>         Jackson JsonParser type
+   * @param <M>         Metadata type
    * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding
    */
   static public <P extends JsonParser, M>
@@ -449,9 +438,9 @@ public class AvroDecoders {
 
   /**
    * @param recordClass Avro SpecificRecord class object
-   * @param strict enable strict type checking
-   * @param <P> Jackson JsonParser type
-   * @param <R> Avro SpecificRecord record type
+   * @param strict      enable strict type checking
+   * @param <P>         Jackson JsonParser type
+   * @param <R>         Avro SpecificRecord record type
    * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding
    */
   static public <P extends JsonParser, R extends SpecificRecord> Function<P, R> jackson(
@@ -464,10 +453,10 @@ public class AvroDecoders {
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Avro SpecificRecord class object
-   * @param strict enable strict type checking
-   * @param <P> Jackson JsonParser type
-   * @param <R> Avro SpecificRecord record type
-   * @param <M> Metadata type
+   * @param strict      enable strict type checking
+   * @param <P>         Jackson JsonParser type
+   * @param <R>         Avro SpecificRecord record type
+   * @param <M>         Metadata type
    * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding
    */
   static public <P extends JsonParser, R extends SpecificRecord, M>
@@ -477,5 +466,15 @@ public class AvroDecoders {
       boolean strict) {
     final AvroReader<R> reader = new AvroReader.SpecificReader<>(recordClass);
     return anoaHandler.functionChecked((P jp) -> reader.readChecked(jp, strict));
+  }
+
+  static protected class BinaryDecoderWrapper {
+
+    protected BinaryDecoder decoder = null;
+
+    protected BinaryDecoder getDecoder(byte[] bytes) {
+      decoder = DecoderFactory.get().binaryDecoder(bytes, decoder);
+      return decoder;
+    }
   }
 }

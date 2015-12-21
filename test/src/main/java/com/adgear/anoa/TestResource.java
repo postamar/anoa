@@ -27,11 +27,11 @@ class TestResource {
 
   }
 
-  public Stream<String> jsonStrings () {
+  public Stream<String> jsonStrings() {
     return jsonStrings.stream().sequential();
   }
 
-  public Stream<byte[]> jsonBytes () {
+  public Stream<byte[]> jsonBytes() {
     return jsonBytes.stream().sequential();
   }
 

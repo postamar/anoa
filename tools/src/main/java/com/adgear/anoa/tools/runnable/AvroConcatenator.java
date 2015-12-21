@@ -40,6 +40,24 @@ public class AvroConcatenator implements Runnable {
     }
   }
 
+  static public void main(String[] args) {
+    List<InputStream> inputs = Stream.of(args)
+        .map(File::new)
+        .peek(f -> {
+          if (!f.exists()) {
+            throw new IllegalArgumentException("File '" + f + "' does not exist.");
+          }
+        })
+        .peek(f -> {
+          if (f.isDirectory()) {
+            throw new IllegalArgumentException("File '" + f + "' is a directory.");
+          }
+        })
+        .map(Unchecked.function(FileInputStream::new))
+        .collect(Collectors.toList());
+    new AvroConcatenator(inputs, System.out).run();
+  }
+
   @Override
   public void run() {
     try {
@@ -60,19 +78,5 @@ public class AvroConcatenator implements Runnable {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-  }
-
-  static public void main(String[] args) {
-    List<InputStream> inputs = Stream.of(args)
-        .map(File::new)
-        .peek(f -> {
-          if (!f.exists())
-            throw new IllegalArgumentException("File '" + f + "' does not exist.");
-        })
-        .peek(f -> {if (f.isDirectory())
-          throw new IllegalArgumentException("File '" + f + "' is a directory.");})
-        .map(Unchecked.function(FileInputStream::new))
-        .collect(Collectors.toList());
-    new AvroConcatenator(inputs, System.out).run();
   }
 }

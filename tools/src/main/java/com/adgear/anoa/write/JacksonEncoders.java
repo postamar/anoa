@@ -5,14 +5,16 @@ import com.adgear.anoa.AnoaHandler;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
-import java.io.ByteArrayOutputStream;
 import java.util.function.Function;
 
 /**
- * Utility class for generating functions for serializing Jackson ObjectNode records.
- * Unless specified otherwise, the functions should not be deemed thread-safe.
+ * Utility class for generating functions for serializing Jackson ObjectNode records. Unless
+ * specified otherwise, the functions should not be deemed thread-safe.
  */
 public class JacksonEncoders {
+
+  protected JacksonEncoders() {
+  }
 
   /**
    * @return A function which serializes an ObjectNode into its JSON encoding
@@ -23,7 +25,7 @@ public class JacksonEncoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param <M> Metadata type
+   * @param <M>         Metadata type
    * @return A function which serializes an ObjectNode record into its JSON encoding
    */
   static public <M> Function<Anoa<ObjectNode, M>, Anoa<byte[], M>> json(
@@ -40,7 +42,7 @@ public class JacksonEncoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param <M> Metadata type
+   * @param <M>         Metadata type
    * @return A function which serializes an ObjectNode record into its CBOR encoding
    */
   static public <M> Function<Anoa<ObjectNode, M>, Anoa<byte[], M>> cbor(
@@ -58,8 +60,8 @@ public class JacksonEncoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param csvSchema CSV schema specification (separator, etc.)
-   * @param <M> Metadata type
+   * @param csvSchema   CSV schema specification (separator, etc.)
+   * @param <M>         Metadata type
    * @return A function which serializes an ObjectNode record into a CSV encoding
    */
   static public <M> Function<Anoa<ObjectNode, M>, Anoa<byte[], M>> csv(

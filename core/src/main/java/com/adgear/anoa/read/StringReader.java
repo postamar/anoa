@@ -25,14 +25,16 @@ class StringReader extends AbstractReader<String> {
   }
 
   @Override
-  protected String readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
+  protected String readStrict(JsonParser jacksonParser)
+      throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_STRING:
         return jacksonParser.getText();
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaJacksonTypeException("Token is not string: " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException(
+            "Token is not string: " + jacksonParser.getCurrentToken());
     }
   }
 }

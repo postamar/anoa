@@ -10,9 +10,9 @@ import java.util.Map;
 
 class EnumReader extends AbstractReader<Enum> {
 
-  final private Map<String,Enum> labelLookUp;
-  final private Map<Integer,Enum> ordinalLookUp;
   final Class enumClass;
+  final private Map<String, Enum> labelLookUp;
+  final private Map<Integer, Enum> ordinalLookUp;
 
   @SuppressWarnings("unchecked")
   EnumReader(Class enumClass) {
@@ -66,19 +66,22 @@ class EnumReader extends AbstractReader<Enum> {
           }
         }
         if (value == null) {
-          throw new AnoaJacksonTypeException("Invalid label " + jacksonParser.getText() + " for " + enumClass);
+          throw new AnoaJacksonTypeException(
+              "Invalid label " + jacksonParser.getText() + " for " + enumClass);
         }
         return value;
       case VALUE_NUMBER_INT:
         value = ordinalLookUp.get(jacksonParser.getIntValue());
         if (value == null) {
-          throw new AnoaJacksonTypeException("Invalid ordinal " + jacksonParser.getText() + " for " + enumClass);
+          throw new AnoaJacksonTypeException(
+              "Invalid ordinal " + jacksonParser.getText() + " for " + enumClass);
         }
         return value;
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaJacksonTypeException("Token is not enum label or ordinal: " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException(
+            "Token is not enum label or ordinal: " + jacksonParser.getCurrentToken());
     }
   }
 }

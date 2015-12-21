@@ -7,7 +7,8 @@ import java.io.IOException;
 class StringWriter extends AbstractWriter<CharSequence> {
 
   @Override
-  protected void writeChecked(CharSequence charSequence, JsonGenerator jacksonGenerator) throws IOException {
+  protected void writeChecked(CharSequence charSequence, JsonGenerator jacksonGenerator)
+      throws IOException {
     jacksonGenerator.writeString(charSequence.toString());
   }
 }

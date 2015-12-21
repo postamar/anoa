@@ -35,8 +35,8 @@ public class ThriftEncoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
    * @return A function for serializing Thrift records as compact binary blobs.
    */
   static public <T extends TBase, M> Function<Anoa<T, M>, Anoa<byte[], M>> compact(
@@ -54,8 +54,8 @@ public class ThriftEncoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
    * @return A function for serializing Thrift records as standard binary blobs.
    */
   static public <T extends TBase, M> Function<Anoa<T, M>, Anoa<byte[], M>> binary(
@@ -73,8 +73,8 @@ public class ThriftEncoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param <T> Thrift record type
-   * @param <M> Metadata type
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
    * @return A function for serializing Thrift records in Thrift JSON format.
    */
   static public <T extends TBase, M> Function<Anoa<T, M>, Anoa<byte[], M>> json(
@@ -111,9 +111,9 @@ public class ThriftEncoders {
 
   /**
    * @param recordClass Thrift record class object
-   * @param supplier called for each new record serialization
-   * @param <T> Thrift record type
-   * @param <G> JsonGenerator type
+   * @param supplier    called for each new record serialization
+   * @param <T>         Thrift record type
+   * @param <G>         JsonGenerator type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
    * into it.
    */
@@ -131,10 +131,10 @@ public class ThriftEncoders {
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Thrift record class object
-   * @param supplier called for each new record serialization
-   * @param <T> Thrift record type
-   * @param <G> JsonGenerator type
-   * @param <M> Metadata type
+   * @param supplier    called for each new record serialization
+   * @param <T>         Thrift record type
+   * @param <G>         JsonGenerator type
+   * @param <M>         Metadata type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
    * into it.
    */

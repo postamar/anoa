@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 
 public class AvroDecodersTest {
 
+  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
+
   @Test
   public void testBinary() {
     BidReqs.assertAvroGenerics(BidReqs.avroBinary()
@@ -42,8 +44,6 @@ public class AvroDecodersTest {
                                     .map(TreeNode::traverse)
                                     .map(AvroDecoders.jackson(BidReqs.avroClass, true)));
   }
-
-  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
 
   @Test
   public void testAnoaBinary() {

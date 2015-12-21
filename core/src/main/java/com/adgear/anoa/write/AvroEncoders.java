@@ -14,7 +14,6 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.function.Function;
@@ -39,8 +38,8 @@ public class AvroEncoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param schema Avro schema of records to serialize
-   * @param <M> Metadata type
+   * @param schema      Avro schema of records to serialize
+   * @param <M>         Metadata type
    */
   static public <M> Function<Anoa<GenericRecord, M>, Anoa<byte[], M>> binary(
       AnoaHandler<M> anoaHandler,
@@ -50,7 +49,7 @@ public class AvroEncoders {
 
   /**
    * @param recordClass Class object of Avro records to be serialized
-   * @param <R> Avro record type
+   * @param <R>         Avro record type
    */
   static public <R extends SpecificRecord> Function<R, byte[]> binary(
       Class<R> recordClass) {
@@ -60,8 +59,8 @@ public class AvroEncoders {
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Class object of Avro records to be serialized
-   * @param <R> Avro record type
-   * @param <M> Metadata type
+   * @param <R>         Avro record type
+   * @param <M>         Metadata type
    */
   static public <R extends SpecificRecord, M> Function<Anoa<R, M>, Anoa<byte[], M>> binary(
       AnoaHandler<M> anoaHandler,
@@ -106,8 +105,8 @@ public class AvroEncoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param schema Avro schema of records to serialize
-   * @param <M> Metadata type
+   * @param schema      Avro schema of records to serialize
+   * @param <M>         Metadata type
    */
   static public <M> Function<Anoa<GenericRecord, M>, Anoa<String, M>> json(
       AnoaHandler<M> anoaHandler,
@@ -117,7 +116,7 @@ public class AvroEncoders {
 
   /**
    * @param recordClass Class object of Avro records to be serialized
-   * @param <R> Avro record type
+   * @param <R>         Avro record type
    */
   static public <R extends SpecificRecord> Function<R, String> json(
       Class<R> recordClass) {
@@ -128,8 +127,8 @@ public class AvroEncoders {
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Class object of Avro records to be serialized
-   * @param <R> Avro record type
-   * @param <M> Metadata type
+   * @param <R>         Avro record type
+   * @param <M>         Metadata type
    */
   static public <R extends SpecificRecord, M> Function<Anoa<R, M>, Anoa<String, M>> json(
       AnoaHandler<M> anoaHandler,
@@ -181,9 +180,9 @@ public class AvroEncoders {
 
   /**
    * @param recordClass Class object of Avro records to be serialized
-   * @param supplier called for each new record serialization
-   * @param <R> Avro record type
-   * @param <G> JsonGenerator type
+   * @param supplier    called for each new record serialization
+   * @param <R>         Avro record type
+   * @param <G>         JsonGenerator type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
    * into it.
    */
@@ -196,10 +195,10 @@ public class AvroEncoders {
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Class object of Avro records to be serialized
-   * @param supplier called for each new record serialization
-   * @param <R> Avro record Type
-   * @param <G> JsonGenerator type
-   * @param <M> Metadata type
+   * @param supplier    called for each new record serialization
+   * @param <R>         Avro record Type
+   * @param <G>         JsonGenerator type
+   * @param <M>         Metadata type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
    * into it.
    */
@@ -212,9 +211,9 @@ public class AvroEncoders {
   }
 
   /**
-   * @param schema Avro record schema
+   * @param schema   Avro record schema
    * @param supplier called for each new record serialization
-   * @param <G> JsonGenerator type
+   * @param <G>      JsonGenerator type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
    * into it.
    */
@@ -226,10 +225,10 @@ public class AvroEncoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param schema Avro record schema
-   * @param supplier called for each new record serialization
-   * @param <G> JsonGenerator type
-   * @param <M> Metadata type
+   * @param schema      Avro record schema
+   * @param supplier    called for each new record serialization
+   * @param <G>         JsonGenerator type
+   * @param <M>         Metadata type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
    * into it.
    */

@@ -16,7 +16,7 @@ public interface Handler1<M> extends BiFunction<Throwable, Object, M[]> {
    * meta-datum.
    *
    * @param mapToMetaDatum exception handler
-   * @param <M> Metadata type
+   * @param <M>            Metadata type
    * @return an instance wrapping the result of {@code mapToMetaDatum} in an array.
    */
   static <M> /*@NonNull*/ Handler1<M> of(

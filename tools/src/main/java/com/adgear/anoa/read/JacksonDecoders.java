@@ -8,10 +8,13 @@ import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import java.util.function.Function;
 
 /**
- * Utility class for generating functions for deserializing Jackson ObjectNode records.
- * Unless specified otherwise, the functions should not be deemed thread-safe.
+ * Utility class for generating functions for deserializing Jackson ObjectNode records. Unless
+ * specified otherwise, the functions should not be deemed thread-safe.
  */
 public class JacksonDecoders {
+
+  protected JacksonDecoders() {
+  }
 
   /**
    * @return A function which deserializes an ObjectNode from its JSON encoding
@@ -23,7 +26,7 @@ public class JacksonDecoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param <M> Metadata type
+   * @param <M>         Metadata type
    * @return A function which deserializes an ObjectNode record from its JSON encoding
    */
   static public <M> Function<Anoa<byte[], M>, Anoa<ObjectNode, M>> json(
@@ -43,7 +46,7 @@ public class JacksonDecoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param <M> Metadata type
+   * @param <M>         Metadata type
    * @return A function which deserializes an ObjectNode record from its CBOR encoding
    */
   static public <M> Function<Anoa<byte[], M>, Anoa<ObjectNode, M>> cbor(
@@ -64,8 +67,8 @@ public class JacksonDecoders {
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param csvSchema CSV schema specification (separator, etc.)
-   * @param <M> Metadata type
+   * @param csvSchema   CSV schema specification (separator, etc.)
+   * @param <M>         Metadata type
    * @return A function which deserializes an ObjectNode record from a CSV encoding
    */
   static public <M> Function<Anoa<String, M>, Anoa<ObjectNode, M>> csv(

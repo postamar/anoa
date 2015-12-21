@@ -29,7 +29,7 @@ public class AvroConsumers {
    * Write as compressed Avro batch file, readable with {@link org.apache.avro.file.DataFileStream}
    *
    * @param schema Avro record schema to accept
-   * @param file file to write into
+   * @param file   file to write into
    */
   static public WriteConsumer<GenericRecord> batch(
       Schema schema,
@@ -47,8 +47,8 @@ public class AvroConsumers {
    * Write as compressed Avro batch file, readable with {@link org.apache.avro.file.DataFileStream}
    *
    * @param recordClass Avro SpecificRecord class to accept
-   * @param file file to write into
-   * @param <R> Avro record type
+   * @param file        file to write into
+   * @param <R>         Avro record type
    */
   static public <R extends SpecificRecord> WriteConsumer<R> batch(
       Class<R> recordClass,
@@ -68,7 +68,7 @@ public class AvroConsumers {
   /**
    * Write as compressed Avro batch file, readable with {@link org.apache.avro.file.DataFileStream}
    *
-   * @param schema Avro record schema to accept
+   * @param schema       Avro record schema to accept
    * @param outputStream stream to write into
    */
   static public WriteConsumer<GenericRecord> batch(
@@ -86,9 +86,9 @@ public class AvroConsumers {
   /**
    * Write as compressed Avro batch file, readable with {@link org.apache.avro.file.DataFileStream}
    *
-   * @param recordClass Avro SpecificRecord class to accept
+   * @param recordClass  Avro SpecificRecord class to accept
    * @param outputStream stream to write into
-   * @param <R> Avro record type
+   * @param <R>          Avro record type
    */
   static public <R extends SpecificRecord> WriteConsumer<R> batch(
       Class<R> recordClass,
@@ -108,7 +108,7 @@ public class AvroConsumers {
   /**
    * Write as Avro binary encoding
    *
-   * @param schema Avro schema to accept
+   * @param schema       Avro schema to accept
    * @param outputStream stream to write into
    */
   static public WriteConsumer<GenericRecord> binary(
@@ -122,9 +122,9 @@ public class AvroConsumers {
   /**
    * Write as Avro binary encoding
    *
-   * @param recordClass Avro SpecificRecord class to accept
+   * @param recordClass  Avro SpecificRecord class to accept
    * @param outputStream stream to write into
-   * @param <R> Avro record type
+   * @param <R>          Avro record type
    */
   static public <R extends SpecificRecord> WriteConsumer<R> binary(
       Class<R> recordClass,
@@ -141,7 +141,7 @@ public class AvroConsumers {
   /**
    * Write as Avro JSON encoding
    *
-   * @param schema Avro schema to accept
+   * @param schema       Avro schema to accept
    * @param outputStream stream to write into
    */
   static public WriteConsumer<GenericRecord> json(
@@ -159,9 +159,9 @@ public class AvroConsumers {
   /**
    * Write as Avro JSON encoding
    *
-   * @param recordClass Avro SpecificRecord class to accept
+   * @param recordClass  Avro SpecificRecord class to accept
    * @param outputStream stream to write into
-   * @param <R> Avro record type
+   * @param <R>          Avro record type
    */
   static public <R extends SpecificRecord> WriteConsumer<R> json(
       Class<R> recordClass,
@@ -182,7 +182,7 @@ public class AvroConsumers {
   /**
    * Write as 'natural' JSON serialization using provided generator
    *
-   * @param schema Avro schema to accept
+   * @param schema           Avro schema to accept
    * @param jacksonGenerator JsonGenerator instance to write into
    */
   static public WriteConsumer<GenericRecord> jackson(
@@ -194,9 +194,9 @@ public class AvroConsumers {
   /**
    * Write as 'natural' JSON serialization using provided generator
    *
-   * @param recordClass Avro SpecificRecord class to accept
+   * @param recordClass      Avro SpecificRecord class to accept
    * @param jacksonGenerator JsonGenerator instance to write into
-   * @param <R> Avro record type
+   * @param <R>              Avro record type
    */
   static public <R extends SpecificRecord>
   WriteConsumer<R> jackson(

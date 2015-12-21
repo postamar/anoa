@@ -7,7 +7,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import java.io.IOException;
 import java.util.HashMap;
 
-class MapReader extends AbstractReader<HashMap<String,Object>> {
+class MapReader extends AbstractReader<HashMap<String, Object>> {
 
   final AbstractReader<?> valueElementReader;
 
@@ -29,12 +29,13 @@ class MapReader extends AbstractReader<HashMap<String,Object>> {
 
   @Override
   protected HashMap<String, Object> readStrict(JsonParser jacksonParser) throws
-                                                                         AnoaJacksonTypeException, IOException {
+                                                                         AnoaJacksonTypeException,
+                                                                         IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;
       case START_OBJECT:
-        HashMap<String,Object> result = new HashMap<>();
+        HashMap<String, Object> result = new HashMap<>();
         doMap(jacksonParser, (k, p) -> result.put(k, valueElementReader.readStrict(p)));
         return result;
       default:

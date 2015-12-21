@@ -45,7 +45,7 @@ public class JsonStreams extends JacksonStreamsBase<
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param <M> Metadata type
+   * @param <M>         Metadata type
    * @return Object-mapping function appliable to TokenBuffer instances
    */
   public <M> Function<Anoa<TokenBuffer, M>, Anoa<ObjectNode, M>> tokenBuffer(

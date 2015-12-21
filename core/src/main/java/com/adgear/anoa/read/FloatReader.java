@@ -13,7 +13,8 @@ class FloatReader extends AbstractReader<Float> {
   }
 
   @Override
-  protected Float readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
+  protected Float readStrict(JsonParser jacksonParser)
+      throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_NUMBER_FLOAT:
         return jacksonParser.getFloatValue();
@@ -26,6 +27,8 @@ class FloatReader extends AbstractReader<Float> {
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaJacksonTypeException("Token is not number: " + jacksonParser.getCurrentToken());
-    }  }
+        throw new AnoaJacksonTypeException(
+            "Token is not number: " + jacksonParser.getCurrentToken());
+    }
+  }
 }

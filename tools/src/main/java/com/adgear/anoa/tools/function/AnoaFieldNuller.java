@@ -62,6 +62,7 @@ public class AnoaFieldNuller<T> implements UnaryOperator<T> {
       return getObjectAtPath(f.get(o), path, startIndex + 1);
     }
   }
+
   /* Will either return a Field object if `name' describes a proper path
     * leading to a field, or null if one of the components leading to the field
     * is set to null (trying to access a field that does not exist at all,

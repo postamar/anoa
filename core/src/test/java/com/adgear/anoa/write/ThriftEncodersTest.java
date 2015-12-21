@@ -15,6 +15,8 @@ import thrift.com.adgear.avro.openrtb.BidRequest;
 
 public class ThriftEncodersTest {
 
+  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
+
   @Test
   public void testBinary() {
     BidReqs.assertThriftObjects(BidReqs.thrift()
@@ -44,8 +46,6 @@ public class ThriftEncodersTest {
                                   .map(TokenBuffer::asParser)
                                   .map(Unchecked.function(JsonParser::readValueAsTree)));
   }
-
-  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
 
   @Test
   public void testAnoaBinary() {

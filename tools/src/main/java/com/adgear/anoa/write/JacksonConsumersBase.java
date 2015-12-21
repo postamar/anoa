@@ -13,7 +13,7 @@ class JacksonConsumersBase<
     F extends JsonFactory,
     S extends FormatSchema,
     G extends JsonGenerator>
-  extends JacksonConsumers<ObjectNode, M, F, S, G> {
+    extends JacksonConsumers<ObjectNode, M, F, S, G> {
 
   JacksonConsumersBase(M objectMapper) {
     this(objectMapper, Optional.<S>empty());

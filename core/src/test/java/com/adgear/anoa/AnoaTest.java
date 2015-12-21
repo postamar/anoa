@@ -111,7 +111,6 @@ public class AnoaTest {
     ListAssert.assertEquals(Arrays.asList("foo", "bar", "baz"),
                             result.meta().collect(Collectors.toList()));
 
-
     ListAssert.assertEquals(EMPTY.meta().collect(Collectors.toList()),
                             EMPTY.flatMap(i -> Anoa.of(i + 1, Stream.of("baz"))).meta()
                                 .collect(Collectors.toList()));

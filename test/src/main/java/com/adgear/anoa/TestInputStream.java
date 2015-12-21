@@ -17,7 +17,7 @@ public class TestInputStream extends InputStream {
     this(Stream.of(bytes), readFailureIndex);
   }
 
-  public TestInputStream(Stream <byte[]> bytes, long readFailureIndex) {
+  public TestInputStream(Stream<byte[]> bytes, long readFailureIndex) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     bytes.forEach((byte[] b) -> {
       try {

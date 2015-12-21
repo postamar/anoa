@@ -12,6 +12,8 @@ import org.junit.Test;
 
 public class AvroEncodersTest {
 
+  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
+
   @Test
   public void testBinary() {
     BidReqs.assertAvroGenerics(
@@ -54,8 +56,6 @@ public class AvroEncodersTest {
             .map(TokenBuffer::asParser)
             .map(AvroDecoders.jackson(BidReqs.avroSchema, true)));
   }
-
-  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
 
   @Test
   public void testAnoaBinary() {

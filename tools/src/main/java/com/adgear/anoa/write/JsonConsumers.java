@@ -12,10 +12,10 @@ import com.fasterxml.jackson.databind.util.TokenBuffer;
  * Utility class for writing Jackson records in the JSON format.
  */
 public class JsonConsumers extends JacksonConsumersBase<
-      ObjectMapper,
-      JsonFactory,
-      FormatSchema,
-      JsonGenerator> {
+    ObjectMapper,
+    JsonFactory,
+    FormatSchema,
+    JsonGenerator> {
 
   static final private PrettyPrinter PRETTY_PRINTER = new MinimalPrettyPrinter("\n");
 
