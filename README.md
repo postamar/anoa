@@ -5,7 +5,7 @@ Anoa is a Java 8 library built around [Avro](https://avro.apache.org),
 de/serializing records in a consistent manner.
 
 
-## Statement of Purpose
+## Rationale
 
 At AdGear, we deal with event logs a lot. Events are all over the place, in Kafka
 topics, in files, S3 buckets, etc. and they're processed in Hadoop map-reduce jobs, Storm
