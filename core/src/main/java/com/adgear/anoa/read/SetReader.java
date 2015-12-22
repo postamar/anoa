@@ -28,7 +28,8 @@ class SetReader extends AbstractReader<HashSet<Object>> {
   }
 
   @Override
-  protected HashSet<Object> readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
+  protected HashSet<Object> readStrict(JsonParser jacksonParser)
+      throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;

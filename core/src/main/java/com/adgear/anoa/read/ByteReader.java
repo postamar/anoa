@@ -19,13 +19,15 @@ class ByteReader extends AbstractReader<Byte> {
       case VALUE_NUMBER_INT:
         int intValue = jacksonParser.getIntValue();
         if (intValue > Byte.MAX_VALUE || intValue < Byte.MIN_VALUE) {
-          throw new AnoaJacksonTypeException(jacksonParser.getText() + " is an out of bounds integer for Byte.");
+          throw new AnoaJacksonTypeException(
+              jacksonParser.getText() + " is an out of bounds integer for Byte.");
         }
         return (byte) intValue;
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaJacksonTypeException("Token is not integer: " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException(
+            "Token is not integer: " + jacksonParser.getCurrentToken());
     }
   }
 }

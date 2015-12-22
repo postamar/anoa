@@ -16,6 +16,8 @@ import thrift.com.adgear.avro.openrtb.BidRequest;
 
 public class ThriftStreamsTest {
 
+  final public AnoaHandler<String> anoaHandler = AnoaHandler.withFn(Object::toString);
+
   @Test
   public void testThrift() {
     Assert.assertEquals(
@@ -71,8 +73,6 @@ public class ThriftStreamsTest {
     ThriftStreams.jackson(BidReqs.thriftClass, true, BidReqs.jsonParser(1234))
         .forEach(Assert::assertNotNull);
   }
-
-  final public AnoaHandler<String> anoaHandler = AnoaHandler.withFn(Object::toString);
 
   @Test
   public void testAnoaBinary() {

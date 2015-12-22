@@ -24,29 +24,49 @@ final public class LookAheadIterator<T> implements Iterator<T> {
   final protected Supplier<Boolean> noNext;
   final protected UnaryOperator<T> next;
   protected long counter = 0;
+  private Closeable closeable;
+  private boolean isStale;
+  private boolean hasNext;
+  private T nextValue;
 
   /**
-   * @param noNext called in hasNext(), will cause it to return false if itself returns true.
+   * @param noNext      called in hasNext(), will cause it to return false if itself returns true.
    * @param nextFactory a function which builds a function which returns the next element based on
-   *                    the previous one, and can trigger the end of the iteration as a side-effect.
-   * @param closeable {@link Closeable#close()} will be called at the end of the iteration
+   *                    the previous one, and can trigger the end of the iteration as a
+   *                    side-effect.
+   * @param closeable   {@link Closeable#close()} will be called at the end of the iteration
    */
   public LookAheadIterator(
-      /*@NonNull*/ Supplier<Boolean> noNext,
-      /*@NonNull*/ Function<Consumer<Boolean>, UnaryOperator<T>> nextFactory,
-      /*@Nullable*/ Closeable closeable) {
+      Supplier<Boolean> noNext,
+      Function<Consumer<Boolean>, UnaryOperator<T>> nextFactory,
+      Closeable closeable) {
     this.next = nextFactory.apply(this::setHasNext);
     this.noNext = noNext;
     this.closeable = closeable;
     reset(null);
   }
 
-  private Closeable closeable;
-  private boolean isStale;
-  private boolean hasNext;
-  private T nextValue;
+  /**
+   * Returns a sequential stream wrapping the generated {@code LookAheadIterator} instance.
+   */
+  static public <T> Stream<T> stream(
+      Supplier<Boolean> noNext,
+      Function<Consumer<Boolean>, UnaryOperator<T>> nextFactory,
+      Closeable closeable) {
+    return new LookAheadIterator<>(noNext, nextFactory, closeable).asStream();
+  }
 
-  void reset(/*@Nullable*/ T nextValue) {
+  /**
+   * Returns a sequential stream wrapping the generated {@code LookAheadIterator} instance.
+   */
+  static public <T> Stream<T> stream(
+      Supplier<Boolean> noNext,
+      Function<Consumer<Boolean>, UnaryOperator<T>> nextFactory) {
+    return stream(noNext, nextFactory, () -> {
+    });
+  }
+
+  void reset(T nextValue) {
     this.isStale = true;
     this.hasNext = true;
     this.nextValue = nextValue;
@@ -67,7 +87,7 @@ final public class LookAheadIterator<T> implements Iterator<T> {
         nextValue = next.apply(nextValue);
       }
     }
-    if (!hasNext && closeable != null) {
+    if (!hasNext) {
       try {
         closeable.close();
       } catch (IOException e) {
@@ -87,21 +107,11 @@ final public class LookAheadIterator<T> implements Iterator<T> {
     return nextValue;
   }
 
-  /**
-   * Returns a sequential stream wrapping the generated {@code LookAheadIterator} instance.
-   */
-  static public <T> /*@NonNull*/ Stream<T> stream(
-      /*@NonNull*/ Supplier<Boolean> noNext,
-      /*@NonNull*/ Function<Consumer<Boolean>, UnaryOperator<T>> nextFactory,
-      /*@Nullable*/ Closeable closeable) {
-    return new LookAheadIterator<>(noNext, nextFactory, closeable).asStream();
-  }
-
-  /*@NonNull*/ Spliterator<T> asSpliterator() {
+  Spliterator<T> asSpliterator() {
     return Spliterators.spliteratorUnknownSize(this, Spliterator.NONNULL | Spliterator.ORDERED);
   }
 
-  /*@NonNull*/ Stream<T> asStream() {
+  Stream<T> asStream() {
     return StreamSupport.stream(asSpliterator(), false);
   }
 }

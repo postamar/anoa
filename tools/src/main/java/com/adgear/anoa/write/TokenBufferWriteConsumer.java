@@ -7,8 +7,7 @@ import java.io.IOException;
 import java.util.function.Supplier;
 
 /**
- * A {@code WriteConsumer} implementation backed by a
- * {@link com.fasterxml.jackson.databind.util.TokenBuffer}
+ * A {@code WriteConsumer} implementation backed by a {@link com.fasterxml.jackson.databind.util.TokenBuffer}
  */
 public class TokenBufferWriteConsumer implements WriteConsumer<TreeNode>, Supplier<TokenBuffer> {
 

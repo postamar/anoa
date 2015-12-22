@@ -20,11 +20,10 @@ import java.util.stream.Stream;
  * value itself, or documenting any exceptions handled during the transformation of the value. For
  * the latter use case, consider using the factory class {@code AnoaHandler}.
  *
- * <p>This is a
- * <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/doc-files/ValueBased.html">
- *   value-based</a> class; use of identity-sensitive operations (including reference equality
- * ({@code ==}), identity hash code, or synchronization) on instances of {@code Anoa} may have
- * unpredictable results and should be avoided.
+ * <p>This is a <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/doc-files/ValueBased.html">
+ * value-based</a> class; use of identity-sensitive operations (including reference equality ({@code
+ * ==}), identity hash code, or synchronization) on instances of {@code Anoa} may have unpredictable
+ * results and should be avoided.
  *
  * @param <T> Value type
  * @param <M> Metadata type
@@ -49,7 +48,7 @@ final public class Anoa<T, M> {
    * @see Optional#empty()
    */
   @SuppressWarnings("unchecked")
-  static public <T, M> /*@NonNull*/ Anoa<T, M> empty() {
+  static public <T, M> Anoa<T, M> empty() {
     return EMPTY;
   }
 
@@ -60,8 +59,8 @@ final public class Anoa<T, M> {
    * @see Optional#empty()
    */
   @SuppressWarnings("unchecked")
-  static public <T, M> /*@NonNull*/ Anoa<T, M> empty(
-      /*@NonNull*/ Stream<M> metadata) {
+  static public <T, M> Anoa<T, M> empty(
+      Stream<M> metadata) {
     Objects.requireNonNull(metadata);
     return ofNullable(null, metadata);
   }
@@ -73,8 +72,8 @@ final public class Anoa<T, M> {
    * @see Optional#of(Object)
    */
   @SuppressWarnings("unchecked")
-  static public <T, M> /*@NonNull*/ Anoa<T, M> of(
-      /*@NonNull*/ T value) {
+  static public <T, M> Anoa<T, M> of(
+      T value) {
     Objects.requireNonNull(value);
     return ofNullable(value);
   }
@@ -86,9 +85,9 @@ final public class Anoa<T, M> {
    * @see Optional#of(Object)
    */
   @SuppressWarnings("unchecked")
-  static public <T, M> /*@NonNull*/ Anoa<T, M> of(
-      /*@NonNull*/ T value,
-      /*@NonNull*/ Stream<M> metadata) {
+  static public <T, M> Anoa<T, M> of(
+      T value,
+      Stream<M> metadata) {
     Objects.requireNonNull(value);
     Objects.requireNonNull(metadata);
     return ofNullable(value, metadata);
@@ -100,7 +99,7 @@ final public class Anoa<T, M> {
    * @see Optional#ofNullable(Object)
    */
   @SuppressWarnings("unchecked")
-  static public <T, M> /*@NonNull*/ Anoa<T, M> ofNullable(
+  static public <T, M> Anoa<T, M> ofNullable(
       /*@Nullable*/ T value) {
     return new Anoa<>(value, (M[]) EMPTY.meta);
   }
@@ -112,9 +111,9 @@ final public class Anoa<T, M> {
    * @see Optional#ofNullable(Object)
    */
   @SuppressWarnings("unchecked")
-  static public <T, M> /*@NonNull*/ Anoa<T, M> ofNullable(
+  static public <T, M> Anoa<T, M> ofNullable(
       /*@Nullable*/ T value,
-      /*@NonNull*/ Stream<M> metadata) {
+      Stream<M> metadata) {
     Objects.requireNonNull(metadata);
     return new Anoa<>(value, (M[]) metadata.toArray());
   }
@@ -122,7 +121,7 @@ final public class Anoa<T, M> {
   /**
    * Returns a stream of metadata elements decorating this {@code Anoa}
    */
-  public /*@NonNull*/ Stream</*@NonNull*/ M> meta() {
+  public Stream<M> meta() {
     return Arrays.stream(meta);
   }
 
@@ -177,12 +176,12 @@ final public class Anoa<T, M> {
   }
 
   /**
-   * If a value is present, and the value matches the given predicate, return an {@code
-   * Anoa} describing the value, otherwise return a valueless {@code Anoa}.
+   * If a value is present, and the value matches the given predicate, return an {@code Anoa}
+   * describing the value, otherwise return a valueless {@code Anoa}.
    *
    * @param predicate a predicate to apply to the value, if present
-   * @return an {@code Anoa} describing the value of this {@code Anoa} if a value is
-   * present and the value matches the given predicate, otherwise a valueless {@code Anoa}
+   * @return an {@code Anoa} describing the value of this {@code Anoa} if a value is present and the
+   * value matches the given predicate, otherwise a valueless {@code Anoa}
    * @throws NullPointerException if the predicate is null
    * @see Optional#filter(Predicate)
    */
@@ -195,13 +194,13 @@ final public class Anoa<T, M> {
   }
 
   /**
-   * If a value is present, apply the provided mapping function to it, return that result wrapped
-   * in an {@code Anoa}, otherwise return a valueless {@code Anoa}.
+   * If a value is present, apply the provided mapping function to it, return that result wrapped in
+   * an {@code Anoa}, otherwise return a valueless {@code Anoa}.
    *
-   * @param <U> The type parameter to the {@code Anoa} returned by
+   * @param <U>    The type parameter to the {@code Anoa} returned by
    * @param mapper a mapping function to apply to the value, if present
-   * @return the result of applying an {@code Anoa}-bearing mapping function to the value of
-   * this {@code Anoa}, if a value is present, otherwise  a valueless {@code Anoa}
+   * @return the result of applying an {@code Anoa}-bearing mapping function to the value of this
+   * {@code Anoa}, if a value is present, otherwise  a valueless {@code Anoa}
    * @throws NullPointerException if the mapping function is null or returns a null result
    * @see Optional#map(Function)
    */
@@ -217,13 +216,13 @@ final public class Anoa<T, M> {
   }
 
   /**
-   * If a value is present, apply the provided {@code Anoa}-bearing mapping function to it,
-   * return that result, otherwise return  a valueless {@code Anoa}.
+   * If a value is present, apply the provided {@code Anoa}-bearing mapping function to it, return
+   * that result, otherwise return  a valueless {@code Anoa}.
    *
    * @param <U>    The type parameter to the {@code Anoa} returned by
    * @param mapper a mapping function to apply to the value, if present
-   * @return the result of applying an {@code Anoa}-bearing mapping function to the value of
-   * this {@code Anoa}, if a value is present, otherwise  a valueless {@code Anoa}
+   * @return the result of applying an {@code Anoa}-bearing mapping function to the value of this
+   * {@code Anoa}, if a value is present, otherwise  a valueless {@code Anoa}
    * @throws NullPointerException if the mapping function is null or returns a null result
    * @see Optional#flatMap(Function)
    */
@@ -247,7 +246,7 @@ final public class Anoa<T, M> {
    * @return the value, if present, otherwise {@code other}
    * @see Optional#orElse(Object)
    */
-  public T orElse(/*@Nullable*/ T other) {
+  public T orElse(T other) {
     return (value != null) ? value : other;
   }
 
@@ -260,7 +259,7 @@ final public class Anoa<T, M> {
    * @throws NullPointerException if value is not present and {@code other} is null
    * @see Optional#orElseGet(Supplier)
    */
-  public T orElseGet(/*@NonNull*/ Supplier</*@Nullable*/ ? extends T> other) {
+  public T orElseGet(Supplier<? extends T> other) {
     return (value != null) ? value : other.get();
   }
 
@@ -268,10 +267,10 @@ final public class Anoa<T, M> {
    * Return the contained value, if present, otherwise throw an exception to be created by the
    * provided supplier.
    *
-   * @param <X> Type of the exception to be thrown
+   * @param <X>               Type of the exception to be thrown
    * @param exceptionSupplier The supplier which will return the exception to be thrown
    * @return the present value
-   * @throws X if there is no value present
+   * @throws X                    if there is no value present
    * @throws NullPointerException if no value is present and {@code exceptionSupplier} is null
    * @see Optional#orElseThrow(Supplier)
    */
@@ -284,13 +283,10 @@ final public class Anoa<T, M> {
 
   /**
    * Indicates whether some other object is "equal to" this Anoa. The other object is considered
-   * equal if it is also an {@code Anoa} and:
-   * <ul>
-   * <li>both instances have no value present, or both instances have values which are "equal to"
-   * each other via {@code equals()}, and;
-   * <li>both instances have no metadata present, or both instances have metadata which is "equal
-   * to" each other via {@code equals()}.
-   * </ul>
+   * equal if it is also an {@code Anoa} and: <ul> <li>both instances have no value present, or both
+   * instances have values which are "equal to" each other via {@code equals()}, and; <li>both
+   * instances have no metadata present, or both instances have metadata which is "equal to" each
+   * other via {@code equals()}. </ul>
    *
    * @param obj an object to be tested for equality
    * @return {@code true} if the other object is "equal to" this object, otherwise {@code false}

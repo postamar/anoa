@@ -66,15 +66,11 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
 
   private Schema avroSchema = null;
 
-  public Schema getAvroSchema() {
-    return avroSchema;
-  }
-
   /**
    * Constructor for when reading parser JDBC source.
    *
    * @param avroSchema         Declared Avro record schema (optional).
-   * @param thriftClass Declared Thrift record class (optional for some input formats).
+   * @param thriftClass        Declared Thrift record class (optional for some input formats).
    * @param outFormat          Declared output serialization format.
    * @param out                Stream to write records to.
    * @param jdbcConnection     Connection object used to open session.
@@ -130,6 +126,70 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
     this.jdbcFetchSize = -1;
   }
 
+  static public void main(String[] args) throws Exception {
+    final Format inFormat = Format.valueOfIgnoreCase(System.getProperty("inFormat", ""));
+    final Format outFormat = Format.valueOfIgnoreCase(System.getProperty("outFormat", ""));
+    final String avroClassName = System.getProperty("recordClass", "");
+    final String thriftClassName = System.getProperty("thriftClass", "");
+    final String outFilePath = System.getProperty("out", "");
+    final String schemaFilePath = System.getProperty("schemaFilePath", "");
+    final String inFilePath = System.getProperty("in", "");
+
+    Schema avroSchema = null;
+    if (!avroClassName.isEmpty()) {
+      Class<? extends SpecificRecord> avroRecordClass = AnoaReflectionUtils
+          .getAvroClass(avroClassName);
+      if (avroRecordClass != null) {
+        avroSchema = SpecificData.get().getSchema(avroRecordClass);
+      }
+    }
+    Class<? extends TBase> thriftRecordClass = null;
+    if (!thriftClassName.isEmpty()) {
+      thriftRecordClass = AnoaReflectionUtils.getThriftClass(thriftClassName);
+    }
+    final DataTool instance;
+    try (OutputStream out = outFilePath.isEmpty()
+                            ? System.out
+                            : new FileOutputStream(outFilePath)) {
+      if (inFormat == Format.JDBC) {
+        final String jdbcUrl = System.getProperty("url");
+        final String jdbcQuery = System.getProperty("query");
+        final String initPath = System.getProperty("initScript", "");
+        Stream<String> initStream = initPath.isEmpty()
+                                    ? Stream.<String>empty()
+                                    : new BufferedReader(new FileReader(initPath)).lines();
+        instance = new DataTool<>(avroSchema,
+                                  thriftRecordClass,
+                                  outFormat,
+                                  out,
+                                  DriverManager.getConnection(jdbcUrl),
+                                  initStream.collect(Collectors.toList()),
+                                  jdbcQuery,
+                                  4096);
+      } else {
+        InputStream in = inFilePath.isEmpty() ? System.in : new FileInputStream(inFilePath);
+        instance = new DataTool<>(avroSchema,
+                                  thriftRecordClass,
+                                  inFormat,
+                                  outFormat,
+                                  in,
+                                  out);
+      }
+      instance.run();
+    }
+    final Schema schema = instance.getAvroSchema();
+    if (schema != null && !schemaFilePath.isEmpty()) {
+      try (OutputStream out = new BufferedOutputStream(new FileOutputStream(schemaFilePath))) {
+        out.write(schema.toString(true).getBytes("UTF-8"));
+        out.flush();
+      }
+    }
+  }
+
+  public Schema getAvroSchema() {
+    return avroSchema;
+  }
+
   public void validate() {
     if (out == null) {
       throw new IllegalStateException("Output stream must be valid.");
@@ -181,7 +241,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
         }
         return;
       case JACKSON:
-        final JacksonConsumers<? extends TreeNode,?,?,?,?> jacksonConsumers;
+        final JacksonConsumers<? extends TreeNode, ?, ?, ?, ?> jacksonConsumers;
         switch (outFormat) {
           case CBOR:
             jacksonConsumers = new CborConsumers();
@@ -244,7 +304,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
         }
         return;
       case JACKSON:
-        final JacksonConsumers<? extends TreeNode,?,?,?,?> jacksonConsumers;
+        final JacksonConsumers<? extends TreeNode, ?, ?, ?, ?> jacksonConsumers;
         switch (outFormat) {
           case CBOR:
             jacksonConsumers = new CborConsumers();
@@ -293,7 +353,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
       runThrift(stream.map(TreeNode::traverse).map(ThriftDecoders.jackson(thriftClass, false)));
       return;
     }
-    final Supplier<JacksonConsumers<ObjectNode,?,?,?,?>> supplier;
+    final Supplier<JacksonConsumers<ObjectNode, ?, ?, ?, ?>> supplier;
     switch (outFormat) {
       case CBOR:
         supplier = CborConsumers::new;
@@ -381,65 +441,5 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
         return;
     }
     throw new UnsupportedOperationException();
-  }
-
-  static public void main(String[] args) throws Exception {
-    final Format inFormat = Format.valueOfIgnoreCase(System.getProperty("inFormat", ""));
-    final Format outFormat = Format.valueOfIgnoreCase(System.getProperty("outFormat", ""));
-    final String avroClassName = System.getProperty("recordClass", "");
-    final String thriftClassName = System.getProperty("thriftClass", "");
-    final String outFilePath = System.getProperty("out", "");
-    final String schemaFilePath = System.getProperty("schemaFilePath", "");
-    final String inFilePath = System.getProperty("in", "");
-
-    Schema avroSchema = null;
-    if (!avroClassName.isEmpty()) {
-      Class<? extends SpecificRecord> avroRecordClass = AnoaReflectionUtils
-          .getAvroClass(avroClassName);
-      if (avroRecordClass != null) {
-        avroSchema = SpecificData.get().getSchema(avroRecordClass);
-      }
-    }
-    Class<? extends TBase> thriftRecordClass = null;
-    if (!thriftClassName.isEmpty()) {
-      thriftRecordClass = AnoaReflectionUtils.getThriftClass(thriftClassName);
-    }
-    final DataTool instance;
-    try (OutputStream out = outFilePath.isEmpty()
-                            ? System.out
-                            : new FileOutputStream(outFilePath)) {
-      if (inFormat == Format.JDBC) {
-        final String jdbcUrl = System.getProperty("url");
-        final String jdbcQuery = System.getProperty("query");
-        final String initPath = System.getProperty("initScript", "");
-        Stream<String> initStream = initPath.isEmpty()
-                                    ? Stream.<String>empty()
-                                    : new BufferedReader(new FileReader(initPath)).lines();
-        instance = new DataTool<>(avroSchema,
-                                  thriftRecordClass,
-                                  outFormat,
-                                  out,
-                                  DriverManager.getConnection(jdbcUrl),
-                                  initStream.collect(Collectors.toList()),
-                                  jdbcQuery,
-                                  4096);
-      } else {
-        InputStream in = inFilePath.isEmpty() ? System.in : new FileInputStream(inFilePath);
-        instance = new DataTool<>(avroSchema,
-                                  thriftRecordClass,
-                                  inFormat,
-                                  outFormat,
-                                  in,
-                                  out);
-      }
-      instance.run();
-    }
-    final Schema schema = instance.getAvroSchema();
-    if (schema != null && !schemaFilePath.isEmpty()) {
-      try (OutputStream out = new BufferedOutputStream(new FileOutputStream(schemaFilePath))) {
-        out.write(schema.toString(true).getBytes("UTF-8"));
-        out.flush();
-      }
-    }
   }
 }

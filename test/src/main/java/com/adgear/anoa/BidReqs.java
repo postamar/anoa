@@ -46,17 +46,15 @@ public class BidReqs {
   static public final TestResource THRIFT;
 
   static public final ObjectMapper objectMapper;
-  static protected final List<ObjectNode> jsonObjects;
-
   static public final Schema avroSchema;
-  static protected final List<GenericRecord> avroGenerics;
   static public final Class<com.adgear.avro.openrtb.BidRequest> avroClass;
+  static public final Class<thrift.com.adgear.avro.openrtb.BidRequest> thriftClass;
+  static public final Supplier<thrift.com.adgear.avro.openrtb.BidRequest> thriftSupplier;
+  static protected final List<ObjectNode> jsonObjects;
+  static protected final List<GenericRecord> avroGenerics;
   static protected final List<com.adgear.avro.openrtb.BidRequest> avroSpecifics;
   static protected final List<byte[]> avroBinaries;
   static protected final byte[] avroBatch;
-
-  static public final Class<thrift.com.adgear.avro.openrtb.BidRequest> thriftClass;
-  static public final Supplier<thrift.com.adgear.avro.openrtb.BidRequest> thriftSupplier;
   static protected final List<thrift.com.adgear.avro.openrtb.BidRequest> thrifts;
   static protected final List<byte[]> thriftCompacts;
   static protected final List<byte[]> thriftBinaries;
@@ -144,7 +142,7 @@ public class BidReqs {
           } catch (TException e) {
             throw new RuntimeException(e);
           }
-            return br;
+          return br;
         }).collect(Collectors.toList());
     thriftCompacts = thrifts.stream().sequential().map(t -> {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();

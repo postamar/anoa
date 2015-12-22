@@ -12,7 +12,7 @@ import java.util.Map;
 
 class AvroWriter<R extends IndexedRecord> extends AbstractWriter<R> {
 
-  final private LinkedHashMap<Schema.Field,AbstractWriter<Object>> fieldMap;
+  final private LinkedHashMap<Schema.Field, AbstractWriter<Object>> fieldMap;
 
   private Schema schema;
 
@@ -26,24 +26,6 @@ class AvroWriter<R extends IndexedRecord> extends AbstractWriter<R> {
     this.schema = schema;
     schema.getFields().stream()
         .forEach(f -> fieldMap.put(f, (AbstractWriter<Object>) createWriter(f.schema())));
-  }
-
-  @Override
-  protected void writeChecked(R record, JsonGenerator jacksonGenerator) throws IOException {
-    if (!record.getSchema().equals(schema)) {
-      throw new IOException("Record does not have correct Avro schema:\n"
-                            + record.getSchema().toString(true));
-    }
-    jacksonGenerator.writeStartObject();
-    for (Map.Entry<Schema.Field,AbstractWriter<Object>> entry : fieldMap.entrySet()) {
-      Schema.Field field = entry.getKey();
-      Object value = record.get(field.pos());
-      if (!(value == null && (field.defaultValue() == null || field.defaultValue().isNull()))) {
-        jacksonGenerator.writeFieldName(field.name());
-        entry.getValue().writeChecked(value, jacksonGenerator);
-      }
-    }
-    jacksonGenerator.writeEndObject();
   }
 
   static protected AbstractWriter<?> createWriter(Schema schema) {
@@ -79,5 +61,23 @@ class AvroWriter<R extends IndexedRecord> extends AbstractWriter<R> {
         }
     }
     throw new RuntimeException("Unsupported Avro schema: " + schema);
+  }
+
+  @Override
+  protected void writeChecked(R record, JsonGenerator jacksonGenerator) throws IOException {
+    if (!record.getSchema().equals(schema)) {
+      throw new IOException("Record does not have correct Avro schema:\n"
+                            + record.getSchema().toString(true));
+    }
+    jacksonGenerator.writeStartObject();
+    for (Map.Entry<Schema.Field, AbstractWriter<Object>> entry : fieldMap.entrySet()) {
+      Schema.Field field = entry.getKey();
+      Object value = record.get(field.pos());
+      if (!(value == null && (field.defaultValue() == null || field.defaultValue().isNull()))) {
+        jacksonGenerator.writeFieldName(field.name());
+        entry.getValue().writeChecked(value, jacksonGenerator);
+      }
+    }
+    jacksonGenerator.writeEndObject();
   }
 }

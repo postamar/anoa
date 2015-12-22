@@ -14,7 +14,6 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.function.Function;
@@ -32,45 +31,45 @@ public class AvroEncoders {
   /**
    * @param schema Avro schema of records to serialize
    */
-  static public /*@NonNull*/ Function<GenericRecord, byte[]> binary(
-      /*@NonNull*/ Schema schema) {
+  static public Function<GenericRecord, byte[]> binary(
+      Schema schema) {
     return binary(new GenericDatumWriter<>(schema));
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param schema Avro schema of records to serialize
-   * @param <M> Metadata type
+   * @param schema      Avro schema of records to serialize
+   * @param <M>         Metadata type
    */
-  static public <M> /*@NonNull*/ Function<Anoa<GenericRecord, M>, Anoa<byte[], M>> binary(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Schema schema) {
+  static public <M> Function<Anoa<GenericRecord, M>, Anoa<byte[], M>> binary(
+      AnoaHandler<M> anoaHandler,
+      Schema schema) {
     return binary(anoaHandler, new GenericDatumWriter<>(schema));
   }
 
   /**
    * @param recordClass Class object of Avro records to be serialized
-   * @param <R> Avro record type
+   * @param <R>         Avro record type
    */
-  static public <R extends SpecificRecord> /*@NonNull*/ Function<R, byte[]> binary(
-      /*@NonNull*/ Class<R> recordClass) {
+  static public <R extends SpecificRecord> Function<R, byte[]> binary(
+      Class<R> recordClass) {
     return binary(new SpecificDatumWriter<>(recordClass));
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Class object of Avro records to be serialized
-   * @param <R> Avro record type
-   * @param <M> Metadata type
+   * @param <R>         Avro record type
+   * @param <M>         Metadata type
    */
-  static public <R extends SpecificRecord, M> /*@NonNull*/ Function<Anoa<R, M>, Anoa<byte[], M>> binary(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Class<R> recordClass) {
+  static public <R extends SpecificRecord, M> Function<Anoa<R, M>, Anoa<byte[], M>> binary(
+      AnoaHandler<M> anoaHandler,
+      Class<R> recordClass) {
     return binary(anoaHandler, new SpecificDatumWriter<>(recordClass));
   }
 
-  static <R extends IndexedRecord> /*@NonNull*/ Function<R, byte[]> binary(
-      /*@NonNull*/ DatumWriter<R> writer) {
+  static <R extends IndexedRecord> Function<R, byte[]> binary(
+      DatumWriter<R> writer) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().directBinaryEncoder(baos, null);
     return (R record) -> {
@@ -84,9 +83,9 @@ public class AvroEncoders {
     };
   }
 
-  static <R extends IndexedRecord, M> /*@NonNull*/ Function<Anoa<R, M>, Anoa<byte[], M>> binary(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ DatumWriter<R> writer) {
+  static <R extends IndexedRecord, M> Function<Anoa<R, M>, Anoa<byte[], M>> binary(
+      AnoaHandler<M> anoaHandler,
+      DatumWriter<R> writer) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().directBinaryEncoder(baos, null);
     return anoaHandler.functionChecked((R record) -> {
@@ -99,28 +98,28 @@ public class AvroEncoders {
   /**
    * @param schema Avro schema of records to serialize
    */
-  static public /*@NonNull*/ Function<GenericRecord, String> json(
-      /*@NonNull*/ Schema schema) {
+  static public Function<GenericRecord, String> json(
+      Schema schema) {
     return json(new GenericDatumWriter<GenericRecord>(schema), schema);
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param schema Avro schema of records to serialize
-   * @param <M> Metadata type
+   * @param schema      Avro schema of records to serialize
+   * @param <M>         Metadata type
    */
-  static public <M> /*@NonNull*/ Function<Anoa<GenericRecord, M>, Anoa<String, M>> json(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Schema schema) {
+  static public <M> Function<Anoa<GenericRecord, M>, Anoa<String, M>> json(
+      AnoaHandler<M> anoaHandler,
+      Schema schema) {
     return json(anoaHandler, new GenericDatumWriter<GenericRecord>(schema), schema);
   }
 
   /**
    * @param recordClass Class object of Avro records to be serialized
-   * @param <R> Avro record type
+   * @param <R>         Avro record type
    */
-  static public <R extends SpecificRecord> /*@NonNull*/ Function<R, String> json(
-      /*@NonNull*/ Class<R> recordClass) {
+  static public <R extends SpecificRecord> Function<R, String> json(
+      Class<R> recordClass) {
     final SpecificDatumWriter<R> writer = new SpecificDatumWriter<>(recordClass);
     return json(writer, writer.getSpecificData().getSchema(recordClass));
   }
@@ -128,19 +127,19 @@ public class AvroEncoders {
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Class object of Avro records to be serialized
-   * @param <R> Avro record type
-   * @param <M> Metadata type
+   * @param <R>         Avro record type
+   * @param <M>         Metadata type
    */
-  static public <R extends SpecificRecord, M> /*@NonNull*/ Function<Anoa<R, M>, Anoa<String, M>> json(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Class<R> recordClass) {
+  static public <R extends SpecificRecord, M> Function<Anoa<R, M>, Anoa<String, M>> json(
+      AnoaHandler<M> anoaHandler,
+      Class<R> recordClass) {
     final SpecificDatumWriter<R> writer = new SpecificDatumWriter<>(recordClass);
     return json(anoaHandler, writer, writer.getSpecificData().getSchema(recordClass));
   }
 
-  static <R extends IndexedRecord> /*@NonNull*/ Function<R, String> json(
-      /*@NonNull*/ DatumWriter<R> writer,
-      /*@NonNull*/ Schema schema) {
+  static <R extends IndexedRecord> Function<R, String> json(
+      DatumWriter<R> writer,
+      Schema schema) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     final Encoder encoder;
     try {
@@ -160,10 +159,10 @@ public class AvroEncoders {
     };
   }
 
-  static <R extends IndexedRecord, M> /*@NonNull*/ Function<Anoa<R, M>, Anoa<String, M>> json(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ DatumWriter<R> writer,
-      /*@NonNull*/ Schema schema) {
+  static <R extends IndexedRecord, M> Function<Anoa<R, M>, Anoa<String, M>> json(
+      AnoaHandler<M> anoaHandler,
+      DatumWriter<R> writer,
+      Schema schema) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     final Encoder encoder;
     try {
@@ -181,69 +180,69 @@ public class AvroEncoders {
 
   /**
    * @param recordClass Class object of Avro records to be serialized
-   * @param supplier called for each new record serialization
-   * @param <R> Avro record type
-   * @param <G> JsonGenerator type
+   * @param supplier    called for each new record serialization
+   * @param <R>         Avro record type
+   * @param <G>         JsonGenerator type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
    * into it.
    */
-  static public <R extends SpecificRecord, G extends JsonGenerator> /*@NonNull*/ Function<R, G> jackson(
-      /*@NonNull*/ Class<R> recordClass,
-      /*@NonNull*/ Supplier<G> supplier) {
+  static public <R extends SpecificRecord, G extends JsonGenerator> Function<R, G> jackson(
+      Class<R> recordClass,
+      Supplier<G> supplier) {
     return jackson(new AvroWriter<>(recordClass), supplier);
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Class object of Avro records to be serialized
-   * @param supplier called for each new record serialization
-   * @param <R> Avro record Type
-   * @param <G> JsonGenerator type
-   * @param <M> Metadata type
+   * @param supplier    called for each new record serialization
+   * @param <R>         Avro record Type
+   * @param <G>         JsonGenerator type
+   * @param <M>         Metadata type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
    * into it.
    */
   static public <R extends SpecificRecord, G extends JsonGenerator, M>
-  /*@NonNull*/ Function<Anoa<R, M>, Anoa<G, M>> jackson(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Class<R> recordClass,
-      /*@NonNull*/ Supplier<G> supplier) {
+  Function<Anoa<R, M>, Anoa<G, M>> jackson(
+      AnoaHandler<M> anoaHandler,
+      Class<R> recordClass,
+      Supplier<G> supplier) {
     return jackson(anoaHandler, new AvroWriter<>(recordClass), supplier);
   }
 
   /**
-   * @param schema Avro record schema
+   * @param schema   Avro record schema
    * @param supplier called for each new record serialization
-   * @param <G> JsonGenerator type
+   * @param <G>      JsonGenerator type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
    * into it.
    */
-  static public <G extends JsonGenerator> /*@NonNull*/ Function<GenericRecord, G> jackson(
-      /*@NonNull*/ Schema schema,
-      /*@NonNull*/ Supplier<G> supplier) {
+  static public <G extends JsonGenerator> Function<GenericRecord, G> jackson(
+      Schema schema,
+      Supplier<G> supplier) {
     return jackson(new AvroWriter<>(schema), supplier);
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
-   * @param schema Avro record schema
-   * @param supplier called for each new record serialization
-   * @param <G> JsonGenerator type
-   * @param <M> Metadata type
+   * @param schema      Avro record schema
+   * @param supplier    called for each new record serialization
+   * @param <G>         JsonGenerator type
+   * @param <M>         Metadata type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
    * into it.
    */
   static public <G extends JsonGenerator, M>
-  /*@NonNull*/ Function<Anoa<GenericRecord, M>, Anoa<G, M>> jackson(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ Schema schema,
-      /*@NonNull*/ Supplier<G> supplier) {
+  Function<Anoa<GenericRecord, M>, Anoa<G, M>> jackson(
+      AnoaHandler<M> anoaHandler,
+      Schema schema,
+      Supplier<G> supplier) {
     return jackson(anoaHandler, new AvroWriter<>(schema), supplier);
   }
 
-  static <G extends JsonGenerator, R extends IndexedRecord> /*@NonNull*/ Function<R, G> jackson(
-      /*@NonNull*/ AvroWriter<R> writer,
-      /*@NonNull*/ Supplier<G> supplier) {
+  static <G extends JsonGenerator, R extends IndexedRecord> Function<R, G> jackson(
+      AvroWriter<R> writer,
+      Supplier<G> supplier) {
     return (R record) -> {
       G jg = supplier.get();
       writer.write(record, jg);
@@ -252,10 +251,10 @@ public class AvroEncoders {
   }
 
   static <G extends JsonGenerator, R extends IndexedRecord, M>
-  /*@NonNull*/ Function<Anoa<R, M>, Anoa<G, M>> jackson(
-      /*@NonNull*/ AnoaHandler<M> anoaHandler,
-      /*@NonNull*/ AvroWriter<R> writer,
-      /*@NonNull*/ Supplier<G> supplier) {
+  Function<Anoa<R, M>, Anoa<G, M>> jackson(
+      AnoaHandler<M> anoaHandler,
+      AvroWriter<R> writer,
+      Supplier<G> supplier) {
     return anoaHandler.functionChecked((R record) -> {
       G jg = supplier.get();
       writer.writeChecked(record, jg);

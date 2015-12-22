@@ -18,7 +18,7 @@ import java.util.Optional;
 class ThriftReader<F extends TFieldIdEnum, T extends TBase<?, F>> extends AbstractReader<T> {
 
   final private List<ThriftFieldWrapper<F>> fieldWrappers;
-  final private Map<String,Optional<ThriftFieldWrapper<F>>> fieldLookUp;
+  final private Map<String, Optional<ThriftFieldWrapper<F>>> fieldLookUp;
   final private T instance;
   final private int nRequired;
 
@@ -45,9 +45,11 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<?, F>> extends Abstra
       doMap(jacksonParser, (fieldName, p) -> {
         Optional<ThriftFieldWrapper<F>> cacheValue = fieldLookUp.get(fieldName);
         if (cacheValue == null) {
-          Optional<Map.Entry<String, Optional<ThriftFieldWrapper<F>>>> found = fieldLookUp.entrySet().stream()
-              .filter(e -> (0 == fieldName.compareToIgnoreCase(e.getKey())))
-              .findAny();
+          Optional<Map.Entry<String, Optional<ThriftFieldWrapper<F>>>>
+              found =
+              fieldLookUp.entrySet().stream()
+                  .filter(e -> (0 == fieldName.compareToIgnoreCase(e.getKey())))
+                  .findAny();
           cacheValue = found.isPresent() ? found.get().getValue() : Optional.empty();
           fieldLookUp.put(fieldName, cacheValue);
         }

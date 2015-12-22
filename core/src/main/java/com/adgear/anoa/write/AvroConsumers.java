@@ -29,11 +29,11 @@ public class AvroConsumers {
    * Write as compressed Avro batch file, readable with {@link org.apache.avro.file.DataFileStream}
    *
    * @param schema Avro record schema to accept
-   * @param file file to write into
+   * @param file   file to write into
    */
-  static public /*@NonNull*/ WriteConsumer<GenericRecord> batch(
-      /*@NonNull*/ Schema schema,
-      /*@NonNull*/ File file) {
+  static public WriteConsumer<GenericRecord> batch(
+      Schema schema,
+      File file) {
     try {
       return new AvroBatchWriteConsumer<>(
           new DataFileWriter<GenericRecord>(new GenericDatumWriter<>(schema))
@@ -47,12 +47,12 @@ public class AvroConsumers {
    * Write as compressed Avro batch file, readable with {@link org.apache.avro.file.DataFileStream}
    *
    * @param recordClass Avro SpecificRecord class to accept
-   * @param file file to write into
-   * @param <R> Avro record type
+   * @param file        file to write into
+   * @param <R>         Avro record type
    */
-  static public <R extends SpecificRecord> /*@NonNull*/ WriteConsumer<R> batch(
-      /*@NonNull*/ Class<R> recordClass,
-      /*@NonNull*/ File file) {
+  static public <R extends SpecificRecord> WriteConsumer<R> batch(
+      Class<R> recordClass,
+      File file) {
     Schema schema = SpecificData.get().getSchema(recordClass);
     if (schema == null) {
       throw new IllegalArgumentException("No schema found for class " + recordClass);
@@ -68,12 +68,12 @@ public class AvroConsumers {
   /**
    * Write as compressed Avro batch file, readable with {@link org.apache.avro.file.DataFileStream}
    *
-   * @param schema Avro record schema to accept
+   * @param schema       Avro record schema to accept
    * @param outputStream stream to write into
    */
-  static public /*@NonNull*/ WriteConsumer<GenericRecord> batch(
-      /*@NonNull*/ Schema schema,
-      /*@NonNull*/ OutputStream outputStream) {
+  static public WriteConsumer<GenericRecord> batch(
+      Schema schema,
+      OutputStream outputStream) {
     try {
       return new AvroBatchWriteConsumer<>(
           new DataFileWriter<GenericRecord>(new GenericDatumWriter<>(schema))
@@ -86,13 +86,13 @@ public class AvroConsumers {
   /**
    * Write as compressed Avro batch file, readable with {@link org.apache.avro.file.DataFileStream}
    *
-   * @param recordClass Avro SpecificRecord class to accept
+   * @param recordClass  Avro SpecificRecord class to accept
    * @param outputStream stream to write into
-   * @param <R> Avro record type
+   * @param <R>          Avro record type
    */
-  static public <R extends SpecificRecord> /*@NonNull*/ WriteConsumer<R> batch(
-      /*@NonNull*/ Class<R> recordClass,
-      /*@NonNull*/ OutputStream outputStream) {
+  static public <R extends SpecificRecord> WriteConsumer<R> batch(
+      Class<R> recordClass,
+      OutputStream outputStream) {
     Schema schema = SpecificData.get().getSchema(recordClass);
     if (schema == null) {
       throw new IllegalArgumentException("No schema found for class " + recordClass);
@@ -108,12 +108,12 @@ public class AvroConsumers {
   /**
    * Write as Avro binary encoding
    *
-   * @param schema Avro schema to accept
+   * @param schema       Avro schema to accept
    * @param outputStream stream to write into
    */
-  static public /*@NonNull*/ WriteConsumer<GenericRecord> binary(
-      /*@NonNull*/ Schema schema,
-      /*@NonNull*/ OutputStream outputStream) {
+  static public WriteConsumer<GenericRecord> binary(
+      Schema schema,
+      OutputStream outputStream) {
     return new AvroWriteConsumer<>(
         new GenericDatumWriter<>(schema),
         EncoderFactory.get().binaryEncoder(new BufferedOutputStream(outputStream), null));
@@ -122,13 +122,13 @@ public class AvroConsumers {
   /**
    * Write as Avro binary encoding
    *
-   * @param recordClass Avro SpecificRecord class to accept
+   * @param recordClass  Avro SpecificRecord class to accept
    * @param outputStream stream to write into
-   * @param <R> Avro record type
+   * @param <R>          Avro record type
    */
-  static public <R extends SpecificRecord> /*@NonNull*/ WriteConsumer<R> binary(
-      /*@NonNull*/ Class<R> recordClass,
-      /*@NonNull*/ OutputStream outputStream) {
+  static public <R extends SpecificRecord> WriteConsumer<R> binary(
+      Class<R> recordClass,
+      OutputStream outputStream) {
     Schema schema = SpecificData.get().getSchema(recordClass);
     if (schema == null) {
       throw new IllegalArgumentException("No schema found for class " + recordClass);
@@ -141,12 +141,12 @@ public class AvroConsumers {
   /**
    * Write as Avro JSON encoding
    *
-   * @param schema Avro schema to accept
+   * @param schema       Avro schema to accept
    * @param outputStream stream to write into
    */
-  static public /*@NonNull*/ WriteConsumer<GenericRecord> json(
-      /*@NonNull*/ Schema schema,
-      /*@NonNull*/ OutputStream outputStream) {
+  static public WriteConsumer<GenericRecord> json(
+      Schema schema,
+      OutputStream outputStream) {
     try {
       return new AvroWriteConsumer<>(
           new GenericDatumWriter<>(schema),
@@ -159,13 +159,13 @@ public class AvroConsumers {
   /**
    * Write as Avro JSON encoding
    *
-   * @param recordClass Avro SpecificRecord class to accept
+   * @param recordClass  Avro SpecificRecord class to accept
    * @param outputStream stream to write into
-   * @param <R> Avro record type
+   * @param <R>          Avro record type
    */
-  static public <R extends SpecificRecord> /*@NonNull*/ WriteConsumer<R> json(
-      /*@NonNull*/ Class<R> recordClass,
-      /*@NonNull*/ OutputStream outputStream) {
+  static public <R extends SpecificRecord> WriteConsumer<R> json(
+      Class<R> recordClass,
+      OutputStream outputStream) {
     Schema schema = SpecificData.get().getSchema(recordClass);
     if (schema == null) {
       throw new IllegalArgumentException("No schema found for class " + recordClass);
@@ -182,26 +182,26 @@ public class AvroConsumers {
   /**
    * Write as 'natural' JSON serialization using provided generator
    *
-   * @param schema Avro schema to accept
+   * @param schema           Avro schema to accept
    * @param jacksonGenerator JsonGenerator instance to write into
    */
-  static public /*@NonNull*/ WriteConsumer<GenericRecord> jackson(
-      /*@NonNull*/ Schema schema,
-      /*@NonNull*/ JsonGenerator jacksonGenerator) {
+  static public WriteConsumer<GenericRecord> jackson(
+      Schema schema,
+      JsonGenerator jacksonGenerator) {
     return new JacksonWriteConsumer<>(jacksonGenerator, new AvroWriter<GenericRecord>(schema));
   }
 
   /**
    * Write as 'natural' JSON serialization using provided generator
    *
-   * @param recordClass Avro SpecificRecord class to accept
+   * @param recordClass      Avro SpecificRecord class to accept
    * @param jacksonGenerator JsonGenerator instance to write into
-   * @param <R> Avro record type
+   * @param <R>              Avro record type
    */
   static public <R extends SpecificRecord>
-  /*@NonNull*/ WriteConsumer<R> jackson(
-      /*@NonNull*/ Class<R> recordClass,
-      /*@NonNull*/ JsonGenerator jacksonGenerator) {
+  WriteConsumer<R> jackson(
+      Class<R> recordClass,
+      JsonGenerator jacksonGenerator) {
     return new JacksonWriteConsumer<>(jacksonGenerator, new AvroWriter<>(recordClass));
   }
 }

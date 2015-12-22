@@ -20,7 +20,8 @@ class LongReader extends AbstractReader<Long> {
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaJacksonTypeException("Token is not integer: " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException(
+            "Token is not integer: " + jacksonParser.getCurrentToken());
     }
   }
 }

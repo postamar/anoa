@@ -15,7 +15,7 @@ class JacksonWriteConsumer<T> implements WriteConsumer<T> {
   }
 
   @Override
-  public void acceptChecked(T record) throws IOException{
+  public void acceptChecked(T record) throws IOException {
     writer.writeChecked(record, jacksonGenerator);
   }
 

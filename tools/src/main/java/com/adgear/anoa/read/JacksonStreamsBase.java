@@ -15,11 +15,11 @@ class JacksonStreamsBase<
     P extends JsonParser>
     extends JacksonStreams<ObjectNode, M, F, S, P> {
 
-  JacksonStreamsBase(/*@NonNull*/ M objectMapper) {
+  JacksonStreamsBase(M objectMapper) {
     this(objectMapper, Optional.<S>empty());
   }
 
-  JacksonStreamsBase(/*@NonNull*/ M objectMapper, /*@NonNull*/ Optional<S> schema) {
+  JacksonStreamsBase(M objectMapper, Optional<S> schema) {
     super(objectMapper, schema);
     objectMapper.findAndRegisterModules();
   }

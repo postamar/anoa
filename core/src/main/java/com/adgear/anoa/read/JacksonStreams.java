@@ -56,10 +56,10 @@ public class JacksonStreams<
 
   /**
    * @param objectCodec Jackson object mapper instance
-   * @param schema Jackson format schema (optional)
+   * @param schema      Jackson format schema (optional)
    */
   @SuppressWarnings("unchecked")
-  public JacksonStreams(/*@NonNull*/ C objectCodec, /*@NonNull*/ Optional<S> schema) {
+  public JacksonStreams(C objectCodec, Optional<S> schema) {
     this.objectCodec = objectCodec;
     this.factory = (F) objectCodec.getFactory();
     this.factory.setCodec(this.objectCodec);
@@ -67,54 +67,78 @@ public class JacksonStreams<
   }
 
   @SuppressWarnings("unchecked")
-  public /*@NonNull*/ P parser(/*@NonNull*/ InputStream inputStream) {
+  protected P parserChecked(InputStream inputStream) throws IOException {
+    return with((P) factory.createParser(new BufferedInputStream(inputStream)));
+  }
+
+  public P parser(InputStream inputStream) {
     try {
-      return with((P) factory.createParser(new BufferedInputStream(inputStream)));
+      return parserChecked(inputStream);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
   @SuppressWarnings("unchecked")
-  public /*@NonNull*/ P parser(/*@NonNull*/ Reader reader) {
+  protected P parserChecked(Reader reader) throws IOException {
+    return with((P) factory.createParser(new BufferedReader(reader)));
+  }
+
+  public P parser(Reader reader) {
     try {
-      return with((P) factory.createParser(new BufferedReader(reader)));
+      return parserChecked(reader);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
   @SuppressWarnings("unchecked")
-  public /*@NonNull*/ P parser(/*@NonNull*/ byte[] bytes) {
+  protected P parserChecked(byte[] bytes) throws IOException {
+    return with((P) factory.createParser(bytes));
+  }
+
+  public P parser(byte[] bytes) {
     try {
-      return with((P) factory.createParser(bytes));
+      return parserChecked(bytes);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
   @SuppressWarnings("unchecked")
-  public /*@NonNull*/ P parser(/*@NonNull*/ String string) {
+  protected P parserChecked(String string) throws IOException {
+    return with((P) factory.createParser(string));
+  }
+
+  public P parser(String string) {
     try {
-      return with((P) factory.createParser(string));
+      return parserChecked(string);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
   @SuppressWarnings("unchecked")
-  public /*@NonNull*/ P parser(/*@NonNull*/ File file) {
+  protected P parserChecked(File file) throws IOException {
+    return with((P) factory.createParser(file));
+  }
+
+  public P parser(File file) {
     try {
-      return with((P) factory.createParser(file));
+      return parserChecked(file);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
   @SuppressWarnings("unchecked")
-  public /*@NonNull*/ P parser(/*@NonNull*/ URL url) {
+  public P parserChecked(URL url) throws IOException {
+    return with((P) factory.createParser(url));
+  }
+
+  public P parser(URL url) {
     try {
-      return with((P) factory.createParser(url));
+      return parserChecked(url);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -123,72 +147,78 @@ public class JacksonStreams<
   /**
    * @return the parser passed as argument, after setting the current object mapper and schema
    */
-  public /*@NonNull*/ P with(/*@NonNull*/ P parser) {
+  public P with(P parser) {
     parser.setCodec(objectCodec);
     schema.ifPresent(parser::setSchema);
     return parser;
   }
 
-  public /*@NonNull*/ Stream<N> from(/*@NonNull*/ P parser) {
+  protected N decodeChecked(P parser) throws IOException {
+    return parser.readValueAsTree();
+  }
+
+  public N decode(P parser) {
+    try {
+      return decodeChecked(parser);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  public Stream<N> from(P parser) {
     return LookAheadIteratorFactory.<N>jackson(parser).asStream();
   }
 
-  public /*@NonNull*/ Stream<N> from(/*@NonNull*/ InputStream inputStream) {
+  public Stream<N> from(InputStream inputStream) {
     return from(parser(inputStream));
   }
 
-  public /*@NonNull*/ Stream<N> from(/*@NonNull*/ Reader reader) {
+  public Stream<N> from(Reader reader) {
     return from(parser(reader));
   }
 
-  public /*@NonNull*/ Stream<N> from(/*@NonNull*/ byte[] bytes) {
+  public Stream<N> from(byte[] bytes) {
     return from(parser(bytes));
   }
 
-  public /*@NonNull*/ Stream<N> from(/*@NonNull*/ String string) {
+  public Stream<N> from(String string) {
     return from(parser(string));
   }
 
-  public /*@NonNull*/ Stream<N> from(/*@NonNull*/ File file) {
+  public Stream<N> from(File file) {
     return from(parser(file));
   }
 
-  public /*@NonNull*/ Stream<N> from(/*@NonNull*/ URL url) {
+  public Stream<N> from(URL url) {
     return from(parser(url));
   }
 
-  public <M> /*@NonNull*/ Stream<Anoa<N, M>> from(/*@NonNull*/ AnoaHandler<M> anoaHandler,
-                                              /*@NonNull*/ P parser) {
+  public <M> Stream<Anoa<N, M>> from(AnoaHandler<M> anoaHandler, P parser) {
     return LookAheadIteratorFactory.<N, M>jackson(anoaHandler, parser).asStream();
   }
 
-  public <M> /*@NonNull*/ Stream<Anoa<N, M>> from(/*@NonNull*/ AnoaHandler<M> anoaHandler,
-                                              /*@NonNull*/ InputStream inputStream) {
+  public <M> Stream<Anoa<N, M>> from(AnoaHandler<M> anoaHandler, InputStream inputStream) {
     return from(anoaHandler, parser(inputStream));
   }
 
-  public <M> /*@NonNull*/ Stream<Anoa<N, M>> from(/*@NonNull*/ AnoaHandler<M> anoaHandler,
-                                              /*@NonNull*/ Reader reader) {
+  public <M> Stream<Anoa<N, M>> from(AnoaHandler<M> anoaHandler, Reader reader) {
     return from(anoaHandler, parser(reader));
   }
 
-  public <M> /*@NonNull*/ Stream<Anoa<N, M>> from(/*@NonNull*/ AnoaHandler<M> anoaHandler,
-                                              /*@NonNull*/ byte[] bytes) {
+  public <M> Stream<Anoa<N, M>> from(AnoaHandler<M> anoaHandler, byte[] bytes) {
     return from(anoaHandler, parser(bytes));
   }
 
-  public <M> /*@NonNull*/ Stream<Anoa<N, M>> from(/*@NonNull*/ AnoaHandler<M> anoaHandler,
-                                              /*@NonNull*/ String string) {
+  public <M> Stream<Anoa<N, M>> from(AnoaHandler<M> anoaHandler, String string) {
     return from(anoaHandler, parser(string));
   }
 
-  public <M> /*@NonNull*/ Stream<Anoa<N, M>> from(/*@NonNull*/ AnoaHandler<M> anoaHandler,
-                                              /*@NonNull*/ File file) {
+  public <M> Stream<Anoa<N, M>> from(AnoaHandler<M> anoaHandler, File file) {
     return from(anoaHandler, parser(file));
   }
 
-  public <M> /*@NonNull*/ Stream<Anoa<N, M>> from(/*@NonNull*/ AnoaHandler<M> anoaHandler,
-                                              /*@NonNull*/ URL url) {
+  public <M> Stream<Anoa<N, M>> from(AnoaHandler<M> anoaHandler, URL url) {
     return from(anoaHandler, parser(url));
   }
+
 }

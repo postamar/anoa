@@ -29,19 +29,6 @@ class ThriftWriter<F extends TFieldIdEnum, T extends TBase<?, F>> extends Abstra
             (AbstractWriter<Object>) createWriter(e.getValue().valueMetaData)));
   }
 
-  @Override
-  protected void writeChecked(T t, JsonGenerator jacksonGenerator) throws IOException {
-    jacksonGenerator.writeStartObject();
-    for (Map.Entry<F,AbstractWriter<Object>> entry : fieldMap.entrySet()) {
-      F f = entry.getKey();
-      if (t.isSet(f)) {
-        jacksonGenerator.writeFieldName(f.getFieldName());
-        entry.getValue().writeChecked(t.getFieldValue(f), jacksonGenerator);
-      }
-    }
-    jacksonGenerator.writeEndObject();
-  }
-
   static protected AbstractWriter<?> createWriter(FieldValueMetaData metaData) {
     switch (metaData.type) {
       case TType.BOOL:
@@ -74,5 +61,18 @@ class ThriftWriter<F extends TFieldIdEnum, T extends TBase<?, F>> extends Abstra
         return metaData.isBinary() ? new ByteArrayWriter() : new StringWriter();
     }
     throw new RuntimeException("Unknown type in metadata " + metaData);
+  }
+
+  @Override
+  protected void writeChecked(T t, JsonGenerator jacksonGenerator) throws IOException {
+    jacksonGenerator.writeStartObject();
+    for (Map.Entry<F, AbstractWriter<Object>> entry : fieldMap.entrySet()) {
+      F f = entry.getKey();
+      if (t.isSet(f)) {
+        jacksonGenerator.writeFieldName(f.getFieldName());
+        entry.getValue().writeChecked(t.getFieldValue(f), jacksonGenerator);
+      }
+    }
+    jacksonGenerator.writeEndObject();
   }
 }

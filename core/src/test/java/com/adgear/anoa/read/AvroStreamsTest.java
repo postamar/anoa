@@ -8,6 +8,8 @@ import org.junit.Test;
 
 public class AvroStreamsTest {
 
+  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
+
   @Test
   public void testBatch() {
     BidReqs.assertAvroGenerics(AvroStreams.batch(BidReqs.avroBatch(-1)));
@@ -36,8 +38,6 @@ public class AvroStreamsTest {
     BidReqs.assertAvroSpecifics(
         AvroStreams.jackson(BidReqs.avroClass, true, BidReqs.jsonParser(-1)));
   }
-
-  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
 
   @Test
   public void testAnoaBatch() {
@@ -78,7 +78,6 @@ public class AvroStreamsTest {
         AvroStreams.jackson(anoaHandler, BidReqs.avroClass, true, BidReqs.jsonParser(-1))
             .flatMap(Anoa::asStream));
   }
-
 
 
 }

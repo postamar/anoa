@@ -14,18 +14,21 @@ class ShortReader extends AbstractReader<Short> {
   }
 
   @Override
-  protected Short readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
+  protected Short readStrict(JsonParser jacksonParser)
+      throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_NUMBER_INT:
         final int intValue = jacksonParser.getIntValue();
         if (intValue > Short.MAX_VALUE || intValue < Short.MIN_VALUE) {
-          throw new AnoaJacksonTypeException(jacksonParser.getText() + " is out of bounds for I16.");
+          throw new AnoaJacksonTypeException(
+              jacksonParser.getText() + " is out of bounds for I16.");
         }
         return (short) intValue;
       case VALUE_NULL:
         return null;
       default:
-        throw new AnoaJacksonTypeException("Token is not integer: " + jacksonParser.getCurrentToken());
+        throw new AnoaJacksonTypeException(
+            "Token is not integer: " + jacksonParser.getCurrentToken());
     }
   }
 }

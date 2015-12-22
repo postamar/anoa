@@ -91,7 +91,8 @@ public class ExportThrift extends ExportBase {
     }
   }
 
-  protected String getFieldType(Schema s, String thriftType, Map<String, String> names) throws IOException {
+  protected String getFieldType(Schema s, String thriftType, Map<String, String> names)
+      throws IOException {
     switch (s.getType()) {
       case ARRAY:
         return ("set".equals(thriftType) ? "set" : "list") +

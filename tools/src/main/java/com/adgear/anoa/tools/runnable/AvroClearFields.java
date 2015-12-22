@@ -30,6 +30,14 @@ public class AvroClearFields<R extends SpecificRecord> implements Runnable {
     this.outputStream = outputStream;
   }
 
+  static public void main(String[] args) throws Exception {
+    new AvroClearFields<>(AnoaReflectionUtils.getAvroClass(System.getProperty("recordClass")),
+                          System.in,
+                          System.out,
+                          System.getProperty("fields").split(","))
+        .run();
+  }
+
   @Override
   public void run() {
     try (WriteConsumer<R> consumer = AvroConsumers.batch(recordClass, outputStream)) {
@@ -39,14 +47,6 @@ public class AvroClearFields<R extends SpecificRecord> implements Runnable {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-  }
-
-  static public void main(String[] args) throws Exception {
-    new AvroClearFields<>(AnoaReflectionUtils.getAvroClass(System.getProperty("recordClass")),
-                          System.in,
-                          System.out,
-                          System.getProperty("fields").split(","))
-        .run();
   }
 
 }

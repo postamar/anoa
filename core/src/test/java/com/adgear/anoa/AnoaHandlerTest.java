@@ -13,8 +13,6 @@ import junitx.framework.ListAssert;
 
 public class AnoaHandlerTest {
 
-  enum Meta { RUNTIME, OTHER, FAIL }
-
   final AnoaHandler<Meta> handler = AnoaHandler.withFn(
       t -> (t instanceof RuntimeException) ? Meta.RUNTIME : Meta.OTHER);
 
@@ -93,4 +91,6 @@ public class AnoaHandlerTest {
                           throw new IOException();
                         }, __ -> Stream.of(Meta.FAIL)).apply(Anoa.of(1L)));
   }
+
+  enum Meta {RUNTIME, OTHER, FAIL}
 }

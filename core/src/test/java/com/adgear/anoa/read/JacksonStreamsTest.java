@@ -30,7 +30,7 @@ public class JacksonStreamsTest {
   }
 
   @Test
-  public void testObjects()  {
+  public void testObjects() {
     BidReqs.assertJsonObjects(build().from(BidReqs.jsonBytes(-1)));
   }
 

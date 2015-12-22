@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 
 public class ThriftDecodersTest {
 
+  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
+
   @Test
   public void testBinary() {
     BidReqs.assertThriftObjects(
@@ -40,8 +42,6 @@ public class ThriftDecodersTest {
             .map(TreeNode::traverse)
             .map(ThriftDecoders.jackson(BidReqs.thriftClass, true)));
   }
-
-  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
 
   @Test
   public void testAnoaBinary() {

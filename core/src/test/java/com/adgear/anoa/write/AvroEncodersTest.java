@@ -12,17 +12,19 @@ import org.junit.Test;
 
 public class AvroEncodersTest {
 
+  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
+
   @Test
   public void testBinary() {
     BidReqs.assertAvroGenerics(
         BidReqs.avroGeneric()
             .map(AvroEncoders.binary(BidReqs.avroSchema))
-            .map(AvroDecoders.binary(BidReqs.avroSchema, null)));
+            .map(AvroDecoders.binary(BidReqs.avroSchema)));
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
             .map(AvroEncoders.binary(BidReqs.avroClass))
-            .map(AvroDecoders.binary(BidReqs.avroSchema, null)));
+            .map(AvroDecoders.binary(BidReqs.avroSchema)));
   }
 
   @Test
@@ -30,12 +32,12 @@ public class AvroEncodersTest {
     BidReqs.assertAvroGenerics(
         BidReqs.avroGeneric()
             .map(AvroEncoders.json(BidReqs.avroSchema))
-            .map(AvroDecoders.json(BidReqs.avroSchema, null)));
+            .map(AvroDecoders.json(BidReqs.avroSchema)));
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
             .map(AvroEncoders.json(BidReqs.avroClass))
-            .map(AvroDecoders.json(BidReqs.avroSchema, null)));
+            .map(AvroDecoders.json(BidReqs.avroSchema)));
   }
 
   @Test
@@ -55,22 +57,20 @@ public class AvroEncodersTest {
             .map(AvroDecoders.jackson(BidReqs.avroSchema, true)));
   }
 
-  final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
-
   @Test
   public void testAnoaBinary() {
     BidReqs.assertAvroGenerics(
         BidReqs.avroGeneric()
             .map(anoaHandler::<GenericRecord>of)
             .map(AvroEncoders.binary(anoaHandler, BidReqs.avroSchema))
-            .map(AvroDecoders.binary(anoaHandler, BidReqs.avroSchema, null))
+            .map(AvroDecoders.binary(anoaHandler, BidReqs.avroSchema))
             .flatMap(Anoa::asStream));
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
             .map(anoaHandler::<BidRequest>of)
             .map(AvroEncoders.binary(anoaHandler, BidReqs.avroClass))
-            .map(AvroDecoders.binary(anoaHandler, BidReqs.avroSchema, null))
+            .map(AvroDecoders.binary(anoaHandler, BidReqs.avroSchema))
             .flatMap(Anoa::asStream));
   }
 
@@ -81,14 +81,14 @@ public class AvroEncodersTest {
         BidReqs.avroGeneric()
             .map(anoaHandler::<GenericRecord>of)
             .map(AvroEncoders.json(anoaHandler, BidReqs.avroSchema))
-            .map(AvroDecoders.json(anoaHandler, BidReqs.avroSchema, null))
+            .map(AvroDecoders.json(anoaHandler, BidReqs.avroSchema))
             .flatMap(Anoa::asStream));
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
             .map(anoaHandler::<BidRequest>of)
             .map(AvroEncoders.json(anoaHandler, BidReqs.avroClass))
-            .map(AvroDecoders.json(anoaHandler, BidReqs.avroSchema, null))
+            .map(AvroDecoders.json(anoaHandler, BidReqs.avroSchema))
             .flatMap(Anoa::asStream));
   }
 

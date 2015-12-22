@@ -7,8 +7,8 @@ import java.io.UncheckedIOException;
 import java.util.function.Consumer;
 
 /**
- * Implemented by consumers which perform write operations, and therefore may need to be flushed
- * or closed.
+ * Implemented by consumers which perform write operations, and therefore may need to be flushed or
+ * closed.
  *
  * Methods in Anoa Utility classes matching #"\w+Consumer" usually return objects implementing this
  * interface.
@@ -37,6 +37,18 @@ public interface WriteConsumer<T> extends Closeable, Flushable, Consumer<T> {
   default void accept(T record) {
     try {
       acceptChecked(record);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  /**
+   * Calls {@link Flushable#flush()}, rethrowing any {@link IOException} as an {@link
+   * UncheckedIOException}
+   */
+  default void flushUnchecked() {
+    try {
+      flush();
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }

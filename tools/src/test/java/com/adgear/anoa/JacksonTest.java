@@ -4,12 +4,14 @@ import com.adgear.anoa.read.AvroDecoders;
 import com.adgear.anoa.read.AvroStreams;
 import com.adgear.anoa.read.CborStreams;
 import com.adgear.anoa.read.CsvStreams;
+import com.adgear.anoa.read.JacksonDecoders;
 import com.adgear.anoa.read.JsonStreams;
 import com.adgear.anoa.read.SmileStreams;
 import com.adgear.anoa.write.AvroConsumers;
 import com.adgear.anoa.write.AvroEncoders;
 import com.adgear.anoa.write.CborConsumers;
 import com.adgear.anoa.write.CsvConsumers;
+import com.adgear.anoa.write.JacksonEncoders;
 import com.adgear.anoa.write.JsonConsumers;
 import com.adgear.anoa.write.SmileConsumers;
 import com.adgear.anoa.write.WriteConsumer;
@@ -26,8 +28,10 @@ import org.jooq.lambda.Unchecked;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Scanner;
@@ -37,6 +41,22 @@ import java.util.stream.Collectors;
 import junitx.framework.ListAssert;
 
 public class JacksonTest {
+
+  @Test
+  public void test() throws Exception {
+    try (InputStream inputStream = getClass().getResourceAsStream("/bidreqs.json")) {
+      try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+        long n = reader.lines()
+            .map(String::getBytes)
+            .map(JacksonDecoders.json())
+            .map(JacksonEncoders.cbor())
+            .map(JacksonDecoders.cbor())
+            .map(JacksonEncoders.json())
+            .count();
+        Assert.assertEquals(946L, n);
+      }
+    }
+  }
 
   @Test
   public void testCsv() throws Exception {
@@ -78,9 +98,11 @@ public class JacksonTest {
       JsonConsumers jsonConsumers = new JsonConsumers();
       JsonStreams jsonStreams = new JsonStreams();
       try (WriteConsumer<ObjectNode> writeConsumer = jsonConsumers.to(baos)) {
-        writeConsumer.accept(jsonStreams.parser(
-            AvroEncoders.jackson(Simple.class, jsonConsumers::generator).apply(simple))
-                                 .readValueAsTree());
+        writeConsumer.accept(
+            AvroEncoders.jackson(Simple.class, jsonConsumers::generator)
+                .apply(simple)
+                .asParser(jsonStreams.objectCodec)
+                .readValueAsTree());
       }
       System.out.println(baos);
       Assert.assertEquals(simple, readFn.apply(jsonStreams.parser(baos.toByteArray())));

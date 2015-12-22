@@ -18,7 +18,7 @@ public class AnoaFieldNuller<T> implements UnaryOperator<T> {
   /**
    * @param fields the field names to set to null, according to this object
    */
-  public AnoaFieldNuller(/*@NonNull*/ String... fields) {
+  public AnoaFieldNuller(String... fields) {
     this.fields = fields;
   }
 
@@ -30,7 +30,7 @@ public class AnoaFieldNuller<T> implements UnaryOperator<T> {
   }
 
 
-  public /*@NonNull*/ T applyChecked(/*@NonNull*/ T object)
+  public T applyChecked(T object)
       throws NoSuchFieldException, IllegalAccessException {
     for (String field : fields) {
       ObjectFieldWrapper wrapper = getFieldAtPath(object, field);
@@ -41,7 +41,7 @@ public class AnoaFieldNuller<T> implements UnaryOperator<T> {
     return object;
   }
 
-  public /*@NonNull*/ T apply(/*@NonNull*/ T object) {
+  public T apply(T object) {
     try {
       return applyChecked(object);
     } catch (NoSuchFieldException | IllegalAccessException e) {
@@ -49,7 +49,7 @@ public class AnoaFieldNuller<T> implements UnaryOperator<T> {
     }
   }
 
-  public /*@NonNull*/ CheckedUnaryOperator<T> asChecked() {
+  public CheckedUnaryOperator<T> asChecked() {
     return this::applyChecked;
   }
 
@@ -62,6 +62,7 @@ public class AnoaFieldNuller<T> implements UnaryOperator<T> {
       return getObjectAtPath(f.get(o), path, startIndex + 1);
     }
   }
+
   /* Will either return a Field object if `name' describes a proper path
     * leading to a field, or null if one of the components leading to the field
     * is set to null (trying to access a field that does not exist at all,

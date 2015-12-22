@@ -8,7 +8,8 @@ import java.nio.ByteBuffer;
 class ByteBufferWriter extends AbstractWriter<ByteBuffer> {
 
   @Override
-  protected void writeChecked(ByteBuffer byteBuffer, JsonGenerator jacksonGenerator) throws IOException {
+  protected void writeChecked(ByteBuffer byteBuffer, JsonGenerator jacksonGenerator)
+      throws IOException {
     jacksonGenerator.writeBinary(byteBuffer.array());
   }
 }

@@ -13,15 +13,15 @@ import org.apache.thrift.protocol.TType;
 
 class ThriftFieldWrapper<F extends TFieldIdEnum> {
 
+  final F tFieldIdEnum;
+  final boolean isRequired;
+  final AbstractReader<?> reader;
+
   ThriftFieldWrapper(F tFieldIdEnum, FieldMetaData fieldMetaData) {
     this.tFieldIdEnum = tFieldIdEnum;
     this.isRequired = (fieldMetaData.requirementType == TFieldRequirementType.REQUIRED);
     this.reader = createReader(fieldMetaData.valueMetaData);
   }
-
-  final F tFieldIdEnum;
-  final boolean isRequired;
-  final AbstractReader<?> reader;
 
   @SuppressWarnings("unchecked")
   static private AbstractReader<?> createReader(FieldValueMetaData metaData) {

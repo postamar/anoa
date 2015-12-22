@@ -9,37 +9,6 @@ import java.io.UncheckedIOException;
 
 abstract class AbstractReader<R> {
 
-  final R read(JsonParser jacksonParser, Boolean strict) {
-    try {
-      return readChecked(jacksonParser, strict);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-  }
-
-  final R readChecked(JsonParser jacksonParser, Boolean strict) throws IOException {
-    jacksonParser.nextToken();
-    return validateTopLevel(Boolean.TRUE.equals(strict)
-                            ? readStrict(jacksonParser)
-                            : read(jacksonParser));
-  }
-
-  protected R validateTopLevel(R record) {
-    return record;
-  }
-
-  abstract protected R read(JsonParser jacksonParser) throws IOException;
-
-  abstract protected R readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException;
-
-  protected interface ValueConsumer<E extends Exception> {
-    void accept(JsonParser jacksonParser) throws IOException, E;
-  }
-
-  protected interface FieldValueConsumer<E extends Exception> {
-    void accept(String fieldName, JsonParser jacksonParser) throws IOException, E;
-  }
-
   static protected <E extends Exception> void doArray(JsonParser jacksonParser,
                                                       ValueConsumer<E> valueConsumer)
       throws IOException, E {
@@ -90,5 +59,39 @@ abstract class AbstractReader<R> {
         throw new IOException("Expected START_ARRAY, START_OBJECT, or value, not "
                               + jacksonParser.getCurrentToken());
     }
+  }
+
+  final R read(JsonParser jacksonParser, Boolean strict) {
+    try {
+      return readChecked(jacksonParser, strict);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  final R readChecked(JsonParser jacksonParser, Boolean strict) throws IOException {
+    jacksonParser.nextToken();
+    return validateTopLevel(Boolean.TRUE.equals(strict)
+                            ? readStrict(jacksonParser)
+                            : read(jacksonParser));
+  }
+
+  protected R validateTopLevel(R record) {
+    return record;
+  }
+
+  abstract protected R read(JsonParser jacksonParser) throws IOException;
+
+  abstract protected R readStrict(JsonParser jacksonParser)
+      throws AnoaJacksonTypeException, IOException;
+
+  protected interface ValueConsumer<E extends Exception> {
+
+    void accept(JsonParser jacksonParser) throws IOException, E;
+  }
+
+  protected interface FieldValueConsumer<E extends Exception> {
+
+    void accept(String fieldName, JsonParser jacksonParser) throws IOException, E;
   }
 }

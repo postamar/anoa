@@ -54,7 +54,7 @@ public class AvroTest {
           .filter(Anoa::isPresent)
           .count();
 
-        Assert.assertEquals(946, total);
+      Assert.assertEquals(946, total);
     }
   }
 

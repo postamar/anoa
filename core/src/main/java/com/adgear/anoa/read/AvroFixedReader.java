@@ -12,9 +12,9 @@ import java.lang.reflect.Constructor;
 
 abstract class AvroFixedReader<F extends GenericData.Fixed> extends AbstractReader<F> {
 
-  abstract protected F newInstance(byte[] bytes) throws Exception;
-
   static private ByteArrayReader byteArrayReader = new ByteArrayReader();
+
+  abstract protected F newInstance(byte[] bytes) throws Exception;
 
   @Override
   protected F read(JsonParser jacksonParser) throws IOException {
