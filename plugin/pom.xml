@@ -27,19 +27,6 @@
         <version>1.4</version>
         <executions>
           <execution>
-            <id>enforce-maven</id>
-            <configuration>
-              <rules>
-                <requireMavenVersion>
-                  <version>(,3.2)</version>
-                </requireMavenVersion>
-              </rules>
-            </configuration>
-            <goals>
-              <goal>enforce</goal>
-            </goals>
-          </execution>
-          <execution>
             <id>enforce</id>
             <configuration>
               <skip>true</skip>
@@ -61,23 +48,11 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.1</version>
+        <version>3.3</version>
         <executions>
           <execution>
             <goals>
               <goal>helpmojo</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.ops4j</groupId>
-        <artifactId>maven-inherit-plugin</artifactId>
-        <version>1.5</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>inherit</goal>
             </goals>
           </execution>
         </executions>
@@ -106,7 +81,17 @@
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-plugin-api</artifactId>
-      <version>3.0.4</version>
+      <version>3.3.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.shared</groupId>
+      <artifactId>file-management</artifactId>
+      <version>3.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro-compiler</artifactId>
+      <version>${project.version.avro}</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
@@ -114,18 +99,11 @@
       <version>2.4</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro-maven-plugin</artifactId>
-      <version>${project.version.avro}</version>
-      <type>maven-plugin</type>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-project</artifactId>
+      <version>2.2.1</version>
     </dependency>
     <!-- other dependencies -->
-    <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro-maven-plugin</artifactId>
-      <version>${project.version.avro}</version>
-      <scope>provided</scope>
-    </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>

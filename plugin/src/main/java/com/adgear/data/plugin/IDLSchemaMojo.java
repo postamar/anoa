@@ -55,10 +55,9 @@ import java.util.regex.Pattern;
  * Generate Java classes and interfaces from AvroIDL files (.avdl), modified for improved
  * annotation and dependency handling.
  *
- * @extendsPlugin avro-maven-plugin
- * @extendsGoal schema
  * @goal idl-schema
  * @phase generate-sources
+ * @requiresDependencyResolution runtime
  * @threadSafe
  */
 public class IDLSchemaMojo extends AbstractAvroMojo {
@@ -71,6 +70,7 @@ public class IDLSchemaMojo extends AbstractAvroMojo {
   // the following are only ever mutated by the 'execute' and 'doCompile' methods.
   protected Map<String, IDLObject> mapSource;
   protected Map<String, IDLObject> mapTest;
+
   /**
    * A set of Ant-like inclusion patterns used to select files from the source directory for
    * processing. By default, the pattern <code>**&#47;*.avdl</code> is used to select IDL files.
@@ -78,6 +78,7 @@ public class IDLSchemaMojo extends AbstractAvroMojo {
    * @parameter
    */
   private String[] includes = new String[]{"**/*.avdl", "**/*.avsc"};
+
   /**
    * A set of Ant-like inclusion patterns used to select files from the source directory for
    * processing. By default, the pattern <code>**&#47;*.avdl</code> is used to select IDL files.
