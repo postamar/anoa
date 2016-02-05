@@ -97,11 +97,10 @@ public class JdbcTest {
     }
   }
 
-  @Test
-  public void testSchema() throws Exception {
+  private void testSchema(String selectStatement) throws Exception {
     try (Connection connection = openDBConnection()) {
       try (Statement statement = connection.createStatement()) {
-        try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {
+        try (ResultSet resultSet = statement.executeQuery(selectStatement)) {
           Schema induced = JdbcStreams.induceSchema(resultSet.getMetaData());
 
           ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -119,6 +118,20 @@ public class JdbcTest {
     }
   }
 
+  @Test
+  public void testSchemaSelectStar() throws Exception {
+    testSchema("SELECT * FROM simple");
+  }
+
+  /**
+   * Simulates JDBC driver which returns table_name.column_name (like e.g. Hive)
+   * And ensures that it doesn't trigger an Avro schema parse exception
+   * @throws Exception
+   */
+  @Test
+  public void testSchemaWithTablePrefixes() throws Exception {
+    testSchema("SELECT foo AS \"simple.foo\", bar AS \"simple.bar\", baz AS \"simple.baz\" FROM simple");
+  }
 
   @Test
   public void testDataToolCsv() throws Exception {

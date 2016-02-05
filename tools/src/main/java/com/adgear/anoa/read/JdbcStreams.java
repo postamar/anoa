@@ -51,14 +51,22 @@ public class JdbcStreams {
     this.objectCodec = objectCodec;
   }
 
+  /*
+   * Turns "table_name.column_name" into "column_name" so that the Avro schema parser doesn't choke on '.' character
+   */
+  private static String getNormalizedColumnLabel(String label) {
+    return label.replaceAll("^(.*\\.)?(.*)", "$2");
+  }
+
   /**
    * @param rsmd JDBC Result Set metadata
    * @return equivalent Avro Schema
+   * @throws java.sql.SQLException
    */
   static public Schema induceSchema(ResultSetMetaData rsmd) throws SQLException {
     List<Schema.Field> fields = IntStream.range(1, rsmd.getColumnCount() + 1)
         .mapToObj(Unchecked.intFunction(c -> {
-          String label = rsmd.getColumnLabel(c);
+          String label = getNormalizedColumnLabel(rsmd.getColumnLabel(c));
           Schema.Field f = new Schema.Field(
               label.toLowerCase(),
               Schema.createUnion(Stream.of(Schema.Type.NULL, getAvroType(rsmd.getColumnType(c)))
@@ -147,7 +155,7 @@ public class JdbcStreams {
     int n = rsmd.getColumnCount();
     String[] names = new String[n];
     for (int c = 0; c < n; c++) {
-      names[c] = rsmd.getColumnLabel(c + 1);
+      names[c] = getNormalizedColumnLabel(rsmd.getColumnLabel(c + 1));
     }
     return (ResultSet resultSet) -> {
       TokenBuffer tb = new TokenBuffer(objectCodec, false);
