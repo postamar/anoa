@@ -1,5 +1,8 @@
 package com.adgear.anoa;
 
+import com.google.openrtb.OpenRtb;
+import com.google.openrtb.json.OpenRtbJsonFactory;
+
 import com.adgear.avro.openrtb.BidRequest;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,6 +53,7 @@ public class BidReqs {
   static public final Class<com.adgear.avro.openrtb.BidRequest> avroClass;
   static public final Class<thrift.com.adgear.avro.openrtb.BidRequest> thriftClass;
   static public final Supplier<thrift.com.adgear.avro.openrtb.BidRequest> thriftSupplier;
+  static public final Class<OpenRtb.BidRequest> protobufClass;
   static protected final List<ObjectNode> jsonObjects;
   static protected final List<GenericRecord> avroGenerics;
   static protected final List<com.adgear.avro.openrtb.BidRequest> avroSpecifics;
@@ -58,6 +62,8 @@ public class BidReqs {
   static protected final List<thrift.com.adgear.avro.openrtb.BidRequest> thrifts;
   static protected final List<byte[]> thriftCompacts;
   static protected final List<byte[]> thriftBinaries;
+  static protected final List<OpenRtb.BidRequest> protobufs;
+  static protected final List<byte[]> protobufBinaries;
 
   static {
     objectMapper = new ObjectMapper();
@@ -168,6 +174,16 @@ public class BidReqs {
       }
       return baos.toByteArray();
     }).collect(Collectors.toList());
+
+    protobufClass = OpenRtb.BidRequest.class;
+
+    OpenRtbJsonFactory openRtbJsonFactory = OpenRtbJsonFactory.create();
+    protobufs = JSON.jsonStrings()
+        .map(Unchecked.function(json -> openRtbJsonFactory.newReader().readBidRequest(json)))
+        .collect(Collectors.toList());
+    protobufBinaries = protobufs.stream()
+        .map(OpenRtb.BidRequest::toByteArray)
+        .collect(Collectors.toList());
   }
 
   static public InputStream allAsStream(CheckedConsumer<OutputStream> lambda) {
@@ -271,5 +287,19 @@ public class BidReqs {
 
   static public InputStream thriftJson(int readFailureIndex) {
     return new TestInputStream(thriftJson(), readFailureIndex);
+  }
+
+  static public Stream<OpenRtb.BidRequest> protobuf() { return protobufs.stream().sequential(); }
+
+  static public Stream<byte[]> protobufBinary() { return protobufBinaries.stream().sequential(); }
+
+  static public InputStream protobufBinary(int readFailureIndex) {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    protobuf().forEach(Unchecked.consumer(br -> br.writeDelimitedTo(baos)));
+    return new TestInputStream(baos.toByteArray(), readFailureIndex);
+  }
+
+  static public void assertProtobufObjects(Stream<OpenRtb.BidRequest> stream) {
+    ListAssert.assertEquals(protobufs, stream.collect(Collectors.toList()));
   }
 }

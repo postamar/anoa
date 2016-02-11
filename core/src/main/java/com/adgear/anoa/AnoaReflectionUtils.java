@@ -1,5 +1,10 @@
 package com.adgear.anoa;
 
+import com.google.protobuf.Descriptors;
+import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
+import com.google.protobuf.Parser;
+
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.thrift.TBase;
 import org.apache.thrift.TFieldIdEnum;
@@ -50,7 +55,7 @@ public class AnoaReflectionUtils {
     }
     Class recordClass = Class.forName(className);
     if (!TBase.class.isAssignableFrom(recordClass)) {
-      throw new ClassCastException(className + " does not implement SpecificRecord.");
+      throw new ClassCastException(className + " does not implement TBase.");
     }
     return (Class<T>) recordClass;
   }
@@ -68,5 +73,60 @@ public class AnoaReflectionUtils {
         .sorted(comparator)
         .forEach(e -> result.put(e.getKey(), e.getValue()));
     return result;
+  }
+
+  /**
+   * @param className Protobuf qualified class name
+   */
+  @SuppressWarnings("unchecked")
+  static public <T extends Message> Class<T> getProtobufClass(
+      String className) throws ClassNotFoundException {
+    if (className == null) {
+      throw new ClassNotFoundException("Class name must not be null.");
+    }
+    Class recordClass = Class.forName(className);
+    if (!Message.class.isAssignableFrom(recordClass)) {
+      throw new ClassCastException(className + " does not implement Message.");
+    }
+    return (Class<T>) recordClass;
+  }
+
+  /**
+   * @param recordClass The Protobuf record class
+   * @return The corresponding message descriptor
+   */
+  @SuppressWarnings("unchecked")
+  static public Descriptors.Descriptor getProtobufDescriptor(Class<? extends Message> recordClass) {
+    try {
+      return (Descriptors.Descriptor) recordClass.getMethod("getDescriptor").invoke(null);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * @param recordClass The Protobuf record class
+   * @return The corresponding message builder
+   */
+  static public MessageLite.Builder getProtobufBuilder(Class<? extends MessageLite> recordClass) {
+    try {
+      return (MessageLite.Builder) recordClass.getMethod("newBuilder").invoke(null);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * @param recordClass The Protobuf record class
+   * @param <R>         Protobuf record type
+   * @return The corresponding message parser
+   */
+  @SuppressWarnings("unchecked")
+  static public <R extends MessageLite> Parser<R> getProtobufParser(Class<R> recordClass) {
+    try {
+      return (Parser<R>) recordClass.getDeclaredField("PARSER").get(null);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 }

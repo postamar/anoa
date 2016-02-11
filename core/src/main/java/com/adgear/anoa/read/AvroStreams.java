@@ -3,7 +3,6 @@ package com.adgear.anoa.read;
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.TreeNode;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
@@ -428,9 +427,7 @@ public class AvroStreams {
       Schema schema,
       boolean strict,
       JsonParser jacksonParser) {
-    return LookAheadIteratorFactory.jackson(jacksonParser).asStream()
-        .map(TreeNode::traverse)
-        .map(AvroDecoders.jackson(schema, strict));
+    return JacksonUtils.stream(new AvroReader.GenericReader(schema), strict, jacksonParser);
   }
 
   /**
@@ -445,9 +442,10 @@ public class AvroStreams {
       Schema schema,
       boolean strict,
       JsonParser jacksonParser) {
-    return LookAheadIteratorFactory.jackson(anoaHandler, jacksonParser).asStream()
-        .map(anoaHandler.function(TreeNode::traverse))
-        .map(AvroDecoders.jackson(anoaHandler, schema, strict));
+    return JacksonUtils.stream(anoaHandler,
+                               new AvroReader.GenericReader(schema),
+                               strict,
+                               jacksonParser);
   }
 
   /**
@@ -460,9 +458,9 @@ public class AvroStreams {
       Class<R> recordClass,
       boolean strict,
       JsonParser jacksonParser) {
-    return LookAheadIteratorFactory.jackson(jacksonParser).asStream()
-        .map(TreeNode::traverse)
-        .map(AvroDecoders.jackson(recordClass, strict));
+    return JacksonUtils.stream(new AvroReader.SpecificReader<>(recordClass),
+                               strict,
+                               jacksonParser);
   }
 
   /**
@@ -478,8 +476,9 @@ public class AvroStreams {
       Class<R> recordClass,
       boolean strict,
       JsonParser jacksonParser) {
-    return LookAheadIteratorFactory.jackson(anoaHandler, jacksonParser).asStream()
-        .map(anoaHandler.function(TreeNode::traverse))
-        .map(AvroDecoders.jackson(anoaHandler, recordClass, strict));
+    return JacksonUtils.stream(anoaHandler,
+                               new AvroReader.SpecificReader<>(recordClass),
+                               strict,
+                               jacksonParser);
   }
 }

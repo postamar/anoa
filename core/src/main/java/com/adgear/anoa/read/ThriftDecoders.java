@@ -136,8 +136,7 @@ public class ThriftDecoders {
   Function<P, T> jackson(
       Class<T> recordClass,
       boolean strict) {
-    final AbstractReader<T> reader = new ThriftReader<>(recordClass);
-    return (P jp) -> reader.read(jp, strict);
+    return JacksonUtils.decoder(new ThriftReader<>(recordClass), strict);
   }
 
   /**
@@ -154,7 +153,6 @@ public class ThriftDecoders {
       AnoaHandler<M> anoaHandler,
       Class<T> recordClass,
       boolean strict) {
-    final AbstractReader<T> reader = new ThriftReader<>(recordClass);
-    return anoaHandler.functionChecked((P jp) -> (T) reader.readChecked(jp, strict));
+    return JacksonUtils.decoder(anoaHandler, new ThriftReader<>(recordClass), strict);
   }
 }

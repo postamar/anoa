@@ -61,11 +61,10 @@ abstract class AvroReader<R extends IndexedRecord> extends AbstractReader<R> {
       doMap(jacksonParser, (fieldName, p) -> {
         Optional<AvroFieldWrapper> cacheValue = fieldLookUp.get(fieldName);
         if (cacheValue == null) {
-          final Optional<Map.Entry<String, Optional<AvroFieldWrapper>>> found =
-              fieldLookUp.entrySet().stream()
-                  .filter(e -> (0 == fieldName.compareToIgnoreCase(e.getKey())))
-                  .findAny();
-          cacheValue = found.flatMap(Map.Entry::getValue);
+          cacheValue = fieldLookUp.entrySet().stream()
+              .filter(e -> (0 == fieldName.compareToIgnoreCase(e.getKey())))
+              .findAny()
+              .flatMap(Map.Entry::getValue);
           fieldLookUp.put(fieldName, cacheValue);
         }
         if (cacheValue.isPresent()) {

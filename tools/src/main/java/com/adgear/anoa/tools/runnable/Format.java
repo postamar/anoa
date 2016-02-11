@@ -35,6 +35,11 @@ public enum Format {
   THRIFT_JSON(FormatCategory.THRIFT),
 
   /**
+   * Protobuf encoding
+   */
+  PROTOBUF(FormatCategory.PROTOBUF),
+
+  /**
    * JDBC result set (input only)
    */
   JDBC(FormatCategory.DB),

@@ -95,4 +95,5 @@ public class ThriftDecodersTest {
     throwables.stream().forEach(t -> Assert.assertTrue(t instanceof TException));
     Assert.assertEquals(BidReqs.n, (long) metaMap.values().stream().findFirst().get().size());
   }
+
 }

@@ -120,12 +120,7 @@ public class ThriftEncoders {
   static public <T extends TBase, G extends JsonGenerator> Function<T, G> jackson(
       Class<T> recordClass,
       Supplier<G> supplier) {
-    AbstractWriter<T> thriftWriter = new ThriftWriter<>(recordClass);
-    return (T record) -> {
-      G jg = supplier.get();
-      thriftWriter.write(record, jg);
-      return jg;
-    };
+    return JacksonUtils.encoder(new ThriftWriter<>(recordClass), supplier);
   }
 
   /**
@@ -143,11 +138,6 @@ public class ThriftEncoders {
       AnoaHandler<M> anoaHandler,
       Class<T> recordClass,
       Supplier<G> supplier) {
-    AbstractWriter<T> thriftWriter = new ThriftWriter<>(recordClass);
-    return anoaHandler.functionChecked((T record) -> {
-      G jg = supplier.get();
-      thriftWriter.writeChecked(record, jg);
-      return jg;
-    });
+    return JacksonUtils.encoder(anoaHandler, new ThriftWriter<>(recordClass), supplier);
   }
 }

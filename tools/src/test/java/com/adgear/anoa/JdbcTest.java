@@ -127,6 +127,7 @@ public class JdbcTest {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       new DataTool<>(null,
                      null,
+                     null,
                      Format.CSV,
                      baos,
                      connection,
@@ -149,6 +150,7 @@ public class JdbcTest {
     try (Connection connection = JdbcTest.openDBConnection()) {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       new DataTool<>(com.adgear.avro.Simple.getClassSchema(),
+                     null,
                      null,
                      Format.AVRO_JSON,
                      baos,

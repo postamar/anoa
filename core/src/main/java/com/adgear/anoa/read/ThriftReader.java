@@ -45,12 +45,10 @@ class ThriftReader<F extends TFieldIdEnum, T extends TBase<?, F>> extends Abstra
       doMap(jacksonParser, (fieldName, p) -> {
         Optional<ThriftFieldWrapper<F>> cacheValue = fieldLookUp.get(fieldName);
         if (cacheValue == null) {
-          Optional<Map.Entry<String, Optional<ThriftFieldWrapper<F>>>>
-              found =
-              fieldLookUp.entrySet().stream()
-                  .filter(e -> (0 == fieldName.compareToIgnoreCase(e.getKey())))
-                  .findAny();
-          cacheValue = found.isPresent() ? found.get().getValue() : Optional.empty();
+          cacheValue = fieldLookUp.entrySet().stream()
+              .filter(e -> (0 == fieldName.compareToIgnoreCase(e.getKey())))
+              .findAny()
+              .flatMap(Map.Entry::getValue);
           fieldLookUp.put(fieldName, cacheValue);
         }
         if (cacheValue.isPresent()) {

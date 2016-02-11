@@ -1,7 +1,11 @@
 package com.adgear.anoa.read;
 
+import com.google.protobuf.MessageLite;
+import com.google.protobuf.Parser;
+
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
+import com.adgear.anoa.AnoaReflectionUtils;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.TreeNode;
 
@@ -20,6 +24,7 @@ import org.jooq.lambda.fi.util.function.CheckedSupplier;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -181,5 +186,61 @@ class LookAheadIteratorFactory {
           return record;
         },
         tTransport);
+  }
+
+  static <R extends MessageLite> LookAheadIterator<R> protobuf(
+      InputStream inputStream,
+      Class<R> recordClass,
+      boolean strict) {
+
+    final Parser<R> parser = AnoaReflectionUtils.getProtobufParser(recordClass);
+    return new LookAheadIterator<>(
+        () -> false,
+        (Consumer<Boolean> setHasNext) -> (__ -> {
+          final R value;
+          try {
+            value = strict
+                    ? parser.parseDelimitedFrom(inputStream)
+                    : parser.parsePartialDelimitedFrom(inputStream);
+          } catch (IOException e) {
+            setHasNext.accept(false);
+            throw new UncheckedIOException(e);
+          }
+          if (value == null) {
+            setHasNext.accept(false);
+          }
+          return value;
+        }),
+        inputStream);
+  }
+
+  static <R extends MessageLite, M> LookAheadIterator<Anoa<R, M>> protobuf(
+      AnoaHandler<M> anoaHandler,
+      InputStream inputStream,
+      Class<R> recordClass,
+      boolean strict) {
+    final Parser<R> parser = AnoaReflectionUtils.getProtobufParser(recordClass);
+    return new LookAheadIterator<>(
+        () -> false,
+        (Consumer<Boolean> setHasNext) -> (anoa -> {
+          R value = null;
+          if (anoa == null || anoa.isPresent()) {
+            try {
+              value = strict
+                      ? parser.parseDelimitedFrom(inputStream)
+                      : parser.parsePartialDelimitedFrom(inputStream);
+            } catch (IOException e) {
+              setHasNext.accept(false);
+              return anoaHandler.empty(anoaHandler.handle(e));
+            } catch (Throwable t) {
+              return anoaHandler.empty(anoaHandler.handle(t));
+            }
+          }
+          if (value == null) {
+            setHasNext.accept(false);
+          }
+          return anoaHandler.ofNullable(value);
+        }),
+        inputStream);
   }
 }

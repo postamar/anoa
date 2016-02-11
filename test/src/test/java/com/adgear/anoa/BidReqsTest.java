@@ -24,6 +24,9 @@ public class BidReqsTest {
     Assert.assertEquals(n, BidReqs.thriftBinary().peek(Assert::assertNotNull).count());
     Assert.assertEquals(n, BidReqs.thriftCompact().peek(Assert::assertNotNull).count());
     Assert.assertEquals(n, BidReqs.thriftJson().peek(Assert::assertNotNull).count());
+
+    Assert.assertEquals(n, BidReqs.protobuf().peek(Assert::assertNotNull).count());
+    Assert.assertEquals(n, BidReqs.protobufBinary().peek(Assert::assertNotNull).count());
   }
 
   @Test

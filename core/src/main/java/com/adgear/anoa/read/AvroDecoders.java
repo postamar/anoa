@@ -28,7 +28,6 @@ public class AvroDecoders {
   protected AvroDecoders() {
   }
 
-
   /**
    * @param schema   Avro record schema
    * @param supplier used for record instantiation
@@ -415,8 +414,7 @@ public class AvroDecoders {
   static public <P extends JsonParser> Function<P, GenericRecord> jackson(
       Schema schema,
       boolean strict) {
-    final AvroReader<GenericRecord> reader = new AvroReader.GenericReader(schema);
-    return (P jp) -> reader.read(jp, strict);
+    return JacksonUtils.decoder(new AvroReader.GenericReader(schema), strict);
   }
 
   /**
@@ -432,8 +430,7 @@ public class AvroDecoders {
       AnoaHandler<M> anoaHandler,
       Schema schema,
       boolean strict) {
-    final AvroReader<GenericRecord> reader = new AvroReader.GenericReader(schema);
-    return anoaHandler.functionChecked((P jp) -> reader.readChecked(jp, strict));
+    return JacksonUtils.decoder(anoaHandler, new AvroReader.GenericReader(schema), strict);
   }
 
   /**
@@ -446,8 +443,7 @@ public class AvroDecoders {
   static public <P extends JsonParser, R extends SpecificRecord> Function<P, R> jackson(
       Class<R> recordClass,
       boolean strict) {
-    final AvroReader<R> reader = new AvroReader.SpecificReader<>(recordClass);
-    return (P jp) -> reader.read(jp, strict);
+    return JacksonUtils.decoder(new AvroReader.SpecificReader<>(recordClass), strict);
   }
 
   /**
@@ -464,8 +460,7 @@ public class AvroDecoders {
       AnoaHandler<M> anoaHandler,
       Class<R> recordClass,
       boolean strict) {
-    final AvroReader<R> reader = new AvroReader.SpecificReader<>(recordClass);
-    return anoaHandler.functionChecked((P jp) -> reader.readChecked(jp, strict));
+    return JacksonUtils.decoder(anoaHandler, new AvroReader.SpecificReader<>(recordClass), strict);
   }
 
   static protected class BinaryDecoderWrapper {

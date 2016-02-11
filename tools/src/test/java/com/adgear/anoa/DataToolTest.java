@@ -25,7 +25,7 @@ public class DataToolTest {
                                Format out,
                                InputStream inputStream) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    new DataTool<>(schema, null, in, out, inputStream, baos).run();
+    new DataTool<>(schema, null, null, in, out, inputStream, baos).run();
     return baos.toByteArray();
   }
 
@@ -35,7 +35,7 @@ public class DataToolTest {
       Format out,
       InputStream inputStream) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    new DataTool<>(null, thriftClass, in, out, inputStream, baos).run();
+    new DataTool<>(null, thriftClass, null, in, out, inputStream, baos).run();
     return baos.toByteArray();
   }
 

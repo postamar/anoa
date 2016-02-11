@@ -22,7 +22,6 @@ import thrift.com.adgear.avro.openrtb.BidRequest;
 
 public class ThriftTest {
 
-
   @Test(expected = AnoaJacksonTypeException.class)
   public void testMissingFields() throws Exception {
     ThriftStreams.jackson(Simple.class,

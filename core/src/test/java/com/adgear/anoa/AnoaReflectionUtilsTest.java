@@ -13,6 +13,4 @@ public class AnoaReflectionUtilsTest {
         .entrySet().stream()
         .count());
   }
-
-
 }
