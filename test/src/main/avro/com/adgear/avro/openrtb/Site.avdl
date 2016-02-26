@@ -13,8 +13,8 @@ record Site {
   /** [01] Site ID on the exchange.*/
   union {null, string} id = null;
 
-  /** [02] Site name (may be masked at publisher’s request).*/
-  union {null, string} name = null;
+  /** [02] Site initialName (may be masked at publisher’s request).*/
+  union {null, string} initialName = null;
 
   /** [03] Domain of the site, used for advertiser side blocking. For example, “foo.com”.*/
   union {null, string} domain = null;

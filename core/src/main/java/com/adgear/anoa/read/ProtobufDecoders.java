@@ -81,7 +81,7 @@ public class ProtobufDecoders {
   static public <P extends JsonParser, R extends Message> Function<P, R> jackson(
       Class<R> recordClass,
       boolean strict) {
-    return JacksonUtils.decoder(new ProtobufReader<>(recordClass), strict);
+    return new ProtobufReader<>(recordClass).decoder(strict);
   }
 
   /**
@@ -98,6 +98,6 @@ public class ProtobufDecoders {
       AnoaHandler<M> anoaHandler,
       Class<R> recordClass,
       boolean strict) {
-    return JacksonUtils.decoder(anoaHandler, new ProtobufReader<>(recordClass), strict);
+    return new ProtobufReader<>(recordClass).decoder(anoaHandler, strict);
   }
 }

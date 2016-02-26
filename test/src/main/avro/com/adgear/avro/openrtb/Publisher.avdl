@@ -9,13 +9,13 @@ record Publisher {
   /** [1] Publisher ID on the exchange. */
   union {null, string} id = null;
 
-  /** [2] Publisher name (may be masked at publisher’s request).*/
-  union {null, string} name = null;
+  /** [2] Publisher initialName (may be masked at publisher’s request).*/
+  union {null, string} initialName = null;
 
   /** [3] Array of IAB content categories for the publisher. See Table 6.1 Content Categories.*/
   union {null, array<string>} cat = null;
 
-  /** [4] Publisher’s highest level domain name, for example “foopub.com”.*/
+  /** [4] Publisher’s highest level domain initialName, for example “foopub.com”.*/
   union {null, string} domain = null;
 
 }

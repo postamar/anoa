@@ -11,16 +11,28 @@ import org.apache.thrift.meta_data.SetMetaData;
 import org.apache.thrift.meta_data.StructMetaData;
 import org.apache.thrift.protocol.TType;
 
-class ThriftFieldWrapper<F extends TFieldIdEnum> {
+import java.util.stream.Stream;
+
+class ThriftFieldWrapper<F extends TFieldIdEnum> implements FieldWrapper {
 
   final F tFieldIdEnum;
   final boolean isRequired;
-  final AbstractReader<?> reader;
+  final private AbstractReader<?> reader;
 
   ThriftFieldWrapper(F tFieldIdEnum, FieldMetaData fieldMetaData) {
     this.tFieldIdEnum = tFieldIdEnum;
     this.isRequired = (fieldMetaData.requirementType == TFieldRequirementType.REQUIRED);
     this.reader = createReader(fieldMetaData.valueMetaData);
+  }
+
+  @Override
+  public Stream<String> getNames() {
+    return Stream.of(tFieldIdEnum.getFieldName());
+  }
+
+  @Override
+  public AbstractReader<?> getReader() {
+    return reader;
   }
 
   @SuppressWarnings("unchecked")

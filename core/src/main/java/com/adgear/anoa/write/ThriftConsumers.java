@@ -141,6 +141,6 @@ public class ThriftConsumers {
   static public <T extends TBase> WriteConsumer<T> jackson(
       Class<T> recordClass,
       JsonGenerator jacksonGenerator) {
-    return new JacksonWriteConsumer<>(jacksonGenerator, new ThriftWriter<>(recordClass));
+    return new ThriftWriter<>(recordClass).writeConsumer(jacksonGenerator);
   }
 }

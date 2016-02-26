@@ -14,7 +14,7 @@ class MapWriter<V> extends AbstractWriter<Map<CharSequence, V>> {
   }
 
   @Override
-  protected void writeChecked(Map<CharSequence, V> map, JsonGenerator jacksonGenerator)
+  protected void write(Map<CharSequence, V> map, JsonGenerator jacksonGenerator)
       throws IOException {
     jacksonGenerator.writeStartObject();
     for (Map.Entry<CharSequence, V> entry : map.entrySet()) {
@@ -22,7 +22,7 @@ class MapWriter<V> extends AbstractWriter<Map<CharSequence, V>> {
       if (entry.getValue() == null) {
         jacksonGenerator.writeNull();
       } else {
-        valueElementWriter.writeChecked(entry.getValue(), jacksonGenerator);
+        valueElementWriter.write(entry.getValue(), jacksonGenerator);
       }
     }
     jacksonGenerator.writeEndObject();

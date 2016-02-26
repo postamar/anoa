@@ -136,7 +136,7 @@ public class ThriftDecoders {
   Function<P, T> jackson(
       Class<T> recordClass,
       boolean strict) {
-    return JacksonUtils.decoder(new ThriftReader<>(recordClass), strict);
+    return new ThriftReader<>(recordClass).decoder(strict);
   }
 
   /**
@@ -153,6 +153,6 @@ public class ThriftDecoders {
       AnoaHandler<M> anoaHandler,
       Class<T> recordClass,
       boolean strict) {
-    return JacksonUtils.decoder(anoaHandler, new ThriftReader<>(recordClass), strict);
+    return new ThriftReader<>(recordClass).decoder(anoaHandler, strict);
   }
 }

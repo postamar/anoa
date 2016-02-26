@@ -12,8 +12,8 @@ record Data {
   /** [1] Exchange specific ID for the data provider. */
   union {null, string} id = null;
 
-  /** [2] Data provider name.*/
-  union {null, string} name = null;
+  /** [2] Data provider initialName.*/
+  union {null, string} initialName = null;
 
   /** [3] Array of segment objects.*/
   union {null, array<com.adgear.avro.openrtb.Segment>} segment = null;

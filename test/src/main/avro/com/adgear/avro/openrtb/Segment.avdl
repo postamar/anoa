@@ -11,7 +11,7 @@ record Segment {
   union {null, string} id = null;
 
   /** [2] Name of a data provider’s segment applicable to the user. */
-  union {null, string} name = null;
+  union {null, string} initialName = null;
 
   /** [3] String representing the value of the segment. The method for transmitting this data should be negotiated offline with the data provider. For example for gender, “male”, or “female”, for age, “30-40”).*/
   union {null, string} value = null;

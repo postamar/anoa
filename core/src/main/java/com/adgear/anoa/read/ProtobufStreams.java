@@ -67,7 +67,7 @@ public class ProtobufStreams {
       Class<R> recordClass,
       boolean strict,
       JsonParser jacksonParser) {
-    return JacksonUtils.stream(new ProtobufReader<>(recordClass), strict, jacksonParser);
+    return new ProtobufReader<>(recordClass).stream(strict, jacksonParser);
   }
 
   /**
@@ -85,9 +85,6 @@ public class ProtobufStreams {
       Class<R> recordClass,
       boolean strict,
       JsonParser jacksonParser) {
-    return JacksonUtils.stream(anoaHandler,
-                               new ProtobufReader<>(recordClass),
-                               strict,
-                               jacksonParser);
+    return new ProtobufReader<>(recordClass).stream(anoaHandler, strict, jacksonParser);
   }
 }

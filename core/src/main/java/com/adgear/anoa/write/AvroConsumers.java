@@ -188,7 +188,7 @@ public class AvroConsumers {
   static public WriteConsumer<GenericRecord> jackson(
       Schema schema,
       JsonGenerator jacksonGenerator) {
-    return new JacksonWriteConsumer<>(jacksonGenerator, new AvroWriter<GenericRecord>(schema));
+    return new AvroWriter<GenericRecord>(schema).writeConsumer(jacksonGenerator);
   }
 
   /**
@@ -202,6 +202,6 @@ public class AvroConsumers {
   WriteConsumer<R> jackson(
       Class<R> recordClass,
       JsonGenerator jacksonGenerator) {
-    return new JacksonWriteConsumer<>(jacksonGenerator, new AvroWriter<>(recordClass));
+    return new AvroWriter<>(recordClass).writeConsumer(jacksonGenerator);
   }
 }

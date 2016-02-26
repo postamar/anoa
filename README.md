@@ -88,8 +88,9 @@ Anoa is currently built with:
 
     Apache Avro 1.7.7
     Apache Thrift 0.9.2
-    FasterXML Jackson 2.5.1
+    FasterXML Jackson 2.7.1
 
+We're also slowly adding support for Google Protobufs, version 2.6.1.
 
 ## License
 

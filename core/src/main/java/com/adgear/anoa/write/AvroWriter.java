@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-class AvroWriter<R extends IndexedRecord> extends AbstractWriter<R> {
+class AvroWriter<R extends IndexedRecord> extends AbstractRecordWriter<R> {
 
   final private LinkedHashMap<Schema.Field, AbstractWriter<Object>> fieldMap;
 
@@ -64,7 +64,7 @@ class AvroWriter<R extends IndexedRecord> extends AbstractWriter<R> {
   }
 
   @Override
-  protected void writeChecked(R record, JsonGenerator jacksonGenerator) throws IOException {
+  protected void write(R record, JsonGenerator jacksonGenerator) throws IOException {
     if (!record.getSchema().equals(schema)) {
       throw new IOException("Record does not have correct Avro schema:\n"
                             + record.getSchema().toString(true));
@@ -75,7 +75,7 @@ class AvroWriter<R extends IndexedRecord> extends AbstractWriter<R> {
       Object value = record.get(field.pos());
       if (!(value == null && (field.defaultValue() == null || field.defaultValue().isNull()))) {
         jacksonGenerator.writeFieldName(field.name());
-        entry.getValue().writeChecked(value, jacksonGenerator);
+        entry.getValue().write(value, jacksonGenerator);
       }
     }
     jacksonGenerator.writeEndObject();

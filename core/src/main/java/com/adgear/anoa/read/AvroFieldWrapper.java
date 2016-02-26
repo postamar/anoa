@@ -14,9 +14,10 @@ import org.codehaus.jackson.node.NullNode;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.stream.Stream;
 
 
-class AvroFieldWrapper {
+class AvroFieldWrapper implements FieldWrapper {
 
   final int index;
   final Schema.Field field;
@@ -40,6 +41,16 @@ class AvroFieldWrapper {
       default:
         this.unboxed = false;
     }
+  }
+
+  @Override
+  public Stream<String> getNames() {
+    return Stream.concat(Stream.of(field.name()), field.aliases().stream());
+  }
+
+  @Override
+  public AbstractReader<?> getReader() {
+    return reader;
   }
 
   @SuppressWarnings("unchecked")

@@ -36,6 +36,6 @@ public class ProtobufConsumers {
   static public <R extends Message> WriteConsumer<R> jackson(
       Class<R> recordClass,
       JsonGenerator jacksonGenerator) {
-    return new JacksonWriteConsumer<>(jacksonGenerator, new ProtobufWriter<>(recordClass));
+    return new ProtobufWriter<>(recordClass).writeConsumer(jacksonGenerator);
   }
 }

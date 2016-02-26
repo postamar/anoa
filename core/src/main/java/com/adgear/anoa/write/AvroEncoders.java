@@ -189,7 +189,7 @@ public class AvroEncoders {
   static public <R extends SpecificRecord, G extends JsonGenerator> Function<R, G> jackson(
       Class<R> recordClass,
       Supplier<G> supplier) {
-    return JacksonUtils.encoder(new AvroWriter<>(recordClass), supplier);
+    return new AvroWriter<>(recordClass).encoder(supplier);
   }
 
   /**
@@ -207,7 +207,7 @@ public class AvroEncoders {
       AnoaHandler<M> anoaHandler,
       Class<R> recordClass,
       Supplier<G> supplier) {
-    return JacksonUtils.encoder(anoaHandler, new AvroWriter<>(recordClass), supplier);
+    return new AvroWriter<>(recordClass).encoder(anoaHandler, supplier);
   }
 
   /**
@@ -220,7 +220,7 @@ public class AvroEncoders {
   static public <G extends JsonGenerator> Function<GenericRecord, G> jackson(
       Schema schema,
       Supplier<G> supplier) {
-    return JacksonUtils.encoder(new AvroWriter<>(schema), supplier);
+    return new AvroWriter<GenericRecord>(schema).encoder(supplier);
   }
 
   /**
@@ -237,6 +237,6 @@ public class AvroEncoders {
       AnoaHandler<M> anoaHandler,
       Schema schema,
       Supplier<G> supplier) {
-    return JacksonUtils.encoder(anoaHandler, new AvroWriter<>(schema), supplier);
+    return new AvroWriter<GenericRecord>(schema).encoder(anoaHandler, supplier);
   }
 }

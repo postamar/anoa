@@ -8,8 +8,8 @@ record Producer {
   /** [1] Content producer or originator ID. Useful if content is syndicated, and may be posted on a site using embed tags.*/
   union {null, string} id = null;
 
-  /** [2] Content producer or originator name (e.g., “Warner Bros”).*/
-  union {null, string} name = null;
+  /** [2] Content producer or originator initialName (e.g., “Warner Bros”).*/
+  union {null, string} initialName = null;
 
   /** [3] Array of IAB content categories for the content producer. See Table 6.1 Content Categories.*/
   union {null, array<string>} cat = null;

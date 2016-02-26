@@ -7,7 +7,7 @@ import java.io.IOException;
 class ByteWriter extends AbstractWriter<Byte> {
 
   @Override
-  protected void writeChecked(Byte aByte, JsonGenerator jacksonGenerator) throws IOException {
+  protected void write(Byte aByte, JsonGenerator jacksonGenerator) throws IOException {
     jacksonGenerator.writeNumber(aByte);
   }
 }

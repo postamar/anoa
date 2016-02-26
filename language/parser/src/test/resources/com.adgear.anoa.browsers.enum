@@ -1,0 +1,9 @@
+redescribe _     "Enumeration of various web browsers\n*** for testing purposes only ***"
+  value UNKNOWN  "default browser"
+  value IE       "Internet Explorer"
+  value OPERA    "Opera Browser"
+  value FIREFOX  "Mozilla Firefox"
+remove OPERA     Who cares about opera?
+  value CHROME   "Google Chrome"
+restore OPERA
+

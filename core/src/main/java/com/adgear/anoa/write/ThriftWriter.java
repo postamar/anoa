@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-class ThriftWriter<F extends TFieldIdEnum, T extends TBase<?, F>> extends AbstractWriter<T> {
+class ThriftWriter<F extends TFieldIdEnum, T extends TBase<?, F>> extends AbstractRecordWriter<T> {
 
   final private LinkedHashMap<F, AbstractWriter<Object>> fieldMap;
 
@@ -64,13 +64,13 @@ class ThriftWriter<F extends TFieldIdEnum, T extends TBase<?, F>> extends Abstra
   }
 
   @Override
-  protected void writeChecked(T t, JsonGenerator jacksonGenerator) throws IOException {
+  protected void write(T t, JsonGenerator jacksonGenerator) throws IOException {
     jacksonGenerator.writeStartObject();
     for (Map.Entry<F, AbstractWriter<Object>> entry : fieldMap.entrySet()) {
       F f = entry.getKey();
       if (t.isSet(f)) {
         jacksonGenerator.writeFieldName(f.getFieldName());
-        entry.getValue().writeChecked(t.getFieldValue(f), jacksonGenerator);
+        entry.getValue().write(t.getFieldValue(f), jacksonGenerator);
       }
     }
     jacksonGenerator.writeEndObject();

@@ -1,5 +1,5 @@
 <configuration>
-  <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+  <appender initialName="STDERR" class="ch.qos.logback.core.ConsoleAppender">
     <!-- encoders are  by default assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder -->
     <encoder>

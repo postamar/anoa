@@ -7,7 +7,7 @@ import java.io.IOException;
 class EnumWriter extends AbstractWriter<Object> {
 
   @Override
-  protected void writeChecked(Object anEnum, JsonGenerator jacksonGenerator) throws IOException {
+  protected void write(Object anEnum, JsonGenerator jacksonGenerator) throws IOException {
     jacksonGenerator.writeString(anEnum.toString());
   }
 }

@@ -3,17 +3,28 @@ package com.adgear.anoa.read;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 
-class ProtobufFieldWrapper {
+import java.util.stream.Stream;
+
+class ProtobufFieldWrapper implements FieldWrapper {
 
   final Descriptors.FieldDescriptor field;
-  final AbstractReader<?> reader;
-  final ListReader listReader;
+  final private AbstractReader<?> reader;
 
   ProtobufFieldWrapper(Descriptors.FieldDescriptor field,
                        Message.Builder parentBuilder) {
     this.field = field;
-    this.reader = createReader(field, parentBuilder);
-    this.listReader = new ListReader(reader);
+    AbstractReader<?> baseReader = createReader(field, parentBuilder);
+    this.reader = (field.isRepeated()) ? new ListReader(baseReader) : baseReader;
+  }
+
+  @Override
+  public Stream<String> getNames() {
+    return Stream.of(field.getName());
+  }
+
+  @Override
+  public AbstractReader<?> getReader() {
+    return reader;
   }
 
   @SuppressWarnings("unchecked")

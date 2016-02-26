@@ -24,7 +24,6 @@ class TestResource {
     jsonBytes = jsonStrings.stream().sequential()
         .map(String::getBytes)
         .collect(Collectors.toList());
-
   }
 
   public Stream<String> jsonStrings() {

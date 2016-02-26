@@ -146,11 +146,6 @@ public class IDLSchemaMojo extends AbstractAvroMojo {
     return new File(outputDir, baseName + ".thrift");
   }
 
-  protected File getProtoFile(File outputDir, Schema s) {
-    String baseName = (s.getNamespace() + "." + Compiler.mangle(s.getName())).replace('.', '_');
-    return new File(outputDir, baseName + ".proto");
-  }
-
   /**
    * Compile a schema in corresponding .java and .avsc files in the outputDir. Also compiles .csv
    * file for enumerations
@@ -192,17 +187,11 @@ public class IDLSchemaMojo extends AbstractAvroMojo {
         } catch (IOException e) {
           getLog().warn("Could not write " + name + " thrift enum schema: " + e.getMessage());
         }
-
-        try {
-          FileUtils.write(getProtoFile(outputDir, s), ExportProtobuf.get().exportEnum(s), encoding);
-        } catch (IOException e) {
-          getLog().warn("Could not write " + name + " protobuf enum schema: " + e.getMessage());
-        }
         break;
       case RECORD:
-        List<Schema> dependencies =
+        List<Schema>
+            dependencies =
             ExportBase.collectDependencies(s, new ArrayList<Schema>(), false);
-      {
         Map<String, String> names = new HashMap<String, String>();
         Map<String, String> includePaths = new HashMap<String, String>();
         try {
@@ -222,28 +211,6 @@ public class IDLSchemaMojo extends AbstractAvroMojo {
         } catch (IOException e) {
           getLog().warn("Could not write " + name + " thrift struct schema: " + e.getMessage());
         }
-      }
-      {
-        Map<String, String> names = new HashMap<String, String>();
-        Map<String, String> includePaths = new HashMap<String, String>();
-        try {
-          for (Schema dependentSchema : dependencies) {
-            if (!dependentSchema.getFullName().equals(s.getFullName())) {
-              File includeFile = getProtoFile(outputDir, dependentSchema);
-              if (!includeFile.exists()) {
-                throw new IOException("Missing include file " + includeFile.getName());
-              }
-              names.put(dependentSchema.getFullName(),
-                        includeFile.getName().replaceAll("\\.proto$", ""));
-              includePaths.put(dependentSchema.getFullName(), includeFile.getName());
-            }
-          }
-          FileUtils.write(getProtoFile(outputDir, s),
-                          ExportProtobuf.get().exportRecord(s, includePaths, names), encoding);
-        } catch (IOException e) {
-          getLog().warn("Could not write " + name + " protobuf struct schema: " + e.getMessage());
-        }
-      }
     }
   }
 

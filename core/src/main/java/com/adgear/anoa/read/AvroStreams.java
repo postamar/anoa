@@ -427,7 +427,7 @@ public class AvroStreams {
       Schema schema,
       boolean strict,
       JsonParser jacksonParser) {
-    return JacksonUtils.stream(new AvroReader.GenericReader(schema), strict, jacksonParser);
+    return new AvroReader.GenericReader(schema).stream(strict, jacksonParser);
   }
 
   /**
@@ -442,10 +442,7 @@ public class AvroStreams {
       Schema schema,
       boolean strict,
       JsonParser jacksonParser) {
-    return JacksonUtils.stream(anoaHandler,
-                               new AvroReader.GenericReader(schema),
-                               strict,
-                               jacksonParser);
+    return new AvroReader.GenericReader(schema).stream(anoaHandler, strict, jacksonParser);
   }
 
   /**
@@ -458,9 +455,7 @@ public class AvroStreams {
       Class<R> recordClass,
       boolean strict,
       JsonParser jacksonParser) {
-    return JacksonUtils.stream(new AvroReader.SpecificReader<>(recordClass),
-                               strict,
-                               jacksonParser);
+    return new AvroReader.SpecificReader<>(recordClass).stream(strict, jacksonParser);
   }
 
   /**
@@ -476,9 +471,6 @@ public class AvroStreams {
       Class<R> recordClass,
       boolean strict,
       JsonParser jacksonParser) {
-    return JacksonUtils.stream(anoaHandler,
-                               new AvroReader.SpecificReader<>(recordClass),
-                               strict,
-                               jacksonParser);
+    return new AvroReader.SpecificReader<>(recordClass).stream(anoaHandler, strict, jacksonParser);
   }
 }

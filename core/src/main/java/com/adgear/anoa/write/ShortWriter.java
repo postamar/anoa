@@ -7,7 +7,7 @@ import java.io.IOException;
 class ShortWriter extends AbstractWriter<Short> {
 
   @Override
-  protected void writeChecked(Short aShort, JsonGenerator jacksonGenerator) throws IOException {
+  protected void write(Short aShort, JsonGenerator jacksonGenerator) throws IOException {
     jacksonGenerator.writeNumber(aShort);
   }
 }

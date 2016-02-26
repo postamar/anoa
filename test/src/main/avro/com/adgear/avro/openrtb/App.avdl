@@ -13,8 +13,8 @@ record App {
   /** [01] Application ID on the exchange.*/
   union {null, string} id = null;
 
-  /** [02] Application name (may be masked at publisher’s request).*/
-  union {null, string} name = null;
+  /** [02] Application initialName (may be masked at publisher’s request).*/
+  union {null, string} initialName = null;
 
   /** [03] Domain of the application (e.g., “mygame.foo.com”).*/
   union {null, string} domain = null;
@@ -31,7 +31,7 @@ record App {
   /** [07] Application version.*/
   union {null, string} ver = null;
 
-  /** [08] Application bundle or package name (e.g., com.foo.mygame). This is intended to be a unique ID across multiple exchanges.*/
+  /** [08] Application bundle or package initialName (e.g., com.foo.mygame). This is intended to be a unique ID across multiple exchanges.*/
   union {null, string} bundle = null;
 
   /** [09] Specifies whether the app has a privacy policy. “1” means there is a policy and “0” means there is not.*/

@@ -21,18 +21,18 @@
     <plugins>
       <plugin>
         <groupId>com.adgear</groupId>
-        <artifactId>anoa-plugin</artifactId>
+        <artifactId>anoa-maven-plugin</artifactId>
         <version>${project.version}</version>
         <executions>
           <execution>
-            <id>schema</id>
             <phase>generate-sources</phase>
             <goals>
-              <goal>idl-schema</goal>
+              <goal>run</goal>
             </goals>
           </execution>
         </executions>
       </plugin>
+      <!--
       <plugin>
         <groupId>org.apache.thrift.tools</groupId>
         <artifactId>maven-thrift-plugin</artifactId>
@@ -50,13 +50,32 @@
           </execution>
         </executions>
       </plugin>
+      -->
+      <plugin>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro-maven-plugin</artifactId>
+        <version>${project.version.avro}</version>
+        <configuration>
+          <sourceDirectory>${project.basedir}/target/generated-sources/anoa/avro</sourceDirectory>
+          <outputDirectory>${project.basedir}/target/generated-sources/avro</outputDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <id>avro-sources</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>schema</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>com.github.igor-petruk.protobuf</groupId>
         <artifactId>protobuf-maven-plugin</artifactId>
         <version>0.6.5</version>
         <configuration>
           <inputDirectories>
-            <inputDirectory>${project.basedir}/target/generated-sources/avro</inputDirectory>
+            <inputDirectory>${project.basedir}/target/generated-sources/anoa/protobuf</inputDirectory>
           </inputDirectories>
           <outputDirectory>${project.basedir}/target/generated-sources/protobuf</outputDirectory>
         </configuration>
@@ -86,6 +105,16 @@
       <groupId>com.google.openrtb</groupId>
       <artifactId>openrtb-core</artifactId>
       <version>1.0.1</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -105,7 +134,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>18.0</version>
+      <version>19.0</version>
     </dependency>
     <dependency>
       <groupId>com.h2database</groupId>

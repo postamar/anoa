@@ -47,7 +47,7 @@ public class ProtobufEncoders {
   static public <R extends Message, G extends JsonGenerator> Function<R, G> jackson(
       Class<R> recordClass,
       Supplier<G> supplier) {
-    return JacksonUtils.encoder(new ProtobufWriter<>(recordClass), supplier);
+    return new ProtobufWriter<>(recordClass).encoder(supplier);
   }
 
   /**
@@ -65,6 +65,6 @@ public class ProtobufEncoders {
       AnoaHandler<M> anoaHandler,
       Class<R> recordClass,
       Supplier<G> supplier) {
-    return JacksonUtils.encoder(anoaHandler, new ProtobufWriter<>(recordClass), supplier);
+    return new ProtobufWriter<>(recordClass).encoder(anoaHandler, supplier);
   }
 }
