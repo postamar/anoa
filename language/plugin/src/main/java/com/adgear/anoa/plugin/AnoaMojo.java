@@ -57,7 +57,7 @@ public class AnoaMojo extends AbstractMojo {
   @Parameter(property = "generateProtobuf", defaultValue = "true")
   private boolean generateProtobuf;
 
-  @Parameter(property = "generateThrift", defaultValue = "false")
+  @Parameter(property = "generateThrift", defaultValue = "true")
   private boolean generateThrift;
 
   @Parameter(property = "generateCsv", defaultValue = "true")
@@ -130,6 +130,10 @@ public class AnoaMojo extends AbstractMojo {
                  Stream.of("--out", out.toString(), "--gen", "java"),
                  thrift,
                  cwd);
+      ThriftPatcher.check(schemaGenerator, outputDir).ifPresent(patcher -> {
+        getLog().info("Repairing broken thrift compiler output in '" + patcher.javaSource + "'.");
+        patcher.run();
+      });
     }
   }
 

@@ -1,2 +1,2 @@
-int key
-bytes value default "poop"
+int map_key
+bytes map_value default "poop"
