@@ -1,0 +1,10 @@
+event {
+
+  /** Event timestamp. */
+  long  timestamp;
+
+  boolean|true deprecated is_ie;
+
+  /** Event browser. */
+  com.adgear.anoa.test.enums.browsers browser web_browser;
+}

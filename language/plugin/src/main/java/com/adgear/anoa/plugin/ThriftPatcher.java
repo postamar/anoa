@@ -1,6 +1,6 @@
 package com.adgear.anoa.plugin;
 
-import com.adgear.anoa.parser.SchemaGenerator;
+import com.adgear.anoa.parser2.SchemaGenerator;
 
 import org.apache.avro.Schema;
 

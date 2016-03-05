@@ -1,55 +1,65 @@
 package com.adgear.anoa.parser;
 
+import org.apache.avro.Protocol;
 import org.junit.Test;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Optional;
-import java.util.stream.Stream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 
 
 public class ParserTest {
 
-  private Stream<String> readResource(String name) {
-    InputStream inputStream = getClass().getResourceAsStream("/" + name);
-    return new BufferedReader(new InputStreamReader(inputStream)).lines();
-  }
 
-  protected Stream<SchemaGenerator> parse(String... name) {
-    return new Parser(ParserTest::errorConsumer, this::readResource).apply(Stream.of(name)).get();
-  }
-
-  static void errorConsumer(String error) {
-    System.err.println(error);
+  protected Protocol parse(String namespace) throws ParseException {
+    try {
+      return new AnoaParser(namespace, getClass().getClassLoader()).CompilationUnit();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 
   @Test
-  public void testProto() {
-    parse("com.adgear.anoa.browsers.enum", "com.adgear.anoa.event.struct")
-        .map(SchemaGenerator::protoSchema)
-        .forEach(System.out::println);
+  public void testParserEnums() throws ParseException {
+    parse("com.adgear.anoa.test.enums");
+  }
+
+
+  @Test
+  public void testParserStructs() throws ParseException {
+    parse("com.adgear.anoa.test.structs");
+  }
+
+  protected ProtocolFactory factory() {
+    try {
+      return new ProtocolFactory("com.adgear.anoa.test.structs", getClass().getClassLoader())
+          .parse();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Test
+  public void testProtocolFactory() {
+    factory();
   }
 
   @Test
   public void testAvro() {
-    parse("com.adgear.anoa.browsers.enum", "com.adgear.anoa.event.struct")
-        .map(SchemaGenerator::avroSchema)
-        .forEach(System.out::println);
+    SchemaGenerator gen = new AvroGenerator(factory());
+    System.err.println(gen.getSchema());
   }
+
+
+  @Test
+  public void testProtobuf() {
+    SchemaGenerator gen = new ProtobufGenerator(factory());
+    System.err.println(gen.getSchema());
+  }
+
 
   @Test
   public void testThrift() {
-    parse("com.adgear.anoa.browsers.enum", "com.adgear.anoa.event.struct")
-        .map(SchemaGenerator::thriftSchema)
-        .forEach(System.out::println);
-  }
-
-  @Test
-  public void testCsv() {
-    parse("com.adgear.anoa.browsers.enum")
-        .map(SchemaGenerator::csvSchema)
-        .map(Optional::get)
-        .forEach(System.out::println);
+    SchemaGenerator gen = new ThriftGenerator(factory());
+    System.err.println(gen.getSchema());
   }
 }

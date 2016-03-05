@@ -1,4 +1,0 @@
-  long          timestamp  "Event timestamp"
-  boolean       is_ie, default true
-  browsers.enum browser    "Event browser"
-deprecate       is_ie

@@ -1,26 +1,14 @@
 package com.adgear.anoa.parser;
 
-import org.apache.avro.Schema;
+import java.io.File;
 
-import java.util.Optional;
-
+/**
+ * Created by postamar on 16-03-04.
+ */
 public interface SchemaGenerator {
 
-  String anoaFileName();
+  File getFile();
 
-  Schema avroSchema();
+  String getSchema();
 
-  String avroFileName();
-
-  String protoSchema();
-
-  String protoFileName();
-
-  String thriftSchema();
-
-  String thriftFileName();
-
-  Optional<String> csvSchema();
-
-  String csvFileName();
 }
