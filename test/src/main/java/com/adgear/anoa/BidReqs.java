@@ -3,7 +3,6 @@ package com.adgear.anoa;
 import com.google.openrtb.OpenRtb;
 import com.google.openrtb.json.OpenRtbJsonFactory;
 
-import com.adgear.avro.openrtb.BidRequest;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -50,16 +49,16 @@ public class BidReqs {
 
   static public final ObjectMapper objectMapper;
   static public final Schema avroSchema;
-  static public final Class<com.adgear.avro.openrtb.BidRequest> avroClass;
-  static public final Class<thrift.com.adgear.avro.openrtb.BidRequest> thriftClass;
-  static public final Supplier<thrift.com.adgear.avro.openrtb.BidRequest> thriftSupplier;
+  static public final Class<open_rtb.BidRequestAvro> avroClass;
+  static public final Class<open_rtb.BidRequestThrift> thriftClass;
+  static public final Supplier<open_rtb.BidRequestThrift> thriftSupplier;
   static public final Class<OpenRtb.BidRequest> protobufClass;
   static protected final List<ObjectNode> jsonObjects;
   static protected final List<GenericRecord> avroGenerics;
-  static protected final List<com.adgear.avro.openrtb.BidRequest> avroSpecifics;
+  static protected final List<open_rtb.BidRequestAvro> avroSpecifics;
   static protected final List<byte[]> avroBinaries;
   static protected final byte[] avroBatch;
-  static protected final List<thrift.com.adgear.avro.openrtb.BidRequest> thrifts;
+  static protected final List<open_rtb.BidRequestThrift> thrifts;
   static protected final List<byte[]> thriftCompacts;
   static protected final List<byte[]> thriftBinaries;
   static protected final List<OpenRtb.BidRequest> protobufs;
@@ -68,7 +67,7 @@ public class BidReqs {
   static {
     objectMapper = new ObjectMapper();
 
-    JSON = new TestResource("/bidreqs.json");
+    JSON = new TestResource("/bidreqs.json", false);
     jsonObjects = JSON.jsonBytes()
         .map(Unchecked.function(objectMapper::readTree))
         .map(n -> (ObjectNode) n)
@@ -76,9 +75,9 @@ public class BidReqs {
 
     n = jsonObjects.size();
 
-    AVRO = new TestResource("/bidreqs_avro.json");
+    AVRO = new TestResource("/bidreqs_avro.json", true);
 
-    avroSchema = com.adgear.avro.openrtb.BidRequest.getClassSchema();
+    avroSchema = open_rtb.BidRequestAvro.getClassSchema();
     {
       GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(avroSchema);
       avroGenerics = AVRO.jsonStrings()
@@ -91,10 +90,10 @@ public class BidReqs {
           })
           .collect(Collectors.toList());
     }
-    avroClass = com.adgear.avro.openrtb.BidRequest.class;
+    avroClass = open_rtb.BidRequestAvro.class;
     {
-      SpecificDatumReader<com.adgear.avro.openrtb.BidRequest> reader
-          = new SpecificDatumReader<>(com.adgear.avro.openrtb.BidRequest.class);
+      SpecificDatumReader<open_rtb.BidRequestAvro> reader
+          = new SpecificDatumReader<>(open_rtb.BidRequestAvro.class);
       avroSpecifics = AVRO.jsonStrings()
           .map((String record) -> {
             try {
@@ -135,14 +134,14 @@ public class BidReqs {
       throw new UncheckedIOException(e);
     }
 
-    THRIFT = new TestResource("/bidreqs_thrift.json");
-    thriftClass = thrift.com.adgear.avro.openrtb.BidRequest.class;
-    thriftSupplier = thrift.com.adgear.avro.openrtb.BidRequest::new;
+    THRIFT = new TestResource("/bidreqs_thrift.json", true);
+    thriftClass = open_rtb.BidRequestThrift.class;
+    thriftSupplier = open_rtb.BidRequestThrift::new;
     thrifts = THRIFT.jsonBytes()
         .map(TMemoryInputTransport::new)
         .map(TJSONProtocol::new)
         .map(tjsonProtocol -> {
-          thrift.com.adgear.avro.openrtb.BidRequest br = thriftSupplier.get();
+          open_rtb.BidRequestThrift br = thriftSupplier.get();
           try {
             br.read(tjsonProtocol);
           } catch (TException e) {
@@ -224,7 +223,7 @@ public class BidReqs {
     ListAssert.assertEquals(avroGenerics, stream.collect(Collectors.toList()));
   }
 
-  static public void assertAvroSpecifics(Stream<BidRequest> stream) {
+  static public void assertAvroSpecifics(Stream<open_rtb.BidRequestAvro> stream) {
     ListAssert.assertEquals(avroSpecifics, stream.collect(Collectors.toList()));
   }
 
@@ -233,7 +232,7 @@ public class BidReqs {
     return avroGenerics.stream().sequential();
   }
 
-  static public Stream<com.adgear.avro.openrtb.BidRequest> avroSpecific() {
+  static public Stream<open_rtb.BidRequestAvro> avroSpecific() {
     return avroSpecifics.stream().sequential();
   }
 
@@ -257,11 +256,11 @@ public class BidReqs {
     return new TestInputStream(avroBatch, readFailureIndex);
   }
 
-  static public void assertThriftObjects(Stream<thrift.com.adgear.avro.openrtb.BidRequest> stream) {
+  static public void assertThriftObjects(Stream<open_rtb.BidRequestThrift> stream) {
     ListAssert.assertEquals(thrifts, stream.collect(Collectors.toList()));
   }
 
-  static public Stream<thrift.com.adgear.avro.openrtb.BidRequest> thrift() {
+  static public Stream<open_rtb.BidRequestThrift> thrift() {
     return thrifts.stream().sequential();
   }
 

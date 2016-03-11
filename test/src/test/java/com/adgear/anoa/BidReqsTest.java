@@ -6,7 +6,7 @@ import org.junit.Test;
 import java.io.IOException;
 
 public class BidReqsTest {
-
+       /*
   @Test
   public void test() {
 
@@ -37,4 +37,5 @@ public class BidReqsTest {
       Assert.assertEquals(500, e.index);
     }
   }
+  */
 }

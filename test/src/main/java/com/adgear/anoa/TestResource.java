@@ -13,16 +13,18 @@ class TestResource {
   protected final List<String> jsonStrings;
   protected final List<byte[]> jsonBytes;
 
-  protected TestResource(String resourcePath) {
+  protected TestResource(String resourcePath, boolean drop) {
     this.resourcePath = resourcePath;
     jsonStrings = new BufferedReader(new InputStreamReader(
         getClass().getResourceAsStream(resourcePath)))
         .lines()
         .map(String::trim)
         .filter(s -> !s.isEmpty())
+        .filter(s -> !drop)
         .collect(Collectors.toList());
     jsonBytes = jsonStrings.stream().sequential()
         .map(String::getBytes)
+        .filter(s -> !drop)
         .collect(Collectors.toList());
   }
 

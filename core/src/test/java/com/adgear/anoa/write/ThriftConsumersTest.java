@@ -8,16 +8,14 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-import thrift.com.adgear.avro.openrtb.BidRequest;
-
 public class ThriftConsumersTest {
 
   @Test
   public void testBinary() {
     BidReqs.assertThriftObjects(ThriftStreams.binary(
-        BidRequest::new,
+        BidReqs.thriftSupplier,
         BidReqs.allAsStream(os -> {
-          try (WriteConsumer<BidRequest> writeConsumer = ThriftConsumers.binary(os)) {
+          try (WriteConsumer<open_rtb.BidRequestThrift> writeConsumer = ThriftConsumers.binary(os)) {
             BidReqs.thrift().forEach(writeConsumer);
           }
         })));
@@ -26,9 +24,9 @@ public class ThriftConsumersTest {
   @Test
   public void testCompact() {
     BidReqs.assertThriftObjects(ThriftStreams.compact(
-        BidRequest::new,
+        BidReqs.thriftSupplier,
         BidReqs.allAsStream(os -> {
-          try (WriteConsumer<BidRequest> writeConsumer = ThriftConsumers.compact(os)) {
+          try (WriteConsumer<open_rtb.BidRequestThrift> writeConsumer = ThriftConsumers.compact(os)) {
             BidReqs.thrift().forEach(writeConsumer);
           }
         })));
@@ -37,9 +35,9 @@ public class ThriftConsumersTest {
   @Test
   public void testJson() {
     BidReqs.assertThriftObjects(ThriftStreams.json(
-        BidRequest::new,
+        BidReqs.thriftSupplier,
         BidReqs.allAsStream(os -> {
-          try (WriteConsumer<BidRequest> writeConsumer = ThriftConsumers.json(os)) {
+          try (WriteConsumer<open_rtb.BidRequestThrift> writeConsumer = ThriftConsumers.json(os)) {
             BidReqs.thrift().forEach(writeConsumer);
           }
         })));
@@ -48,7 +46,7 @@ public class ThriftConsumersTest {
   @Test
   public void testJackson() throws IOException {
     TokenBuffer tb = new TokenBuffer(BidReqs.objectMapper, false);
-    try (WriteConsumer<BidRequest> wc = ThriftConsumers.jackson(BidReqs.thriftClass, tb)) {
+    try (WriteConsumer<open_rtb.BidRequestThrift> wc = ThriftConsumers.jackson(BidReqs.thriftClass, tb)) {
       BidReqs.thrift().forEach(wc);
     }
     BidReqs.assertThriftObjects(ThriftStreams.jackson(BidReqs.thriftClass, true, tb.asParser()));

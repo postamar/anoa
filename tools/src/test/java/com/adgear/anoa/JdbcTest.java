@@ -31,8 +31,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import thrift.com.adgear.avro.Simple;
-
 public class JdbcTest {
 
   static protected Connection openDBConnection() throws SQLException {
@@ -60,6 +58,7 @@ public class JdbcTest {
     }
   }
 
+  /*
   @Test
   public void testToThrift() throws Exception {
     AnoaHandler<Throwable> f = AnoaHandler.NO_OP_HANDLER;
@@ -85,7 +84,7 @@ public class JdbcTest {
       }
     }
   }
-
+*/
   @Test
   public void testDB() throws Exception {
     try (Connection connection = openDBConnection()) {
@@ -96,6 +95,7 @@ public class JdbcTest {
       }
     }
   }
+  /*
 
   @Test
   public void testSchema() throws Exception {
@@ -166,5 +166,5 @@ public class JdbcTest {
         .filter(x -> x != null)
         .count());
   }
-
+ */
 }

@@ -1,10 +1,11 @@
 package com.adgear.anoa.plugin;
 
-import com.adgear.anoa.parser2.Parser;
-import com.adgear.anoa.parser2.SchemaGenerator;
+import com.adgear.anoa.compiler.CompilationUnit;
+import com.adgear.anoa.compiler.JavaCodeGenerationException;
+import com.adgear.anoa.compiler.ParseException;
+import com.adgear.anoa.compiler.SchemaGenerationException;
 
-import org.apache.avro.Schema;
-import org.apache.maven.model.Resource;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -15,19 +16,14 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.model.fileset.FileSet;
 import org.apache.maven.shared.model.fileset.util.FileSetManager;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.LinkedHashMap;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Scanner;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Mojo(name = "run", defaultPhase = LifecyclePhase.GENERATE_SOURCES, threadSafe = true)
 public class AnoaMojo extends AbstractMojo {
@@ -60,139 +56,11 @@ public class AnoaMojo extends AbstractMojo {
   @Parameter(property = "generateThrift", defaultValue = "true")
   private boolean generateThrift;
 
-  @Parameter(property = "generateCsv", defaultValue = "true")
-  private boolean generateCsv;
-
   @Parameter(property = "protocCommand", defaultValue = "protoc")
   private String protocCommand;
 
   @Parameter(property = "thriftCommand", defaultValue = "thrift")
   private String thriftCommand;
-
-  static final private String[] RESOURCE_INCLUDES =
-      new String[] { "**/*.enum", "**/*.struct", "**/*.thrift", "**/*.proto", "**/*.avsc", "**/*.csv"};
-
-  private void write(String contents, File file)
-      throws MojoExecutionException {
-    try {
-      file.getParentFile().mkdirs();
-      try (FileWriter writer = new FileWriter(file)) {
-        writer.write(contents);
-      }
-    } catch (IOException e) {
-      throw new MojoExecutionException("Write error: " + file , e);
-    }
-  }
-
-  private void runCommand(String cmd, Stream<String> opts, File source, File cwd)
-      throws MojoExecutionException  {
-    String src = cwd.toPath().relativize(source.toPath()).toString();
-    Stream<String> cmdStream = Stream.concat(Stream.concat(Stream.of(cmd), opts), Stream.of(src));
-    String[] cmdArray = cmdStream.toArray(String[]::new);
-    getLog().info(Stream.of(cmdArray).collect(Collectors.joining(" ", "Executing: '", "'.")));
-    final Process process;
-    try {
-      process = Runtime.getRuntime().exec(cmdArray, null, cwd);
-      if (process.waitFor() != 0) {
-        Scanner scanner = new Scanner(process.getErrorStream());
-        while (scanner.hasNextLine()) {
-          getLog().error(">> " + scanner.nextLine());
-        }
-        throw new MojoExecutionException(
-            cmd + " failed, exit code " + process.exitValue() + " for " + source);
-      }
-    } catch (InterruptedException e) {
-      throw new MojoExecutionException(cmd + " interrupted for " + source, e);
-    } catch (IOException e) {
-      throw new MojoExecutionException(cmd + " failed for " + source, e);
-    }
-  }
-
-  private void protoCompile(SchemaGenerator schemaGenerator, File cwd, File outputDir)
-      throws MojoExecutionException {
-    File proto = new File(cwd, schemaGenerator.protoFileName());
-    write(schemaGenerator.protoSchema(), proto);
-    if (generateProtobuf) {
-      runCommand(protocCommand,
-                 Stream.of("--java_out=" + cwd.toPath().relativize(outputDir.toPath())),
-                 proto,
-                 cwd);
-    }
-  }
-
-  private void thriftCompile(SchemaGenerator schemaGenerator, File cwd, File outputDir)
-      throws MojoExecutionException {
-    File thrift = new File(cwd, schemaGenerator.thriftFileName());
-    Path out = cwd.toPath().relativize(outputDir.toPath());
-    write(schemaGenerator.thriftSchema(), thrift);
-    if (generateThrift) {
-      runCommand(thriftCommand,
-                 Stream.of("--out", out.toString(), "--gen", "java"),
-                 thrift,
-                 cwd);
-      ThriftPatcher.check(schemaGenerator, outputDir).ifPresent(patcher -> {
-        getLog().info("Repairing broken thrift compiler output in '" + patcher.javaSource + "'.");
-        patcher.run();
-      });
-    }
-  }
-
-  private void avroCompile(SchemaGenerator schemaGenerator, File cwd, File outputDir)
-      throws MojoExecutionException {
-    File avro = new File(cwd, schemaGenerator.avroFileName());
-    write(schemaGenerator.avroSchema().toString(true), avro);
-    if (generateAvro) {
-      try {
-        Schema schema = new Schema.Parser().parse(avro);
-        new AnoaAvroSpecificCompiler(schema).compileToDestination(avro, outputDir);
-      } catch (IOException e) {
-        throw new MojoExecutionException("avro compilation failed for " + avro, e);
-      }
-    }
-  }
-
-  private Stream<SchemaGenerator> parse(File anoaSourceDir)
-      throws MojoExecutionException, MojoFailureException {
-    Map<String, Stream<String>> map = new LinkedHashMap<>();
-    FileSet includes = new FileSet();
-    includes.setDirectory(anoaSourceDir.getAbsolutePath());
-    includes.setFollowSymlinks(false);
-    Stream.of("**/*.enum", "**/*.struct").forEach(includes::addInclude);
-    for (String fileName : new FileSetManager().getIncludedFiles(includes)) {
-      File source = new File(anoaSourceDir, fileName);
-      try {
-        map.put(source.getName(), new BufferedReader(new FileReader(source)).lines());
-      } catch (IOException e) {
-        throw new MojoExecutionException("Read error: " + source, e);
-      }
-    }
-    return new Parser(getLog()::error, map::get).apply(map.keySet().stream()).orElseThrow(
-        () -> new MojoFailureException("Compilation errors in '" + anoaSourceDir + "'."));
-  }
-
-  private void execute(File anoaSourceDir, File outDir)
-      throws MojoExecutionException, MojoFailureException {
-    List<SchemaGenerator> results = parse(anoaSourceDir).collect(Collectors.toList());
-    File anoaDir = new File(outDir, "anoa");
-    if (anoaDir.exists() && anoaDir.delete()) {
-      throw new MojoExecutionException("Could not delete existing directory " + anoaDir);
-    }
-    if (!anoaDir.mkdirs()) {
-      throw new MojoExecutionException("Could not create directory " + anoaDir);
-    }
-    File javaDir = new File(outDir, "java");
-    if ((generateAvro || generateProtobuf || generateThrift) && !javaDir.mkdirs()) {
-      throw new MojoExecutionException("Could not create directory " + javaDir);
-    }
-    for (SchemaGenerator g : results) {
-      if (generateCsv && g.csvSchema().isPresent()) {
-        write(g.csvSchema().get(), new File(anoaDir, g.csvFileName()));
-      }
-      avroCompile(g, anoaDir, javaDir);
-      protoCompile(g, anoaDir, javaDir);
-      thriftCompile(g, anoaDir, javaDir);
-    }
-  }
 
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
@@ -203,26 +71,103 @@ public class AnoaMojo extends AbstractMojo {
           "neither sourceDirectory '" + sourceDirectory + "' or testSourceDirectory '"
           + testSourceDirectory + "' are directories");
     }
-
     if (source.isPresent()) {
-      execute(source.get().getAbsoluteFile(), outputDirectory.getAbsoluteFile());
+      execute(source.get(), outputDirectory);
       if (generateAvro || generateProtobuf || generateThrift) {
         project.addCompileSourceRoot(new File(outputDirectory, "java").getAbsolutePath());
       }
-      Resource resource = new Resource();
-      resource.setDirectory(new File(outputDirectory, "anoa").getAbsolutePath());
-      Stream.of(RESOURCE_INCLUDES).forEach(resource::addInclude);
-      project.addResource(resource);
     }
     if (test.isPresent()) {
-      execute(test.get().getAbsoluteFile(), testOutputDirectory.getAbsoluteFile());
+      execute(test.get(), testOutputDirectory);
       if (generateAvro || generateProtobuf || generateThrift) {
         project.addTestCompileSourceRoot(new File(testOutputDirectory, "java").getAbsolutePath());
       }
-      Resource resource = new Resource();
-      resource.setDirectory(new File(testOutputDirectory, "anoa").getAbsolutePath());
-      Stream.of(RESOURCE_INCLUDES).forEach(resource::addInclude);
-      project.addTestResource(resource);
+    }
+  }
+
+  private void execute(File anoaSourceDir, File outDir)
+      throws MojoExecutionException, MojoFailureException {
+    getLog().info("Parsing all anoa files in '" + anoaSourceDir + "'...");
+    List<CompilationUnit> parsed = parse(anoaSourceDir);
+    getLog().info("Successfully parsed all anoa files.");
+    File anoaDir = new File(outDir, "anoa");
+    if (anoaDir.exists() && anoaDir.delete()) {
+      throw new MojoExecutionException("Could not delete existing directory " + anoaDir);
+    }
+    if (!anoaDir.exists() && !anoaDir.mkdirs()) {
+      throw new MojoExecutionException("Could not create directory " + anoaDir);
+    }
+    File javaDir = new File(outDir, "java");
+    if ((generateAvro || generateProtobuf || generateThrift)
+        && !javaDir.exists() && !javaDir.mkdirs()) {
+      throw new MojoExecutionException("Could not create directory " + javaDir);
+    }
+    try {
+      compile(parsed, anoaDir, javaDir);
+    } catch (SchemaGenerationException e) {
+      throw new MojoExecutionException("Error generating schema.", e);
+    } catch (JavaCodeGenerationException e) {
+      throw new MojoExecutionException("Error generating java source.", e);
+    }
+  }
+
+  private void compile(Iterable<CompilationUnit> parsed, File schemaDir, File javaDir)
+      throws SchemaGenerationException, JavaCodeGenerationException {
+    for (CompilationUnit cu : parsed) {
+      cu.avroGenerator().generateSchema(schemaDir);
+      cu.protobufGenerator().generateSchema(schemaDir);
+      cu.thriftGenerator().generateSchema(schemaDir);
+    }
+    for (CompilationUnit cu : parsed) {
+      if (generateAvro) {
+        cu.avroGenerator().generateJava(schemaDir, javaDir);
+      }
+      if (generateProtobuf) {
+        cu.protobufGenerator(protocCommand).generateJava(schemaDir, javaDir);
+      }
+      if (generateThrift) {
+        cu.thriftGenerator(thriftCommand).generateJava(schemaDir, javaDir);
+      }
+    }
+  }
+
+  private List<CompilationUnit> parse(File anoaSourceDir)
+      throws MojoExecutionException, MojoFailureException {
+    FileSet includes = new FileSet();
+    includes.setDirectory(anoaSourceDir.getAbsolutePath());
+    includes.setFollowSymlinks(false);
+    includes.addInclude("**/*.anoa");
+    ClassLoader classLoader = getResourceLoader(anoaSourceDir);
+    List<CompilationUnit> cu = new ArrayList<>();
+    for (String fileName : new FileSetManager().getIncludedFiles(includes)) {
+      String namespace = fileName
+          .substring(0, fileName.length() - ".anoa".length())
+          .replace(File.separatorChar, '.');
+      try {
+        cu.add(new CompilationUnit(namespace, anoaSourceDir, classLoader).parse(getLog()::info));
+      } catch (ParseException e) {
+        throw new MojoFailureException("Error parsing '" + fileName + "'.", e);
+      } catch (IOException e) {
+        throw new MojoExecutionException("Read error for '" + fileName + "'.", e);
+      }
+    }
+    return cu;
+  }
+
+  private ClassLoader getResourceLoader(File anoaSourceDir) throws MojoExecutionException {
+    try {
+      List<String> runtimeClasspathElements = project.getRuntimeClasspathElements();
+      List<URL> runtimeUrls = new ArrayList<>();
+      runtimeUrls.add(anoaSourceDir.toURI().toURL());
+      if (runtimeClasspathElements != null) {
+        for (String runtimeClasspathElement : runtimeClasspathElements) {
+          runtimeUrls.add(new File(runtimeClasspathElement).toURI().toURL());
+        }
+      }
+      return new URLClassLoader(runtimeUrls.toArray(new URL[runtimeUrls.size()]),
+                                Thread.currentThread().getContextClassLoader());
+    } catch (DependencyResolutionRequiredException | MalformedURLException e) {
+      throw new MojoExecutionException("ClassLoader error: " + e);
     }
   }
 }

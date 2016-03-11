@@ -16,91 +16,12 @@
     utility classes for use in unit tests within other Anoa modules (anoa-core, for instance).
   </description>
 
-  <build>
-    <!-- plugins for test phase -->
-    <plugins>
-      <plugin>
-        <groupId>com.adgear</groupId>
-        <artifactId>anoa-maven-plugin</artifactId>
-        <version>${project.version}</version>
-        <executions>
-          <execution>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <!--
-      <plugin>
-        <groupId>org.apache.thrift.tools</groupId>
-        <artifactId>maven-thrift-plugin</artifactId>
-        <version>0.1.11</version>
-        <configuration>
-          <thriftSourceRoot>${project.basedir}/target/generated-sources/avro</thriftSourceRoot>
-        </configuration>
-        <executions>
-          <execution>
-            <id>thrift-sources</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      -->
-      <plugin>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>avro-maven-plugin</artifactId>
-        <version>${project.version.avro}</version>
-        <configuration>
-          <sourceDirectory>${project.basedir}/target/generated-sources/anoa/avro</sourceDirectory>
-          <outputDirectory>${project.basedir}/target/generated-sources/avro</outputDirectory>
-        </configuration>
-        <executions>
-          <execution>
-            <id>avro-sources</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>schema</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>com.github.igor-petruk.protobuf</groupId>
-        <artifactId>protobuf-maven-plugin</artifactId>
-        <version>0.6.5</version>
-        <configuration>
-          <inputDirectories>
-            <inputDirectory>${project.basedir}/target/generated-sources/anoa/protobuf</inputDirectory>
-          </inputDirectories>
-          <outputDirectory>${project.basedir}/target/generated-sources/protobuf</outputDirectory>
-        </configuration>
-        <executions>
-          <execution>
-            <id>protobuf-sources</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.10.2</version>
-        <configuration>
-          <excludePackageNames>com.adgear.avro.*:thrift.com.adgear.avro.*</excludePackageNames>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
   <dependencies>
+    <dependency>
+      <groupId>com.adgear</groupId>
+      <artifactId>anoa-language-test</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>com.google.openrtb</groupId>
       <artifactId>openrtb-core</artifactId>
@@ -113,6 +34,10 @@
         <exclusion>
           <groupId>com.fasterxml.jackson.core</groupId>
           <artifactId>jackson-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.google.protobuf</groupId>
+          <artifactId>protobuf-java</artifactId>
         </exclusion>
       </exclusions>
     </dependency>

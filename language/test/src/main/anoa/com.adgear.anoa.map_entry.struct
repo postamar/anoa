@@ -1,2 +1,0 @@
-int map_key
-bytes map_value default "poop"

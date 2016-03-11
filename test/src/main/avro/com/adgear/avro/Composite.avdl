@@ -1,9 +1,0 @@
-record Composite {
-
-  union {null, int} id = null;
-
-  array<string> names;
-
-  map<union {null, boolean}> flags;
-
-}

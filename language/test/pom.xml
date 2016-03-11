@@ -23,8 +23,20 @@
             <goals>
               <goal>run</goal>
             </goals>
+            <configuration>
+              <protocCommand>/opt/protobuf/bin/protoc</protocCommand>
+            </configuration>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.10.2</version>
+        <configuration>
+          <excludePackageNames>com.adgear.anoa.test.ad_exchange:open_rtb</excludePackageNames>
+        </configuration>
       </plugin>
     </plugins>
   </build>

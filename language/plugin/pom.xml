@@ -12,7 +12,7 @@
 
   <artifactId>anoa-maven-plugin</artifactId>
   <description>
-    Maven plugin for anoa parser.
+    Maven plugin for anoa compiler.
   </description>
   <packaging>maven-plugin</packaging>
 
@@ -53,13 +53,8 @@
   <dependencies>
     <dependency>
       <groupId>com.adgear</groupId>
-      <artifactId>anoa-parser</artifactId>
+      <artifactId>anoa-compiler</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro-compiler</artifactId>
-      <version>${project.version.avro}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>

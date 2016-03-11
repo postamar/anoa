@@ -1,0 +1,810 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Some portions of this file were modeled after the example Java 1.5
+ * parser included with JavaCC. The following license applies to those
+ * portions:
+ *
+ * Copyright (c) 2006, Sun Microsystems, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *     * Redistributions of source code must retain the above copyright notice,
+ *       this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the Sun Microsystems, Inc. nor the names of its
+ *       contributors may be used to endorse or promote products derived from
+ *       this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
+ * Notice:
+ * This file is based off 'idl.jj' from the Apache Avro (TM) project.
+ * The reserved keywords list is taken from 'thrift.ll' from the Apache Thrift (TM) project.
+ */
+
+options {
+  JAVA_UNICODE_ESCAPE = true;
+  UNICODE_INPUT = true;
+  ERROR_REPORTING = true;
+  STATIC = false;
+  FORCE_LA_CHECK = true;
+  JDK_VERSION = "1.6";
+}
+
+PARSER_BEGIN(AnoaParser)
+
+package com.adgear.anoa.compiler;
+
+import com.adgear.anoa.compiler.utils.AnoaBinaryNode;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.net.URL;
+
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.*;
+import org.apache.avro.Protocol;
+import org.apache.avro.Protocol.*;
+
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.*;
+
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.StringEscapeUtils;
+
+
+/**
+ * Grammar to parse the Anoa language into an Avro Protocol.
+ *
+ * Note: each instance is not thread-safe, but multiple separate instances are safely independent.
+ */
+public class AnoaParser implements Closeable {
+
+  static final private ThreadLocal<String> DOC = new ThreadLocal<String>();
+
+  static void setDoc(String doc) {
+    DOC.set(doc.trim());
+  }
+
+  static String getDoc() {
+    String doc = DOC.get();
+    DOC.set(null);
+    return doc;
+  }
+
+  static private URL toURL(String namespace, File baseDir, ClassLoader resourceLoader)
+      throws IOException {
+    String path = namespace.replace('.', File.separatorChar) + ".anoa";
+    File completeFile = (baseDir == null) ? new File(path) : new File(baseDir, path);
+    if (completeFile.exists()) {
+      return completeFile.toURL();
+    } else if (resourceLoader != null) {
+      URL url = resourceLoader.getResource(path);
+      if (url != null) {
+        return url;
+      }
+    }
+    throw new FileNotFoundException(path);
+  }
+
+  String namespace;
+  File baseDir;
+  ClassLoader resourceLoader;
+  List<String> ancestry;
+  Map<Schema,Boolean> types = new LinkedHashMap<Schema,Boolean>();
+  List<String> enumSymbols = new ArrayList<String>();
+  List<String> imports = new ArrayList<String>();
+
+  private AnoaParser(String namespace,
+                     File baseDir,
+                     ClassLoader resourceLoader,
+                     List<String> ancestry,
+                     URL input)
+      throws IOException {
+    this(input.openStream(), "UTF-8");
+    this.namespace = namespace;
+    this.baseDir = baseDir;
+    this.resourceLoader = resourceLoader;
+    this.ancestry = ancestry;
+    this.ancestry.add(namespace);
+  }
+
+  private AnoaParser(String namespace, AnoaParser parent) throws IOException {
+    this(namespace,
+         parent.baseDir,
+         parent.resourceLoader,
+         new ArrayList<String>(parent.ancestry),
+         toURL(namespace, parent.baseDir, parent.resourceLoader));
+  }
+
+  public AnoaParser(String namespace, File baseDir, ClassLoader resourceLoader) throws IOException {
+    this(namespace,
+         baseDir,
+         resourceLoader,
+         new ArrayList<String>(),
+         toURL(namespace, baseDir, resourceLoader));
+  }
+
+  @Override
+  public void close() throws IOException {
+    jj_input_stream.inputStream.close();
+  }
+
+  Protocol exportProtocol() {
+    String name = buildFullName(namespace);
+    name = name.substring(name.lastIndexOf('.') + 1);
+    Protocol p = new Protocol(name, namespace);
+    List<Schema> exportedTypes = new ArrayList<Schema>();
+    for (Map.Entry<Schema,Boolean> entry : types.entrySet()) {
+      if (Boolean.FALSE.equals(entry.getValue())) {
+        exportedTypes.add(entry.getKey());
+      }
+    }
+    p.setTypes(exportedTypes);
+    return p;
+  }
+
+  Schema getByFullName(String name) {
+    for (Schema schema : types.keySet()) {
+      if (name.equals(schema.getFullName()) || schema.getAliases().contains(name)) {
+        return schema;
+      }
+    }
+    return null;
+  }
+
+  List<Schema> findByFullName(String name) {
+    List<Schema> found = new ArrayList<Schema>();
+    for (Schema schema : types.keySet()) {
+      if (schema.getFullName().endsWith(name)) {
+        found.add(schema);
+      }
+    }
+    if (found.isEmpty()) {
+      for (Schema schema : types.keySet()) {
+        for (String alias : schema.getAliases()) {
+          if (alias.endsWith(name)) {
+            found.add(schema);
+          }
+        }
+      }
+    }
+    return found;
+  }
+
+  String buildFullName(String name) {
+    int index = name.lastIndexOf('.');
+    String namespace = this.namespace;
+    if (index >= 0) {
+      namespace = name.substring(0, index);
+      name = name.substring(index + 1);
+    }
+    StringBuilder sb = new StringBuilder();
+    sb.append((namespace == null) ? this.namespace : namespace).append('.');
+    boolean capitalize = true;
+    for (char c : name.toCharArray()) {
+      if (c == '_') {
+        capitalize = true;
+      } else if (capitalize) {
+        capitalize = false;
+        sb.append(Character.toUpperCase(c));
+      } else {
+        sb.append(c);
+      }
+    }
+    return sb.toString();
+  }
+
+  boolean importProtocol(String namespace) throws IOException, ParseException {
+    if (!imports.contains(namespace)) {
+      if (ancestry.contains(namespace)) {
+        return false;
+      }
+      Protocol importedProtocol = new AnoaParser(namespace, this).CompilationUnit();
+      for (Schema importedType : importedProtocol.getTypes()) {
+        types.put(importedType, true);
+      }
+      imports.add(namespace);
+    }
+    return true;
+  }
+
+  protected ParseException error(String message, Token token) {
+    String msg = message + ", line " + token.beginLine + ", column " + token.beginColumn;
+    return new ParseException(msg);
+  }
+}
+
+PARSER_END(AnoaParser)
+
+/* WHITE SPACE */
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+
+/* COMMENTS */
+
+SKIP :
+{
+  <SINGLE_LINE_COMMENT: "//" (~["\n", "\r"])* ("\n" | "\r" | "\r\n")?>
+}
+
+SKIP :
+{
+  <"/**" ~["/"]> { input_stream.backup(1); } : DOC_COMMENT
+|
+  "/*" : MULTI_LINE_COMMENT
+}
+
+<DOC_COMMENT,MULTI_LINE_COMMENT>
+MORE :
+{
+  < ~[] >
+}
+
+<DOC_COMMENT>
+SPECIAL_TOKEN :
+{
+  <"*/" > { AnoaParser.setDoc(image.substring(0, image.length() - 2)); } : DEFAULT
+}
+
+<MULTI_LINE_COMMENT>
+SKIP :
+{
+  <"*/" > : DEFAULT
+}
+
+/* QUALIFIED IDENTIFIERS */
+
+TOKEN :
+{
+  < QUALIFIED_IDENTIFIER:
+      ["a"-"z"] ( "_" ["a"-"z"] | ["a"-"z","0"-"9"] )*
+      ( "." ["a"-"z"] ( "_" ["a"-"z"] | ["a"-"z","0"-"9"] ) * ) +
+  >
+}
+
+/* RESERVED WORDS AND LITERALS */
+
+TOKEN :
+{
+  < BOOLEAN: "boolean" > | < FALSE: "false" > | < TRUE: "true" >
+| < BYTES: "bytes" > | < STRING: "string" >
+| < FLOAT: "float" > | < DOUBLE: "double" >
+| < INT: "int" > | < LONG: "long" >
+| < LIST: "list" > | < MAP: "map" >
+/*
+|
+  < RESERVED_PROTOBUF_KEYWORD:
+      "syntax" | "import" | "weak" | "public" | "package" | "option" | "proto2" | "proto3"
+    | "bool" | "int32" | "int64" | "uint32" | "uint64" | "sint32" | "sint64"
+    | "fixed32" | "fixed64" | "sfixed32" | "sfixed64"
+    | "required" | "optional" | "repeated" | "reserved" | "extensions"
+    | "oneof" | "group" | "enum" | "message" | "rpc" | "service" | "returns" | "stream"
+  >
+|
+  < RESERVED_EXTERNAL_KEYWORD:
+      "namespace" | "cpp_namespace" | "cpp_include" | "cpp_type" | "java_package" | "cocoa_prefix"
+    | "csharp_namespace" | "delphi_namespace" | "php_namespace" | "py_module" | "perl_package"
+    | "ruby_namespace" | "smalltalk_category" | "smalltalk_prefix" | "xsd_all" | "xsd_optional"
+    | "xsd_nillable" | "xsd_namespace" | "xsd_attrs" | "include" | "void" | "byte" | "i8" | "i16"
+    | "i32" | "i64" | "binary" | "slist" | "senum" | "set" | "oneway" | "typedef" | "struct"
+    | "union" |"exception" |"extends" |"throws" |"const" | "required" | "optional" | "async"
+    | "abstract" | "alias" | "and" | "args" | "as" | "assert" | "begin" | "break" | "case" | "catch"
+    | "class" | "clone" | "continue" | "declare" | "def" | "default" | "del" | "delete" | "do"
+    | "dynamic" | "elif" | "else" | "elseif" | "elsif" | "end" | "enddeclare" | "endfor"
+    | "endforeach" | "endif" | "endswitch" | "endwhile" | "ensure" | "except" | "exec" | "finally"
+    | "float" | "for" | "foreach" | "from" | "function" | "global" | "goto" | "if" | "implements"
+    | "import" | "in" | "inline" | "instanceof" | "interface" | "is" | "lambda" | "module"
+    | "native" | "new" | "next" | "nil" | "not" | "or" | "pass" | "print" | "private" | "protected"
+    | "raise" | "redo" | "rescue" | "retry" | "register" | "return" | "self" | "sizeof" | "static"
+    | "super" | "switch" | "synchronized" | "then" | "this" | "throw" | "transient" | "try"
+    | "undef" | "unless" | "unsigned" | "until" | "use" | "var" | "virtual" | "volatile" | "when"
+    |"while" | "with" | "xor" | "yield"
+  >
+*/
+}
+
+
+/* LITERALS */
+
+TOKEN :
+{
+  < INTEGER_LITERAL: ("-")? ( <DECIMAL_LITERAL> | <HEX_LITERAL> | <OCTAL_LITERAL> ) (["l","L"])? >
+| < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
+| < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+| < #OCTAL_LITERAL: "0" (["0"-"7"])* >
+|
+  < FLOATING_POINT_LITERAL: ("-")?
+        ( "NaN"
+        | "Infinity"
+        | <DECIMAL_FLOATING_POINT_LITERAL>
+        | <HEXADECIMAL_FLOATING_POINT_LITERAL>
+        )
+  >
+| < #DECIMAL_FLOATING_POINT_LITERAL:
+        (["0"-"9"])+ "." (["0"-"9"])* (<DECIMAL_EXPONENT>)? (["f","F","d","D"])?
+      | "." (["0"-"9"])+ (<DECIMAL_EXPONENT>)? (["f","F","d","D"])?
+      | (["0"-"9"])+ <DECIMAL_EXPONENT> (["f","F","d","D"])?
+      | (["0"-"9"])+ (<DECIMAL_EXPONENT>)? ["f","F","d","D"]
+  >
+| < #DECIMAL_EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+| < #HEXADECIMAL_FLOATING_POINT_LITERAL:
+        "0" ["x", "X"] (["0"-"9","a"-"f","A"-"F"])+ (".")? <HEXADECIMAL_EXPONENT> (["f","F","d","D"])?
+      | "0" ["x", "X"] (["0"-"9","a"-"f","A"-"F"])* "." (["0"-"9","a"-"f","A"-"F"])+ <HEXADECIMAL_EXPONENT> (["f","F","d","D"])?
+  >
+| < #HEXADECIMAL_EXPONENT: ["p","P"] (["+","-"])? (["0"-"9"])+ >
+|
+  < STRING_LITERAL:
+      "\""
+      (   (~["\"","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )*
+      "\""
+  >
+}
+
+/* IDENTIFIERS */
+
+TOKEN :
+{
+  < BADLY_FORMED_IDENTIFIER: ( ("_")? (["0"-"9"])? (["a"-"z"]["A"-"Z"]|["A"-"Z"]["a"-"z"]) )+ >
+| < IDENTIFIER: ["a"-"z"] ( "_" ["a"-"z"] | ["a"-"z","0"-"9"] )* >
+| < ENUM_SYMBOL: ["A"-"Z"] ( "_" ["A"-"Z"] | ["A"-"Z","0"-"9"] )* >
+
+}
+
+/* SEPARATORS */
+
+TOKEN :
+{
+  < LPAREN: "(" > | < RPAREN: ")" >
+| < LBRACE: "{" > | < RBRACE: "}" >
+| < LBRACK: "[" > | < RBRACK: "]" >
+| < LT: "<" > | < GT: ">" >
+| < COLON : ":" > | < AT: "@" > | < SEMICOLON: ";" > | < COMMA: "," > | < TICK: "`" >
+}
+
+
+/*********************************************
+ * THE ANOA LANGUAGE GRAMMAR STARTS HERE *
+ *********************************************/
+
+/**
+ * The input to AnoaParser is a CompilationUnit, which is currently just a single Avro Protocol.
+ */
+Protocol CompilationUnit():
+{ }
+{
+  ( TypeDeclaration() ) *
+  ( < "\u001a" > )?
+  ( <STUFF_TO_IGNORE: ~[]> )?
+  <EOF>
+  { return this.exportProtocol(); }
+}
+
+void TypeDeclaration():
+{
+  Token t;
+  String typeName;
+  String doc = getDoc();
+  List<String> aliases = new ArrayList<String>();
+  List<String> enumSymbols = new ArrayList<String>();
+  List<Field> structFields = new ArrayList<Field>();
+  Schema type;
+}
+{
+  typeName = TypeName()
+  ( TypeAlias(typeName, aliases) ) *
+  (
+    <LBRACK> ( EnumSymbol(enumSymbols) ( <COMMA> | <SEMICOLON> ) ? ) + <RBRACK>
+    { type = Schema.createEnum(typeName, doc, this.namespace, enumSymbols); }
+  |
+    <LBRACE> ( FieldDeclaration(structFields) ) + <RBRACE>
+    {
+      type = Schema.createRecord(typeName, doc, this.namespace, false);
+      type.setFields(structFields);
+    }
+  )
+  {
+    for (String alias : aliases) {
+      int index = alias.lastIndexOf('.');
+      type.addAlias(alias.substring(index + 1), alias.substring(0, index));
+    }
+    this.types.put(type, false);
+  }
+}
+
+Token Identifier() :
+{ Token id; }
+{
+  ( id = <BOOLEAN>
+  | id = <BYTES> | id = <STRING>
+  | id = <FLOAT> | id = <DOUBLE>
+  | id = <INT>   | id = <LONG>
+  | id = <LIST>  | id = <MAP>
+  | id = <IDENTIFIER>
+  )
+  { return id; }
+}
+
+String TypeName() :
+{ Token t; }
+{
+  t = Identifier()
+  {
+    String fullName = this.buildFullName(t.image);
+    if (null != this.getByFullName(fullName)) {
+      throw this.error("Type name collision", t);
+    }
+    return fullName;
+  }
+}
+
+void TypeAlias(String typeName, List<String> aliases) :
+{ Token t; }
+{
+  ( t = Identifier() | t = <QUALIFIED_IDENTIFIER> )
+  {
+    String fullName = this.buildFullName(t.image);
+    if (typeName.equals(fullName)) {
+      throw this.error("Type alias is identical to type name", t);
+    }
+    if (aliases.contains(fullName)) {
+      throw this.error("Repeated type alias", t);
+    }
+    if (null != this.getByFullName(fullName)) {
+      throw this.error("Type alias name collision", t);
+    }
+    aliases.add(fullName);
+  }
+}
+
+void EnumSymbol(List<String> enumSymbols) :
+{ Token t; }
+{
+  t = <ENUM_SYMBOL>
+  {
+    String symbol = t.image;
+    if (enumSymbols.contains(symbol)) {
+      throw this.error("Repeated enum symbol", t);
+    }
+    if (this.enumSymbols.contains(symbol)) {
+      throw this.error("Enum symbol name collision", t);
+    }
+    this.enumSymbols.add(symbol);
+    enumSymbols.add(symbol);
+  }
+}
+
+void FieldDeclaration(List<Field> fields) :
+{
+  int before = fields.isEmpty() ? 0 : fields.get(fields.size() - 1).getJsonProp("ordinal").asInt();
+  IntNode ordinal;
+  Field auxField;
+  String name;
+  String fieldName = null;
+}
+{
+  ordinal = FieldOrdinal(before)
+  auxField = FieldType()
+  ( FieldPropsDeclaration(auxField) ) *
+  ( name = FieldName(fields)
+    {
+      if (fieldName == null) {
+        fieldName = name;
+      } else {
+        auxField.addAlias(name);
+      }
+    }
+  ) *
+  <SEMICOLON>
+  {
+    Field field = new Field((fieldName == null) ? ("field__" + ordinal.asInt()) : fieldName,
+                            auxField.schema(),
+                            auxField.doc(),
+                            auxField.defaultValue());
+    field.addProp("ordinal", ordinal);
+    for (Map.Entry<String, JsonNode> prop : auxField.getJsonProps().entrySet()) {
+      field.addProp(prop.getKey(), prop.getValue());
+    }
+    for (String alias : auxField.aliases()) {
+      field.addAlias(alias);
+    }
+    fields.add(field);
+  }
+}
+
+IntNode FieldOrdinal(int previous_ordinal) :
+{
+  long ordinal = 1L + previous_ordinal;
+  Token t;
+}
+{
+  (
+    ordinal = IntegerLiteral()
+    t = <COLON>
+    {
+      if (ordinal <= 0L || ordinal > 536870911L) {
+        throw this.error("Tag number is out of range, must be positive and less than 2^29", t);
+      }
+      if (ordinal <= (long) previous_ordinal) {
+        throw this.error("Tag number collision", t);
+      }
+    }
+  ) ?
+  { return IntNode.valueOf((int) ordinal); }
+}
+
+Field FieldType() :
+{
+  Schema type;
+  JsonNode defaultValue = null;
+}
+{
+  ( <BOOLEAN> defaultValue = BooleanDefault()       { type = Schema.create(Type.BOOLEAN); }
+  | <BYTES>   defaultValue = BytesDefault()         { type = Schema.create(Type.BYTES);   }
+  | <DOUBLE>  defaultValue = FloatingPointDefault() { type = Schema.create(Type.DOUBLE);  }
+  | <FLOAT>   defaultValue = FloatingPointDefault() { type = Schema.create(Type.FLOAT);   }
+  | <INT>     defaultValue = IntegerDefault()       { type = Schema.create(Type.INT);     }
+  | <LONG>    defaultValue = IntegerDefault()       { type = Schema.create(Type.LONG);    }
+  | <STRING>  defaultValue = StringDefault()        { type = Schema.create(Type.STRING);  }
+  | <LIST> <LT> type = WrappedType() <GT>
+    {
+      type = Schema.createArray(type);
+      defaultValue = JsonNodeFactory.instance.arrayNode();
+    }
+  | <MAP> <LT> <STRING> <COMMA> type = WrappedType() <GT>
+    {
+      type = Schema.createMap(type);
+      defaultValue = JsonNodeFactory.instance.objectNode();
+    }
+  | type = ReferenceType()
+    {
+      defaultValue = (type.getType() == Type.ENUM)
+                     ? TextNode.valueOf(type.getEnumSymbols().get(0))
+                     : JsonNodeFactory.instance.objectNode();
+    }
+  )
+  { return new Field("_UNNAMED", type, getDoc(), defaultValue); }
+}
+
+JsonNode BooleanDefault() :
+{ BooleanNode n = BooleanNode.FALSE; }
+{
+  ( <FALSE> | ( <TRUE> { n = BooleanNode.TRUE; } ) ) ?
+  { return n; }
+}
+
+JsonNode BytesDefault() :
+{
+  Token t;
+  long byteValue;
+  ByteArrayOutputStream baos = new ByteArrayOutputStream();
+}
+{
+  (
+    t = <INTEGER_LITERAL>
+    {
+      try {
+        byteValue = Long.decode(t.image);
+      } catch (NumberFormatException e) {
+        throw this.error("Byte value out of range: " + e, t);
+      }
+      if (byteValue < 0L || byteValue > 255L) {
+        throw this.error("Byte value out of range", t);
+      }
+      baos.write(((int) byteValue) & 0xff);
+    }
+  ) +
+  { return AnoaBinaryNode.valueOf(baos.toByteArray()); }
+}
+
+JsonNode FloatingPointDefault() :
+{ double d = 0.0; }
+{
+  ( d = FloatingPointLiteral() ) ?
+  { return DoubleNode.valueOf(d); }
+}
+
+double FloatingPointLiteral() :
+{ Token t; }
+{
+  t = <FLOATING_POINT_LITERAL>
+  {
+    try {
+      return Double.valueOf(t.image);
+    } catch (NumberFormatException e) {
+      throw this.error("Floating point value out of range: " + e, t);
+    }
+  }
+}
+
+JsonNode IntegerDefault() :
+{ long l = 0L; }
+{
+  ( l = IntegerLiteral() ) ?
+  { return LongNode.valueOf(l); }
+}
+
+long IntegerLiteral() :
+{ Token t; }
+{
+  t = <INTEGER_LITERAL>
+  {
+    try {
+      return Long.decode(t.image);
+    } catch (NumberFormatException e) {
+      throw this.error("Integer value out of range: " + e, t);
+    }
+  }
+}
+
+JsonNode StringDefault() :
+{ String s = ""; }
+{
+  ( s = StringLiteral() ) ?
+  { return TextNode.valueOf(s); }
+}
+
+String StringLiteral() :
+{ Token t; }
+{
+  t = <STRING_LITERAL>
+  { return StringEscapeUtils.unescapeJson(t.image.substring(1, t.image.length() - 1)); }
+}
+
+
+Schema WrappedType() :
+{ Schema type; }
+{
+  ( <BOOLEAN> { type = Schema.create(Type.BOOLEAN); }
+  | <BYTES>   { type = Schema.create(Type.BYTES);   }
+  | <DOUBLE>  { type = Schema.create(Type.DOUBLE);  }
+  | <FLOAT>   { type = Schema.create(Type.FLOAT);   }
+  | <INT>     { type = Schema.create(Type.INT);     }
+  | <LONG>    { type = Schema.create(Type.LONG);    }
+  | <STRING>  { type = Schema.create(Type.STRING);  }
+  | type = ReferenceType()
+  )
+  { return type;}
+}
+
+Schema ReferenceType() :
+{ Token id; }
+{
+  ( id = <QUALIFIED_IDENTIFIER> | id = <IDENTIFIER> | <TICK> id = Identifier() <TICK> )
+  {
+    String fullName = this.buildFullName(id.image);
+    Schema type = this.getByFullName(fullName);
+    if (null != type) {
+      return type;
+    }
+    String namespace = fullName.substring(0, fullName.lastIndexOf('.'));
+    if (namespace.equals(this.namespace)) {
+      throw this.error("Unqualified referenced type not yet declared in current namespace", id);
+    }
+    List<Schema> types = this.findByFullName(fullName);
+    if (types.size() == 0) {
+      try {
+        if (!this.importProtocol(namespace)) {
+          throw this.error("Circular dependency", id);
+        }
+      } catch (FileNotFoundException e) {
+        throw this.error("Unknown namespace '" + namespace + "': " + e, id);
+      } catch (IOException e) {
+        throw this.error("Error importing namespace: " + e, id);
+      }
+      types = this.findByFullName(fullName);
+      if (types.size() == 0) {
+        throw this.error("Referenced type not found in imported namespace", id);
+      }
+    }
+    if (types.size() == 1) {
+      return types.get(0);
+    }
+    throw this.error("Referenced type is ambiguous, may refer to any of: " + types, id);
+  }
+}
+
+String FieldName(List<Field> structFields) :
+{ Token t; }
+{
+  t = Identifier()
+  {
+    String fieldName = t.image;
+    for (Field field : structFields) {
+      if (fieldName.equals(field.name())) {
+        throw this.error("Field name collision", t);
+      }
+    }
+    return fieldName;
+  }
+}
+
+String FieldAlias(List<Field> structFields) :
+{ Token t; }
+{
+  t = Identifier()
+  {
+    String fieldName = t.image;
+    for (Field field : structFields) {
+      if (fieldName.equals(field.name())) {
+        throw this.error("Field name collision", t);
+      }
+    }
+    return fieldName;
+  }
+}
+
+
+void FieldPropsDeclaration(Field field) :
+{
+  Token key;
+  long longValue;
+  double doubleValue;
+  String stringValue;
+  JsonNode node = BooleanNode.TRUE;
+}
+{
+  <AT> key = Identifier()
+  (
+    <LPAREN>
+    ( <TRUE>                               { node = BooleanNode.TRUE; }
+    | <FALSE>                              { node = BooleanNode.FALSE; }
+    | longValue = IntegerLiteral()         { node = LongNode.valueOf(longValue); }
+    | doubleValue = FloatingPointLiteral() { node = DoubleNode.valueOf(doubleValue); }
+    | stringValue = StringLiteral()        { node = TextNode.valueOf(stringValue); }
+    )
+    <RPAREN>
+  ) ?
+  { field.addProp(key.image, node); }
+}
+
+

@@ -3,7 +3,6 @@ package com.adgear.anoa.read;
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
 import com.adgear.anoa.BidReqs;
-import com.adgear.avro.openrtb.BidRequest;
 import com.fasterxml.jackson.core.TreeNode;
 
 import org.apache.avro.AvroRuntimeException;
@@ -31,7 +30,7 @@ public class AvroDecodersTest {
     BidReqs.assertAvroGenerics(BidReqs.avroJson()
                                    .map(AvroDecoders.json(BidReqs.avroSchema)));
     BidReqs.assertAvroSpecifics(BidReqs.avroJson()
-                                    .map(AvroDecoders.json(BidReqs.avroClass, BidRequest::new)));
+                                    .map(AvroDecoders.json(BidReqs.avroClass, open_rtb.BidRequestAvro::new)));
   }
 
   @Test

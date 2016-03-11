@@ -4,7 +4,6 @@ import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
 import com.adgear.anoa.BidReqs;
 import com.adgear.anoa.read.AvroDecoders;
-import com.adgear.avro.openrtb.BidRequest;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 import org.apache.avro.generic.GenericRecord;
@@ -68,7 +67,7 @@ public class AvroEncodersTest {
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
-            .map(anoaHandler::<BidRequest>of)
+            .map(anoaHandler::<open_rtb.BidRequestAvro>of)
             .map(AvroEncoders.binary(anoaHandler, BidReqs.avroClass))
             .map(AvroDecoders.binary(anoaHandler, BidReqs.avroSchema))
             .flatMap(Anoa::asStream));
@@ -86,7 +85,7 @@ public class AvroEncodersTest {
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
-            .map(anoaHandler::<BidRequest>of)
+            .map(anoaHandler::<open_rtb.BidRequestAvro>of)
             .map(AvroEncoders.json(anoaHandler, BidReqs.avroClass))
             .map(AvroDecoders.json(anoaHandler, BidReqs.avroSchema))
             .flatMap(Anoa::asStream));
@@ -106,7 +105,7 @@ public class AvroEncodersTest {
 
     BidReqs.assertAvroGenerics(
         BidReqs.avroSpecific()
-            .map(anoaHandler::<BidRequest>of)
+            .map(anoaHandler::<open_rtb.BidRequestAvro>of)
             .map(AvroEncoders.jackson(anoaHandler,
                                       BidReqs.avroClass,
                                       () -> new TokenBuffer(BidReqs.objectMapper, false)))

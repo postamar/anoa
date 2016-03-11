@@ -1,0 +1,4 @@
+test_struct {
+  list<int> list_field array;
+  map<string,float> map_field hash_map;
+}

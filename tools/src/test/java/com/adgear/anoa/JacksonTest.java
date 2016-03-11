@@ -15,7 +15,6 @@ import com.adgear.anoa.write.JacksonEncoders;
 import com.adgear.anoa.write.JsonConsumers;
 import com.adgear.anoa.write.SmileConsumers;
 import com.adgear.anoa.write.WriteConsumer;
-import com.adgear.avro.Simple;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.cbor.CBORGenerator;
@@ -57,7 +56,7 @@ public class JacksonTest {
       }
     }
   }
-
+/*
   @Test
   public void testCsv() throws Exception {
     CsvSchema schema = CsvSchema.builder()
@@ -127,7 +126,7 @@ public class JacksonTest {
     }
     baos.reset();
   }
-
+  */
   @Test
   public void testBidRequest() throws Exception {
     List<ObjectNode> list = new JsonStreams()

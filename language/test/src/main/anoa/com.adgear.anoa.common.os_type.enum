@@ -1,8 +1,0 @@
-redescribe _     "Enumeration of various operating systems\n*** for testing purposes only ***"
-  value UNKNOWN_OS  "default browser"
-  value WINDOWS
-  value UNIX
-remove WINDOWS
-  value OSX
-
-

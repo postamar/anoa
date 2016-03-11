@@ -11,8 +11,6 @@ import com.fasterxml.jackson.databind.util.TokenBuffer;
 import org.jooq.lambda.Unchecked;
 import org.junit.Test;
 
-import thrift.com.adgear.avro.openrtb.BidRequest;
-
 public class ThriftEncodersTest {
 
   final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
@@ -21,21 +19,21 @@ public class ThriftEncodersTest {
   public void testBinary() {
     BidReqs.assertThriftObjects(BidReqs.thrift()
                                     .map(ThriftEncoders.binary())
-                                    .map(ThriftDecoders.binary(BidRequest::new)));
+                                    .map(ThriftDecoders.binary(BidReqs.thriftSupplier)));
   }
 
   @Test
   public void testCompact() {
     BidReqs.assertThriftObjects(BidReqs.thrift()
                                     .map(ThriftEncoders.compact())
-                                    .map(ThriftDecoders.compact(BidRequest::new)));
+                                    .map(ThriftDecoders.compact(BidReqs.thriftSupplier)));
   }
 
   @Test
   public void testJson() {
     BidReqs.assertThriftObjects(BidReqs.thrift()
                                     .map(ThriftEncoders.json())
-                                    .map(ThriftDecoders.json(BidRequest::new)));
+                                    .map(ThriftDecoders.json(BidReqs.thriftSupplier)));
   }
 
   @Test
@@ -51,9 +49,9 @@ public class ThriftEncodersTest {
   public void testAnoaBinary() {
     BidReqs.assertThriftObjects(
         BidReqs.thrift()
-            .map(anoaHandler::<BidRequest>of)
+            .map(anoaHandler::<open_rtb.BidRequestThrift>of)
             .map(ThriftEncoders.binary(anoaHandler))
-            .map(ThriftDecoders.binary(anoaHandler, BidRequest::new))
+            .map(ThriftDecoders.binary(anoaHandler, BidReqs.thriftSupplier))
             .flatMap(Anoa::asStream));
   }
 
@@ -61,9 +59,9 @@ public class ThriftEncodersTest {
   public void testAnoaCompact() {
     BidReqs.assertThriftObjects(
         BidReqs.thrift()
-            .map(anoaHandler::<BidRequest>of)
+            .map(anoaHandler::<open_rtb.BidRequestThrift>of)
             .map(ThriftEncoders.compact(anoaHandler))
-            .map(ThriftDecoders.compact(anoaHandler, BidRequest::new))
+            .map(ThriftDecoders.compact(anoaHandler, BidReqs.thriftSupplier))
             .flatMap(Anoa::asStream));
   }
 
@@ -71,9 +69,9 @@ public class ThriftEncodersTest {
   public void testAnoaJson() {
     BidReqs.assertThriftObjects(
         BidReqs.thrift()
-            .map(anoaHandler::<BidRequest>of)
+            .map(anoaHandler::<open_rtb.BidRequestThrift>of)
             .map(ThriftEncoders.json(anoaHandler))
-            .map(ThriftDecoders.json(anoaHandler, BidRequest::new))
+            .map(ThriftDecoders.json(anoaHandler, BidReqs.thriftSupplier))
             .flatMap(Anoa::asStream));
   }
 
@@ -81,7 +79,7 @@ public class ThriftEncodersTest {
   public void testAnoaJackson() {
     BidReqs.assertJsonObjects(
         BidReqs.thrift()
-            .map(anoaHandler::<BidRequest>of)
+            .map(anoaHandler::<open_rtb.BidRequestThrift>of)
             .map(ThriftEncoders.jackson(anoaHandler,
                                         BidReqs.thriftClass,
                                         () -> new TokenBuffer(BidReqs.objectMapper, false)))

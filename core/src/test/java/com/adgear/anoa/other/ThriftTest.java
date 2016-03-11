@@ -17,11 +17,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import thrift.com.adgear.avro.Simple;
-import thrift.com.adgear.avro.openrtb.BidRequest;
 
 public class ThriftTest {
 
+  /*
   @Test(expected = AnoaJacksonTypeException.class)
   public void testMissingFields() throws Exception {
     ThriftStreams.jackson(Simple.class,
@@ -30,21 +29,23 @@ public class ThriftTest {
         .forEach(System.err::println);
   }
 
+  */
   @Test
   public void test() throws Exception {
-    final List<BidRequest> collected = new ArrayList<>();
+    final List<open_rtb.BidRequestThrift> collected = new ArrayList<>();
     AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
     try (InputStream inputStream = getClass().getResourceAsStream("/bidreqs.json")) {
       try (JsonParser jp = new JsonFactory(new ObjectMapper()).createParser(inputStream)) {
-        long total = ThriftStreams.jackson(anoaHandler, BidRequest.class, true, jp)
+        long total = ThriftStreams.jackson(anoaHandler, BidReqs.thriftClass, true, jp)
             .map(ThriftEncoders.binary(anoaHandler))
-            .map(ThriftDecoders.binary(anoaHandler, BidRequest::new))
+            .map(ThriftDecoders.binary(anoaHandler, BidReqs.thriftSupplier))
             .map(anoaHandler.consumer(collected::add))
             .count();
         Assert.assertEquals(BidReqs.n + 1, total);
       }
     }
-    Assert.assertEquals(BidReqs.n, collected.stream().filter(BidRequest.class::isInstance).count());
+    Assert.assertEquals(BidReqs.n, collected.stream().filter(BidReqs.thriftClass::isInstance).count());
     collected.stream().forEach(Assert::assertNotNull);
   }
+
 }

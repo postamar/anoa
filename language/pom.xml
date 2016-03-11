@@ -13,7 +13,7 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>parser</module>
+    <module>compiler</module>
     <module>plugin</module>
     <module>test</module>
   </modules>

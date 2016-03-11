@@ -1,0 +1,6 @@
+test_struct {
+  com.adgear.anoa.test.primitive.test_struct nested_struct;
+  com.adgear.anoa.test.enums.systems nested_enum;
+  list<com.adgear.anoa.test.container.test_struct> list_nested;
+  map<string,com.adgear.anoa.test.enums.browsers> map_nested;
+}

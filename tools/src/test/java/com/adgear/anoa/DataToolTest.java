@@ -14,11 +14,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
-import thrift.com.adgear.avro.openrtb.BidRequest;
-
 public class DataToolTest {
 
-  final private Schema schema = com.adgear.avro.openrtb.BidRequest.getClassSchema();
+  final private Schema schema = BidReqs.avroSchema;
 
   static public byte[] convert(Schema schema,
                                Format in,
@@ -58,11 +56,11 @@ public class DataToolTest {
     Assert.assertEquals(
         946,
         new CborStreams()
-            .from(convert(BidRequest.class,
+            .from(convert(BidReqs.thriftClass,
                           Format.THRIFT_JSON,
                           Format.CBOR,
                           new ByteArrayInputStream(
-                              convert(BidRequest.class,
+                              convert(BidReqs.thriftClass,
                                       Format.JSON,
                                       Format.THRIFT_JSON,
                                       bidreqs()))))

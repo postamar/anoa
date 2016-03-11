@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-import thrift.com.adgear.avro.openrtb.BidRequest;
-
 
 public class ThriftStreamsTest {
 
@@ -76,7 +74,7 @@ public class ThriftStreamsTest {
 
   @Test
   public void testAnoaBinary() {
-    List<Anoa<BidRequest, String>> anoas =
+    List<Anoa<open_rtb.BidRequestThrift, String>> anoas =
         ThriftStreams.binary(anoaHandler,
                              BidReqs.thriftSupplier,
                              BidReqs.thriftBinary(12345))
@@ -92,7 +90,7 @@ public class ThriftStreamsTest {
 
   @Test
   public void testAnoaCompact() {
-    List<Anoa<BidRequest, String>> anoas =
+    List<Anoa<open_rtb.BidRequestThrift, String>> anoas =
         ThriftStreams.compact(anoaHandler,
                               BidReqs.thriftSupplier,
                               BidReqs.thriftCompact(12345))
@@ -108,7 +106,7 @@ public class ThriftStreamsTest {
 
   @Test
   public void testAnoaJson() {
-    List<Anoa<BidRequest, String>> anoas =
+    List<Anoa<open_rtb.BidRequestThrift, String>> anoas =
         ThriftStreams.json(anoaHandler,
                            BidReqs.thriftSupplier,
                            BidReqs.thriftJson(12345))
@@ -125,7 +123,7 @@ public class ThriftStreamsTest {
 
   @Test
   public void testAnoaJackson() {
-    List<Anoa<BidRequest, String>> anoas =
+    List<Anoa<open_rtb.BidRequestThrift, String>> anoas =
         ThriftStreams.jackson(anoaHandler,
                               BidReqs.thriftClass,
                               true,
@@ -142,7 +140,7 @@ public class ThriftStreamsTest {
 
   @Test
   public void testAnoaBroken() {
-    List<Anoa<BidRequest, String>> anoas =
+    List<Anoa<open_rtb.BidRequestThrift, String>> anoas =
         ThriftStreams.compact(anoaHandler,
                               BidReqs.thriftSupplier,
                               BidReqs.thriftBinary(-1))

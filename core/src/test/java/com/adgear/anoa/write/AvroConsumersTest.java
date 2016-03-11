@@ -3,7 +3,6 @@ package com.adgear.anoa.write;
 
 import com.adgear.anoa.BidReqs;
 import com.adgear.anoa.read.AvroStreams;
-import com.adgear.avro.openrtb.BidRequest;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 import org.apache.avro.generic.GenericRecord;
@@ -34,7 +33,7 @@ public class AvroConsumersTest {
 
     BidReqs.assertAvroSpecifics(AvroStreams.binary(BidReqs.avroClass, BidReqs.allAsStream(
         os -> {
-          try (WriteConsumer<BidRequest> wc = AvroConsumers.binary(BidReqs.avroClass, os)) {
+          try (WriteConsumer<open_rtb.BidRequestAvro> wc = AvroConsumers.binary(BidReqs.avroClass, os)) {
             BidReqs.avroSpecific().forEach(wc);
           }
         })));
@@ -51,7 +50,7 @@ public class AvroConsumersTest {
 
     BidReqs.assertAvroSpecifics(AvroStreams.json(BidReqs.avroClass, BidReqs.allAsStream(
         os -> {
-          try (WriteConsumer<BidRequest> wc = AvroConsumers.json(BidReqs.avroClass, os)) {
+          try (WriteConsumer<open_rtb.BidRequestAvro> wc = AvroConsumers.json(BidReqs.avroClass, os)) {
             BidReqs.avroSpecific().forEach(wc);
           }
         })));
@@ -61,7 +60,7 @@ public class AvroConsumersTest {
   @Test
   public void testJackson() throws IOException {
     TokenBuffer b = new TokenBuffer(BidReqs.objectMapper, false);
-    try (WriteConsumer<BidRequest> wc = AvroConsumers.jackson(BidReqs.avroClass, b)) {
+    try (WriteConsumer<open_rtb.BidRequestAvro> wc = AvroConsumers.jackson(BidReqs.avroClass, b)) {
       BidReqs.avroSpecific().forEach(wc);
     }
     BidReqs.assertAvroSpecifics(AvroStreams.jackson(BidReqs.avroClass, true, b.asParser()));
