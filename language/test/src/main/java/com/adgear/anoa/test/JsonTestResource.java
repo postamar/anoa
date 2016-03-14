@@ -1,4 +1,4 @@
-package com.adgear.anoa;
+package com.adgear.anoa.test;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -7,36 +7,33 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class TestResource {
+class JsonTestResource {
 
-  protected final String resourcePath;
-  protected final List<String> jsonStrings;
-  protected final List<byte[]> jsonBytes;
+  final String resourcePath;
+  final List<String> jsonStrings;
+  final List<byte[]> jsonBytes;
 
-  protected TestResource(String resourcePath, boolean drop) {
+  JsonTestResource(String resourcePath) {
     this.resourcePath = resourcePath;
-    jsonStrings = new BufferedReader(new InputStreamReader(
-        getClass().getResourceAsStream(resourcePath)))
+    jsonStrings = new BufferedReader(new InputStreamReader(inputStream()))
         .lines()
         .map(String::trim)
         .filter(s -> !s.isEmpty())
-        .filter(s -> !drop)
         .collect(Collectors.toList());
     jsonBytes = jsonStrings.stream().sequential()
         .map(String::getBytes)
-        .filter(s -> !drop)
         .collect(Collectors.toList());
   }
 
-  public Stream<String> jsonStrings() {
+  Stream<String> strings() {
     return jsonStrings.stream().sequential();
   }
 
-  public Stream<byte[]> jsonBytes() {
+  Stream<byte[]> bytes() {
     return jsonBytes.stream().sequential();
   }
 
-  public InputStream jsonStream() {
+  InputStream inputStream() {
     return getClass().getResourceAsStream(resourcePath);
   }
 }

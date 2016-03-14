@@ -1,29 +1,16 @@
 package com.adgear.anoa;
 
-import com.adgear.anoa.read.AvroDecoders;
-import com.adgear.anoa.read.AvroStreams;
 import com.adgear.anoa.read.CborStreams;
-import com.adgear.anoa.read.CsvStreams;
 import com.adgear.anoa.read.JacksonDecoders;
 import com.adgear.anoa.read.JsonStreams;
 import com.adgear.anoa.read.SmileStreams;
-import com.adgear.anoa.write.AvroConsumers;
-import com.adgear.anoa.write.AvroEncoders;
 import com.adgear.anoa.write.CborConsumers;
-import com.adgear.anoa.write.CsvConsumers;
 import com.adgear.anoa.write.JacksonEncoders;
 import com.adgear.anoa.write.JsonConsumers;
 import com.adgear.anoa.write.SmileConsumers;
 import com.adgear.anoa.write.WriteConsumer;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.dataformat.cbor.CBORGenerator;
-import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.fasterxml.jackson.dataformat.smile.SmileGenerator;
 
-import org.apache.commons.codec.binary.Hex;
-import org.jooq.lambda.Unchecked;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -31,10 +18,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Scanner;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import junitx.framework.ListAssert;

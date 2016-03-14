@@ -1,4 +1,4 @@
-package com.adgear.anoa;
+package com.adgear.anoa.test;
 
 import java.io.IOException;
 

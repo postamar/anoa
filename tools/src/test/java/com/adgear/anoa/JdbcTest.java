@@ -1,35 +1,16 @@
 package com.adgear.anoa;
 
-import com.adgear.anoa.read.AvroDecoders;
-import com.adgear.anoa.read.AvroStreams;
-import com.adgear.anoa.read.CsvStreams;
 import com.adgear.anoa.read.JdbcStreams;
-import com.adgear.anoa.read.ThriftDecoders;
-import com.adgear.anoa.tools.runnable.DataTool;
-import com.adgear.anoa.tools.runnable.Format;
-import com.adgear.anoa.write.AvroConsumers;
-import com.adgear.anoa.write.WriteConsumer;
-import com.fasterxml.jackson.core.TreeNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.commons.codec.binary.Hex;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class JdbcTest {
 

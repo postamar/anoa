@@ -13,8 +13,7 @@ class ProtobufFieldWrapper implements FieldWrapper {
   ProtobufFieldWrapper(Descriptors.FieldDescriptor field,
                        Message.Builder parentBuilder) {
     this.field = field;
-    AbstractReader<?> baseReader = createReader(field, parentBuilder);
-    this.reader = (field.isRepeated()) ? new ListReader(baseReader) : baseReader;
+    this.reader = createReader(field, parentBuilder);
   }
 
   @Override
@@ -27,9 +26,28 @@ class ProtobufFieldWrapper implements FieldWrapper {
     return reader;
   }
 
-  @SuppressWarnings("unchecked")
   static private AbstractReader<?> createReader(Descriptors.FieldDescriptor field,
                                                 Message.Builder parentBuilder) {
+    if (!field.isRepeated()) {
+      return createBaseReader(field, parentBuilder);
+    }
+    if (field.getType() != Descriptors.FieldDescriptor.Type.MESSAGE
+        || !field.getMessageType().getOptions().getMapEntry()) {
+      return new ListReader(createBaseReader(field, parentBuilder));
+    }
+    Message.Builder mapEntryBuilder = parentBuilder.newBuilderForField(field);
+    Descriptors.Descriptor mapEntryDescriptor = field.getMessageType();
+    Descriptors.FieldDescriptor keyDescriptor = mapEntryDescriptor.getFields().get(0);
+    Descriptors.FieldDescriptor valueDescriptor = mapEntryDescriptor.getFields().get(1);
+    return new ProtobufMapReader(keyDescriptor,
+                                 valueDescriptor,
+                                 mapEntryBuilder,
+                                 createReader(valueDescriptor, mapEntryBuilder));
+  }
+
+  @SuppressWarnings("unchecked")
+  static private AbstractReader<?> createBaseReader(Descriptors.FieldDescriptor field,
+                                                    Message.Builder parentBuilder) {
     switch (field.getType()) {
       case BOOL:
         return new BooleanReader();
@@ -63,5 +81,6 @@ class ProtobufFieldWrapper implements FieldWrapper {
     }
     throw new RuntimeException("Unknown type for " + field);
   }
+
 
 }

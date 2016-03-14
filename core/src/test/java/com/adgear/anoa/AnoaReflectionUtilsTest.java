@@ -4,14 +4,18 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class AnoaReflectionUtilsTest {
-/*
+
   @Test
-  public void test() throws Exception {
-    Assert.assertNotNull(AnoaReflectionUtils.getAvroClass("com.adgear.avro.Simple"));
-    Assert.assertEquals(3, AnoaReflectionUtils.getThriftMetaDataMap(
-        AnoaReflectionUtils.getThriftClass("thrift.com.adgear.avro.Simple"))
+  public void testAvro() throws Exception {
+    Assert.assertNotNull(AnoaReflectionUtils.getAvroClass("open_rtb.BidRequestAvro"));
+  }
+
+  @Test
+  public void testThrift() throws Exception {
+    Assert.assertEquals(14, AnoaReflectionUtils.getThriftMetaDataMap(
+        AnoaReflectionUtils.getThriftClass("open_rtb.BidRequestThrift"))
         .entrySet().stream()
         .count());
   }
-*/
+
 }

@@ -3,7 +3,7 @@ package com.adgear.anoa.read;
 
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
-import com.adgear.anoa.BidReqs;
+import com.adgear.anoa.test.AnoaTestSample;
 import com.fasterxml.jackson.core.TreeNode;
 
 import org.junit.Test;
@@ -11,37 +11,40 @@ import org.junit.Test;
 public class ProtobufDecodersTest {
 
   final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
+  final static AnoaTestSample ATS = new AnoaTestSample();
+
 
   @Test
   public void testBinary() {
-    BidReqs.assertProtobufObjects(
-        BidReqs.protobufBinary().map(ProtobufDecoders.binary(BidReqs.protobufClass, true)));
+    ATS.assertProtobufObjects(
+        ATS.protobufBinary().map(ProtobufDecoders.binary(ATS.protobufClass, true)));
   }
 
   @Test
   public void testJackson() {
-    BidReqs.assertProtobufObjects(
-        BidReqs.jsonObjects()
+    ATS.assertProtobufObjects(
+        ATS.jsonObjects()
+            .peek(System.err::println)
             .map(TreeNode::traverse)
-            .map(ProtobufDecoders.jackson(BidReqs.protobufClass, true)));
+            .map(ProtobufDecoders.jackson(ATS.protobufClass, true)));
   }
 
   @Test
   public void testAnoaBinary() {
-    BidReqs.assertProtobufObjects(
-        BidReqs.protobufBinary()
+    ATS.assertProtobufObjects(
+        ATS.protobufBinary()
             .map(anoaHandler::<byte[]>of)
-            .map(ProtobufDecoders.binary(anoaHandler, BidReqs.protobufClass, true))
+            .map(ProtobufDecoders.binary(anoaHandler, ATS.protobufClass, true))
             .map(Anoa::get));
   }
 
   @Test
   public void testAnoaJackson() {
-    BidReqs.assertProtobufObjects(
-        BidReqs.jsonObjects()
+    ATS.assertProtobufObjects(
+        ATS.jsonObjects()
             .map(anoaHandler::<TreeNode>of)
             .map(anoaHandler.function(TreeNode::traverse))
-            .map(ProtobufDecoders.jackson(anoaHandler, BidReqs.protobufClass, true))
+            .map(ProtobufDecoders.jackson(anoaHandler, ATS.protobufClass, true))
             .map(Anoa::get));
   }
 }

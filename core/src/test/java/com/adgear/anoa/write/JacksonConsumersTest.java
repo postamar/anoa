@@ -1,8 +1,7 @@
 package com.adgear.anoa.write;
 
-
-import com.adgear.anoa.BidReqs;
 import com.adgear.anoa.read.JacksonStreamsTest;
+import com.adgear.anoa.test.AnoaTestSample;
 import com.fasterxml.jackson.core.FormatSchema;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -17,26 +16,28 @@ import java.util.Optional;
 
 public class JacksonConsumersTest {
 
+  final static AnoaTestSample ATS = new AnoaTestSample();
+
   static public JacksonConsumers<ObjectNode, ObjectMapper, JsonFactory, ?, JsonGenerator> build() {
     return new JacksonConsumers<>(new ObjectMapper(), Optional.<FormatSchema>empty());
   }
 
   @Test
   public void testBuffer() throws IOException {
-    try (TokenBuffer b = new TokenBuffer(BidReqs.objectMapper, false)) {
+    try (TokenBuffer b = new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false)) {
       try (WriteConsumer<ObjectNode> wc = build().to(b)) {
-        BidReqs.jsonObjects().forEach(wc);
+        ATS.jsonObjects().forEach(wc);
       }
-      BidReqs.assertJsonObjects(JacksonStreamsTest.build().from(b.asParser()));
+      ATS.assertJsonObjects(JacksonStreamsTest.build().from(b.asParser()));
     }
   }
 
   @Test
   public void testStream() throws IOException {
-    BidReqs.assertJsonObjects(JacksonStreamsTest.build().from(BidReqs.allAsStream(
+    ATS.assertJsonObjects(JacksonStreamsTest.build().from(ATS.allAsInputStream(
         os -> {
           try (WriteConsumer<ObjectNode> wc = build().to(os)) {
-            BidReqs.jsonObjects().forEach(wc);
+            ATS.jsonObjects().forEach(wc);
           }
         })));
   }

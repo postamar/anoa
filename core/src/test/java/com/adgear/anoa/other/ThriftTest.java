@@ -1,10 +1,10 @@
 package com.adgear.anoa.other;
 
 import com.adgear.anoa.AnoaHandler;
-import com.adgear.anoa.AnoaJacksonTypeException;
-import com.adgear.anoa.BidReqs;
 import com.adgear.anoa.read.ThriftDecoders;
 import com.adgear.anoa.read.ThriftStreams;
+import com.adgear.anoa.test.AnoaTestSample;
+import com.adgear.anoa.test.ad_exchange.LogEventThrift;
 import com.adgear.anoa.write.ThriftEncoders;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -20,31 +20,23 @@ import java.util.List;
 
 public class ThriftTest {
 
-  /*
-  @Test(expected = AnoaJacksonTypeException.class)
-  public void testMissingFields() throws Exception {
-    ThriftStreams.jackson(Simple.class,
-                          false,
-                          new ObjectMapper().getFactory().createParser("{\"baz\":1.9}"))
-        .forEach(System.err::println);
-  }
+  static final AnoaTestSample ATS = new AnoaTestSample();
 
-  */
   @Test
   public void test() throws Exception {
-    final List<open_rtb.BidRequestThrift> collected = new ArrayList<>();
+    final List<LogEventThrift> collected = new ArrayList<>();
     AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
-    try (InputStream inputStream = getClass().getResourceAsStream("/bidreqs.json")) {
+    try (InputStream inputStream = ATS.jsonInputStream(-1)) {
       try (JsonParser jp = new JsonFactory(new ObjectMapper()).createParser(inputStream)) {
-        long total = ThriftStreams.jackson(anoaHandler, BidReqs.thriftClass, true, jp)
+        long total = ThriftStreams.jackson(anoaHandler, ATS.thriftClass, true, jp)
             .map(ThriftEncoders.binary(anoaHandler))
-            .map(ThriftDecoders.binary(anoaHandler, BidReqs.thriftSupplier))
+            .map(ThriftDecoders.binary(anoaHandler, ATS.thriftSupplier))
             .map(anoaHandler.consumer(collected::add))
             .count();
-        Assert.assertEquals(BidReqs.n + 1, total);
+        Assert.assertEquals(ATS.n + 1, total);
       }
     }
-    Assert.assertEquals(BidReqs.n, collected.stream().filter(BidReqs.thriftClass::isInstance).count());
+    Assert.assertEquals(ATS.n, collected.stream().filter(ATS.thriftClass::isInstance).count());
     collected.stream().forEach(Assert::assertNotNull);
   }
 

@@ -2,7 +2,8 @@ package com.adgear.anoa.read;
 
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
-import com.adgear.anoa.BidReqs;
+import com.adgear.anoa.test.AnoaTestSample;
+import com.adgear.anoa.test.ad_exchange.LogEventAvro;
 import com.fasterxml.jackson.core.TreeNode;
 
 import org.apache.avro.AvroRuntimeException;
@@ -16,84 +17,82 @@ import java.util.stream.Collectors;
 public class AvroDecodersTest {
 
   final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
+  final static AnoaTestSample ATS = new AnoaTestSample();
+
 
   @Test
   public void testBinary() {
-    BidReqs.assertAvroGenerics(BidReqs.avroBinary()
-                                   .map(AvroDecoders.binary(BidReqs.avroSchema)));
-    BidReqs.assertAvroSpecifics(BidReqs.avroBinary()
-                                    .map(AvroDecoders.binary(BidReqs.avroClass)));
+    ATS.assertAvroGenerics(ATS.avroBinary().map(AvroDecoders.binary(ATS.avroSchema)));
+    ATS.assertAvroSpecifics(ATS.avroBinary().map(AvroDecoders.binary(ATS.avroClass)));
   }
 
   @Test
   public void testJson() {
-    BidReqs.assertAvroGenerics(BidReqs.avroJson()
-                                   .map(AvroDecoders.json(BidReqs.avroSchema)));
-    BidReqs.assertAvroSpecifics(BidReqs.avroJson()
-                                    .map(AvroDecoders.json(BidReqs.avroClass, open_rtb.BidRequestAvro::new)));
+    ATS.assertAvroGenerics(ATS.avroJson().map(AvroDecoders.json(ATS.avroSchema)));
+    ATS.assertAvroSpecifics(ATS.avroJson().map(AvroDecoders.json(ATS.avroClass,LogEventAvro::new)));
   }
 
   @Test
   public void testJackson() {
-    BidReqs.assertAvroGenerics(BidReqs.jsonObjects()
+    ATS.assertAvroGenerics(ATS.jsonObjects()
                                    .map(TreeNode::traverse)
-                                   .map(AvroDecoders.jackson(BidReqs.avroSchema, true)));
+                                   .map(AvroDecoders.jackson(ATS.avroSchema, true)));
 
-    BidReqs.assertAvroSpecifics(BidReqs.jsonObjects()
+    ATS.assertAvroSpecifics(ATS.jsonObjects()
                                     .map(TreeNode::traverse)
-                                    .map(AvroDecoders.jackson(BidReqs.avroClass, true)));
+                                    .map(AvroDecoders.jackson(ATS.avroClass, true)));
   }
 
   @Test
   public void testAnoaBinary() {
-    BidReqs.assertAvroGenerics(BidReqs.avroBinary()
+    ATS.assertAvroGenerics(ATS.avroBinary()
                                    .map(anoaHandler::<byte[]>of)
-                                   .map(AvroDecoders.binary(anoaHandler, BidReqs.avroSchema))
+                                   .map(AvroDecoders.binary(anoaHandler, ATS.avroSchema))
                                    .map(Anoa::get));
 
-    BidReqs.assertAvroSpecifics(BidReqs.avroBinary()
+    ATS.assertAvroSpecifics(ATS.avroBinary()
                                     .map(anoaHandler::<byte[]>of)
-                                    .map(AvroDecoders.binary(anoaHandler, BidReqs.avroClass))
+                                    .map(AvroDecoders.binary(anoaHandler, ATS.avroClass))
                                     .map(Anoa::get));
   }
 
   @Test
   public void testAnoaJson() {
-    BidReqs.assertAvroGenerics(
-        BidReqs.avroJson()
+    ATS.assertAvroGenerics(
+        ATS.avroJson()
             .map(anoaHandler::<String>of)
-            .map(AvroDecoders.json(anoaHandler, BidReqs.avroSchema))
+            .map(AvroDecoders.json(anoaHandler, ATS.avroSchema))
             .map(Anoa::get));
 
-    BidReqs.assertAvroSpecifics(
-        BidReqs.avroJson()
+    ATS.assertAvroSpecifics(
+        ATS.avroJson()
             .map(anoaHandler::<String>of)
-            .map(AvroDecoders.json(anoaHandler, BidReqs.avroClass))
+            .map(AvroDecoders.json(anoaHandler, ATS.avroClass))
             .map(Anoa::get));
   }
 
   @Test
   public void testAnoaJackson() {
-    BidReqs.assertAvroGenerics(
-        BidReqs.jsonObjects()
+    ATS.assertAvroGenerics(
+        ATS.jsonObjects()
             .map(anoaHandler::<TreeNode>of)
             .map(anoaHandler.function(TreeNode::traverse))
-            .map(AvroDecoders.jackson(anoaHandler, BidReqs.avroSchema, false))
+            .map(AvroDecoders.jackson(anoaHandler, ATS.avroSchema, false))
             .map(Anoa::get));
 
-    BidReqs.assertAvroSpecifics(
-        BidReqs.jsonObjects()
+    ATS.assertAvroSpecifics(
+        ATS.jsonObjects()
             .map(anoaHandler::<TreeNode>of)
             .map(anoaHandler.function(TreeNode::traverse))
-            .map(AvroDecoders.jackson(anoaHandler, BidReqs.avroClass, false))
+            .map(AvroDecoders.jackson(anoaHandler, ATS.avroClass, false))
             .map(Anoa::get));
   }
 
   @Test
   public void testAnoaBroken() {
-    Map<String, List<Throwable>> metaMap = BidReqs.thriftCompact()
+    Map<String, List<Throwable>> metaMap = ATS.thriftCompact()
         .map(anoaHandler::<byte[]>of)
-        .map(AvroDecoders.binary(anoaHandler, BidReqs.avroClass))
+        .map(AvroDecoders.binary(anoaHandler, ATS.avroClass))
         .peek(a -> Assert.assertFalse(a.isPresent()))
         .flatMap(Anoa::meta)
         .collect(Collectors.groupingBy(Throwable::toString));
@@ -101,6 +100,6 @@ public class AvroDecodersTest {
     Assert.assertEquals(1, metaMap.size());
     List<Throwable> throwables = metaMap.values().stream().findFirst().get();
     throwables.stream().forEach(t -> Assert.assertTrue(t instanceof AvroRuntimeException));
-    Assert.assertEquals(BidReqs.n, (long) metaMap.values().stream().findFirst().get().size());
+    Assert.assertEquals(ATS.n, (long) metaMap.values().stream().findFirst().get().size());
   }
 }
