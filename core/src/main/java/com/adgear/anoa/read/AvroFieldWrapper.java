@@ -10,6 +10,7 @@ import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificFixed;
 import org.apache.avro.specific.SpecificRecord;
+import org.apache.avro.util.Utf8;
 import org.codehaus.jackson.node.NullNode;
 
 import java.io.ByteArrayOutputStream;
@@ -78,14 +79,14 @@ class AvroFieldWrapper implements FieldWrapper {
       case LONG:
         return new LongReader();
       case MAP:
-        return new MapReader(createReader(schema.getValueType()));
+        return new MapReader(createReader(schema.getValueType()), Utf8::new);
       case RECORD:
         final Class<? extends SpecificRecord> recordClass = SpecificData.get().getClass(schema);
         return (recordClass == null)
                ? new AvroReader.GenericReader(schema)
                : new AvroReader.SpecificReader<>(recordClass);
       case STRING:
-        return new StringReader();
+        return new StringReader(Utf8::new);
       case UNION:
         if (schema.getTypes().size() == 2) {
           return createReader(schema.getTypes().get(

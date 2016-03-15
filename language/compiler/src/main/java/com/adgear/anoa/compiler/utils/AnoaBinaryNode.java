@@ -9,6 +9,7 @@ import org.codehaus.jackson.node.ValueNode;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.regex.Pattern;
 
 final public class AnoaBinaryNode extends ValueNode {
@@ -70,7 +71,10 @@ final public class AnoaBinaryNode extends ValueNode {
   }
 
   public String toThriftJava() {
-    return "ByteBuffer.wrap(" + toOctalString() + ".getBytes());";
+    String bbWrapped = (wrapped.getBinaryValue().length == 0)
+                       ? "new byte[0]"
+                       : toOctalString() + ".getBytes()";
+    return "ByteBuffer.wrap(" + bbWrapped + ");";
   }
 
   @Override

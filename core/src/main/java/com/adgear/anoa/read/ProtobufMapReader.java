@@ -28,9 +28,9 @@ class ProtobufMapReader extends AbstractReader<List<Object>> {
     this.valueDescriptor = valueDescriptor;
   }
 
-  private List<Object> toEntryList(Map<String, Object> map) {
+  private List<Object> toEntryList(Map<CharSequence, Object> map) {
     ArrayList<Object> result = new ArrayList<>();
-    for (Map.Entry<String, Object> entry : map.entrySet()) {
+    for (Map.Entry<CharSequence, Object> entry : map.entrySet()) {
       mapEntryBuilder.clear();
       mapEntryBuilder.setField(keyDescriptor, entry.getKey());
       if (valueDescriptor.isRepeated()) {

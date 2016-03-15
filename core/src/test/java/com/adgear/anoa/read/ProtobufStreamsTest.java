@@ -64,7 +64,7 @@ public class ProtobufStreamsTest {
         .entrySet()
         .stream()
         .forEach(e -> System.err.format("%d\t= %s\n", e.getValue().size(), e.getKey()));
-    Assert.assertEquals(34, anoas.stream().filter(Anoa::isPresent).count());
+    Assert.assertEquals(29, anoas.stream().filter(Anoa::isPresent).count());
   }
 
   @Test
@@ -81,6 +81,6 @@ public class ProtobufStreamsTest {
         .entrySet()
         .stream()
         .forEach(e -> System.err.format("%d\t= %s\n", e.getValue().size(), e.getKey()));
-    Assert.assertEquals(20, anoas.stream().filter(Anoa::isPresent).count());
+    Assert.assertEquals(15, anoas.stream().filter(Anoa::isPresent).count());
   }
 }

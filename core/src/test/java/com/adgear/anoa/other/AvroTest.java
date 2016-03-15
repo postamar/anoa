@@ -49,15 +49,13 @@ public class AvroTest {
           .filter(Anoa::isPresent)
           .count();
 
-      Assert.assertEquals(946, total);
+      Assert.assertEquals(ATS.nl, total);
     }
   }
 
   @Test
   public void testFile() throws Exception {
-    JsonParser jp = AnoaTestSample.OBJECT_MAPPER.getFactory()
-        .createParser(getClass().getResourceAsStream("/bidreqs.json"));
-
+    JsonParser jp = AnoaTestSample.OBJECT_MAPPER.getFactory().createParser(ATS.jsonInputStream(-1));
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try (WriteConsumer<LogEventAvro> consumer =
              AvroConsumers.batch(ATS.avroClass, baos)) {
@@ -69,9 +67,9 @@ public class AvroTest {
       Assert.assertEquals(ATS.n, total);
     }
 
-    Assert.assertEquals(ATS.n, AvroStreams
-        .batch(ATS.avroSchema, new ByteArrayInputStream(baos.toByteArray())
-        ).count());
+    Assert.assertEquals(ATS.n,
+                        AvroStreams.batch(ATS.avroSchema,
+                                          new ByteArrayInputStream(baos.toByteArray())).count());
   }
 
 }

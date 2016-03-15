@@ -2,6 +2,7 @@ package com.adgear.anoa;
 
 import com.adgear.anoa.read.AvroStreams;
 import com.adgear.anoa.read.CborStreams;
+import com.adgear.anoa.test.AnoaTestSample;
 import com.adgear.anoa.tools.runnable.DataTool;
 import com.adgear.anoa.tools.runnable.Format;
 
@@ -16,7 +17,8 @@ import java.io.InputStream;
 
 public class DataToolTest {
 
-  final private Schema schema = BidReqs.avroSchema;
+  static final private AnoaTestSample ATS = new AnoaTestSample();
+  final private Schema schema = ATS.avroSchema;
 
   static public byte[] convert(Schema schema,
                                Format in,
@@ -37,16 +39,16 @@ public class DataToolTest {
     return baos.toByteArray();
   }
 
-  private InputStream bidreqs() {
-    return getClass().getResourceAsStream("/bidreqs.json");
+  private InputStream inputStream() {
+    return ATS.jsonInputStream(-1);
   }
 
   @Test
   public void testJsonToAvro() {
     Assert.assertEquals(
-        946,
+        ATS.nl,
         AvroStreams.batch(AnoaHandler.NO_OP_HANDLER, new ByteArrayInputStream(
-            convert(schema, Format.JSON, Format.AVRO, bidreqs())))
+            convert(schema, Format.JSON, Format.AVRO, inputStream())))
             .filter(Anoa::isPresent)
             .count());
   }
@@ -54,16 +56,16 @@ public class DataToolTest {
   @Test
   public void testJsonToThriftToCbor() {
     Assert.assertEquals(
-        946,
+        ATS.nl,
         new CborStreams()
-            .from(convert(BidReqs.thriftClass,
+            .from(convert(ATS.thriftClass,
                           Format.THRIFT_JSON,
                           Format.CBOR,
                           new ByteArrayInputStream(
-                              convert(BidReqs.thriftClass,
+                              convert(ATS.thriftClass,
                                       Format.JSON,
                                       Format.THRIFT_JSON,
-                                      bidreqs()))))
+                                      inputStream()))))
             .count());
   }
 }

@@ -87,7 +87,7 @@ public class ThriftStreamsTest {
         .entrySet()
         .stream()
         .forEach(e -> System.err.format("%d\t= %s\n", e.getValue().size(), e.getKey()));
-    Assert.assertEquals(25, anoas.stream().filter(Anoa::isPresent).count());
+    Assert.assertEquals(13, anoas.stream().filter(Anoa::isPresent).count());
   }
 
   @Test
@@ -103,7 +103,7 @@ public class ThriftStreamsTest {
         .entrySet()
         .stream()
         .forEach(e -> System.err.format("%d\t= %s\n", e.getValue().size(), e.getKey()));
-    Assert.assertEquals(35, anoas.stream().filter(Anoa::isPresent).count());
+    Assert.assertEquals(24, anoas.stream().filter(Anoa::isPresent).count());
   }
 
   @Test
@@ -119,7 +119,7 @@ public class ThriftStreamsTest {
         .entrySet()
         .stream()
         .forEach(e -> System.err.format("%d\t= %s\n", e.getValue().size(), e.getKey()));
-    Assert.assertEquals(16, anoas.stream().filter(Anoa::isPresent).count());
+    Assert.assertEquals(8, anoas.stream().filter(Anoa::isPresent).count());
   }
 
 
@@ -137,7 +137,7 @@ public class ThriftStreamsTest {
         .entrySet()
         .stream()
         .forEach(e -> System.err.format("%d\t= %s\n", e.getValue().size(), e.getKey()));
-    Assert.assertEquals(20, anoas.stream().filter(Anoa::isPresent).count());
+    Assert.assertEquals(15, anoas.stream().filter(Anoa::isPresent).count());
   }
 
   @Test
@@ -153,6 +153,6 @@ public class ThriftStreamsTest {
         .entrySet()
         .stream()
         .forEach(e -> System.err.format("%d\t= %s\n", e.getValue().size(), e.getKey()));
-    Assert.assertEquals(0, anoas.stream().filter(Anoa::isPresent).count());
+    Assert.assertEquals(3, anoas.stream().filter(Anoa::isPresent).count());
   }
 }

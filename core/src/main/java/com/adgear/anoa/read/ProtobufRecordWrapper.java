@@ -1,5 +1,6 @@
 package com.adgear.anoa.read;
 
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 
 class ProtobufRecordWrapper<R extends Message> implements RecordWrapper<R, ProtobufFieldWrapper> {
@@ -19,12 +20,21 @@ class ProtobufRecordWrapper<R extends Message> implements RecordWrapper<R, Proto
   @Override
   @SuppressWarnings("unchecked")
   public void put(ProtobufFieldWrapper fieldWrapper, Object value) {
-    if (fieldWrapper.field.isRepeated()) {
-      for (Object e : (Iterable<Object>) value) {
-        builder.addRepeatedField(fieldWrapper.field, e);
+    Descriptors.FieldDescriptor field = fieldWrapper.field;
+    if (field.isRepeated()) {
+      for (Object element : (Iterable<Object>) value) {
+        builder.addRepeatedField(field, nonNullValue(field, element));
       }
     } else {
-      builder.setField(fieldWrapper.field, value);
+      builder.setField(field, nonNullValue(field, value));
     }
   }
+
+  private Object nonNullValue(Descriptors.FieldDescriptor field, Object value) {
+    if (value != null) {
+      return value;
+    }
+    return builder.newBuilderForField(field).getDefaultInstanceForType();
+  }
+
 }

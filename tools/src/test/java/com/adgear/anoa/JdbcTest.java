@@ -1,16 +1,37 @@
 package com.adgear.anoa;
 
+import com.adgear.anoa.read.AvroDecoders;
+import com.adgear.anoa.read.AvroStreams;
+import com.adgear.anoa.read.CsvStreams;
 import com.adgear.anoa.read.JdbcStreams;
+import com.adgear.anoa.read.ThriftDecoders;
+import com.adgear.anoa.test.simple.SimpleAvro;
+import com.adgear.anoa.test.simple.SimpleThrift;
+import com.adgear.anoa.tools.runnable.DataTool;
+import com.adgear.anoa.tools.runnable.Format;
+import com.adgear.anoa.write.AvroConsumers;
+import com.adgear.anoa.write.WriteConsumer;
+import com.fasterxml.jackson.core.TreeNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.commons.codec.binary.Hex;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class JdbcTest {
 
@@ -39,16 +60,16 @@ public class JdbcTest {
     }
   }
 
-  /*
+
   @Test
   public void testToThrift() throws Exception {
     AnoaHandler<Throwable> f = AnoaHandler.NO_OP_HANDLER;
     try (Connection connection = openDBConnection()) {
       try (Statement statement = connection.createStatement()) {
         try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {
-          List<Simple> simples = new JdbcStreams().resultSet(f, resultSet)
+          List<SimpleThrift> simples = new JdbcStreams().resultSet(f, resultSet)
               .map(f.function(TreeNode::traverse))
-              .map(f.function(ThriftDecoders.jackson(Simple.class, false)))
+              .map(f.function(ThriftDecoders.jackson(SimpleThrift.class, false)))
               .peek(System.out::println)
               .filter(Anoa::isPresent)
               .map(Anoa::get)
@@ -65,7 +86,7 @@ public class JdbcTest {
       }
     }
   }
-*/
+
   @Test
   public void testDB() throws Exception {
     try (Connection connection = openDBConnection()) {
@@ -76,7 +97,6 @@ public class JdbcTest {
       }
     }
   }
-  /*
 
   @Test
   public void testSchema() throws Exception {
@@ -93,13 +113,12 @@ public class JdbcTest {
                 .forEach(consumer);
           }
           Assert.assertEquals(2, AvroStreams.batch(
-              com.adgear.avro.Simple.class,
+              SimpleAvro.class,
               new ByteArrayInputStream(baos.toByteArray())).count());
         }
       }
     }
   }
-
 
   @Test
   public void testDataToolCsv() throws Exception {
@@ -120,7 +139,7 @@ public class JdbcTest {
     System.out.println(new String(bytes));
     Assert.assertEquals(2, CsvStreams.csvWithHeader().from(bytes)
         .map(TreeNode::traverse)
-        .map(AvroDecoders.jackson(com.adgear.avro.Simple.class, false))
+        .map(AvroDecoders.jackson(SimpleAvro.class, false))
         .filter(x -> x != null)
         .count());
   }
@@ -130,7 +149,7 @@ public class JdbcTest {
     final byte[] bytes;
     try (Connection connection = JdbcTest.openDBConnection()) {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      new DataTool<>(com.adgear.avro.Simple.getClassSchema(),
+      new DataTool<>(SimpleAvro.getClassSchema(),
                      null,
                      null,
                      Format.AVRO_JSON,
@@ -142,10 +161,9 @@ public class JdbcTest {
       bytes = baos.toByteArray();
     }
     System.out.println(new String(bytes));
-    Assert.assertEquals(2, AvroStreams.json(com.adgear.avro.Simple.class,
+    Assert.assertEquals(2, AvroStreams.json(SimpleAvro.class,
                                             new ByteArrayInputStream(bytes))
         .filter(x -> x != null)
         .count());
   }
- */
 }

@@ -642,7 +642,7 @@ JsonNode BytesDefault() :
       }
       baos.write(((int) byteValue) & 0xff);
     }
-  ) +
+  ) *
   { return AnoaBinaryNode.valueOf(baos.toByteArray()); }
 }
 

@@ -24,7 +24,6 @@ public class ProtobufDecodersTest {
   public void testJackson() {
     ATS.assertProtobufObjects(
         ATS.jsonObjects()
-            .peek(System.err::println)
             .map(TreeNode::traverse)
             .map(ProtobufDecoders.jackson(ATS.protobufClass, true)));
   }

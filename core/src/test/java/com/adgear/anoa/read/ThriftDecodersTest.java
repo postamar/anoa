@@ -5,7 +5,6 @@ import com.adgear.anoa.AnoaHandler;
 import com.adgear.anoa.test.AnoaTestSample;
 import com.fasterxml.jackson.core.TreeNode;
 
-import org.apache.thrift.TException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -87,17 +86,18 @@ public class ThriftDecodersTest {
 
   @Test
   public void testAnoaBroken() {
-    Map<String, List<Throwable>> metaMap = ATS.thriftBinary()
+    Map<String, List<Throwable>> metaMap = ATS.json()
+        .map(String::getBytes)
         .map(anoaHandler::<byte[]>of)
         .map(ThriftDecoders.compact(anoaHandler, ATS.thriftSupplier))
-        .peek(a -> Assert.assertFalse(a.isPresent()))
         .flatMap(Anoa::meta)
-        .collect(Collectors.groupingBy(Throwable::toString));
+        .collect(Collectors.groupingBy(t -> t.getClass().getSimpleName()));
 
-    Assert.assertEquals(1, metaMap.size());
-    List<Throwable> throwables = metaMap.values().stream().findFirst().get();
-    throwables.stream().forEach(t -> Assert.assertTrue(t instanceof TException));
-    Assert.assertEquals(ATS.n, (long) metaMap.values().stream().findFirst().get().size());
+    Assert.assertEquals(2, metaMap.size());
+    Assert.assertTrue(metaMap.containsKey("TProtocolException"));
+    Assert.assertTrue(metaMap.containsKey("TTransportException"));
+    Assert.assertEquals(717, metaMap.get("TProtocolException").size());
+    Assert.assertEquals(158, metaMap.get("TTransportException").size());
   }
 
 }

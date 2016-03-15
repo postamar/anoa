@@ -16,18 +16,20 @@ public class ProtobufEncodersTest {
 
   @Test
   public void testBinary() {
-    ATS.assertProtobufObjects(ATS.protobuf()
-                                  .map(ProtobufEncoders.binary())
-                                  .map(ProtobufDecoders.binary(ATS.protobufClass, true)));
+    ATS.assertProtobufObjects(
+        ATS.protobuf()
+            .map(ProtobufEncoders.binary())
+            .map(ProtobufDecoders.binary(ATS.protobufClass, true)));
   }
 
   @Test
   public void testJackson() {
-    ATS.assertProtobufObjects(ATS.protobuf()
-                                      .map(ProtobufEncoders.jackson(ATS.protobufClass, () ->
-                                          new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false)))
-                                      .map(TokenBuffer::asParser)
-                                      .map(ProtobufDecoders.jackson(ATS.protobufClass, true)));
+    ATS.assertProtobufObjects(
+        ATS.protobuf()
+            .map(ProtobufEncoders.jackson(ATS.protobufClass, () ->
+                new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false)))
+            .map(TokenBuffer::asParser)
+            .map(ProtobufDecoders.jackson(ATS.protobufClass, true)));
   }
 
   @Test

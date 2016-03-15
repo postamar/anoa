@@ -164,7 +164,6 @@ final class ThriftGenerator extends AnoaCodeGeneratorBase {
         Map<Pattern, String> map = new LinkedHashMap<>();
         type.getFields().stream()
             .filter(f -> f.schema().getType() == Schema.Type.BYTES)
-            .filter(f -> !f.defaultValue().asText().isEmpty())
             .forEach(f -> {
               AnoaBinaryNode node = AnoaBinaryNode.valueOf(f.defaultValue());
               map.put(node.buildThriftBrokenJavaPattern(f.name()), node.toThriftJava());

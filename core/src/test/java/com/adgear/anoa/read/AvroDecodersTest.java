@@ -6,7 +6,6 @@ import com.adgear.anoa.test.AnoaTestSample;
 import com.adgear.anoa.test.ad_exchange.LogEventAvro;
 import com.fasterxml.jackson.core.TreeNode;
 
-import org.apache.avro.AvroRuntimeException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -34,26 +33,30 @@ public class AvroDecodersTest {
 
   @Test
   public void testJackson() {
-    ATS.assertAvroGenerics(ATS.jsonObjects()
-                                   .map(TreeNode::traverse)
-                                   .map(AvroDecoders.jackson(ATS.avroSchema, true)));
+    ATS.assertAvroGenerics(
+        ATS.jsonObjects()
+            .map(TreeNode::traverse)
+            .map(AvroDecoders.jackson(ATS.avroSchema, true)));
 
-    ATS.assertAvroSpecifics(ATS.jsonObjects()
-                                    .map(TreeNode::traverse)
-                                    .map(AvroDecoders.jackson(ATS.avroClass, true)));
+    ATS.assertAvroSpecifics(
+        ATS.jsonObjects()
+            .map(TreeNode::traverse)
+            .map(AvroDecoders.jackson(ATS.avroClass, true)));
   }
 
   @Test
   public void testAnoaBinary() {
-    ATS.assertAvroGenerics(ATS.avroBinary()
-                                   .map(anoaHandler::<byte[]>of)
-                                   .map(AvroDecoders.binary(anoaHandler, ATS.avroSchema))
-                                   .map(Anoa::get));
+    ATS.assertAvroGenerics(
+        ATS.avroBinary()
+            .map(anoaHandler::<byte[]>of)
+            .map(AvroDecoders.binary(anoaHandler, ATS.avroSchema))
+            .map(Anoa::get));
 
-    ATS.assertAvroSpecifics(ATS.avroBinary()
-                                    .map(anoaHandler::<byte[]>of)
-                                    .map(AvroDecoders.binary(anoaHandler, ATS.avroClass))
-                                    .map(Anoa::get));
+    ATS.assertAvroSpecifics(
+        ATS.avroBinary()
+            .map(anoaHandler::<byte[]>of)
+            .map(AvroDecoders.binary(anoaHandler, ATS.avroClass))
+            .map(Anoa::get));
   }
 
   @Test
@@ -95,11 +98,14 @@ public class AvroDecodersTest {
         .map(AvroDecoders.binary(anoaHandler, ATS.avroClass))
         .peek(a -> Assert.assertFalse(a.isPresent()))
         .flatMap(Anoa::meta)
-        .collect(Collectors.groupingBy(Throwable::toString));
+        .collect(Collectors.groupingBy(t -> t.getClass().getSimpleName()));
 
-    Assert.assertEquals(1, metaMap.size());
-    List<Throwable> throwables = metaMap.values().stream().findFirst().get();
-    throwables.stream().forEach(t -> Assert.assertTrue(t instanceof AvroRuntimeException));
-    Assert.assertEquals(ATS.n, (long) metaMap.values().stream().findFirst().get().size());
+    Assert.assertEquals(3, metaMap.size());
+    Assert.assertNotNull(metaMap.get("EOFException"));
+    Assert.assertNotNull(metaMap.get("AvroRuntimeException"));
+    Assert.assertNotNull(metaMap.get("ArrayIndexOutOfBoundsException"));
+    Assert.assertEquals(4, metaMap.get("EOFException").size());
+    Assert.assertEquals(9, metaMap.get("AvroRuntimeException").size());
+    Assert.assertEquals(987, metaMap.get("ArrayIndexOutOfBoundsException").size());
   }
 }
