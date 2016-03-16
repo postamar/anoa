@@ -5,10 +5,14 @@ import com.adgear.anoa.AnoaHandler;
 import com.adgear.anoa.read.AvroDecoders;
 import com.adgear.anoa.test.AnoaTestSample;
 import com.adgear.anoa.test.ad_exchange.LogEventAvro;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 import org.apache.avro.generic.GenericRecord;
+import org.junit.Assert;
 import org.junit.Test;
+
+import java.io.IOException;
 
 public class AvroEncodersTest {
 
@@ -46,16 +50,38 @@ public class AvroEncodersTest {
     ATS.assertAvroGenerics(
         ATS.avroGeneric()
             .map(AvroEncoders.jackson(ATS.avroSchema,
-                                      () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false)))
+                                      () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
+                                      true))
             .map(TokenBuffer::asParser)
             .map(AvroDecoders.jackson(ATS.avroSchema, true)));
 
     ATS.assertAvroGenerics(
         ATS.avroSpecific()
             .map(AvroEncoders.jackson(ATS.avroClass,
-                                      () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false)))
+                                      () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
+                                      true))
             .map(TokenBuffer::asParser)
             .map(AvroDecoders.jackson(ATS.avroSchema, true)));
+  }
+
+  @Test
+  public void testJacksonStrictness() throws IOException {
+    LogEventAvro avro = AvroDecoders.jackson(ATS.avroClass, false)
+        .apply(ATS.jsonNullsObjectParser());
+    JsonNode node = AvroEncoders.jackson(ATS.avroClass,
+                         () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
+                         false)
+        .apply(avro).asParser().readValueAsTree();
+    Assert.assertTrue(node.isObject());
+    Assert.assertEquals(0, node.size());
+
+    ATS.assertAvroGenerics(
+        ATS.avroGeneric()
+            .map(AvroEncoders.jackson(ATS.avroSchema,
+                                      () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
+                                      false))
+            .map(TokenBuffer::asParser)
+            .map(AvroDecoders.jackson(ATS.avroSchema, false)));
   }
 
   @Test
@@ -101,7 +127,8 @@ public class AvroEncodersTest {
             .map(AvroEncoders.jackson(
                 anoaHandler,
                 ATS.avroSchema,
-                () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false)))
+                () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
+                true))
             .map(anoaHandler.function(TokenBuffer::asParser))
             .flatMap(Anoa::asStream)
             .map(AvroDecoders.jackson(ATS.avroSchema, true)));
@@ -112,7 +139,8 @@ public class AvroEncodersTest {
             .map(AvroEncoders.jackson(
                 anoaHandler,
                 ATS.avroClass,
-                () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false)))
+                () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
+                true))
             .map(anoaHandler.function(TokenBuffer::asParser))
             .flatMap(Anoa::asStream)
             .map(AvroDecoders.jackson(ATS.avroSchema, true)));

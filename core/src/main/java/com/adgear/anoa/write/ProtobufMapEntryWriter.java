@@ -39,4 +39,19 @@ class ProtobufMapEntryWriter<R extends Message> extends ProtobufWriter<R> {
       jacksonGenerator.writeEndArray();
     }
   }
+
+  @Override
+  void writeStrict(R msg, JsonGenerator jacksonGenerator) throws IOException {
+    jacksonGenerator.writeFieldName(msg.getField(keyField).toString());
+    if (!valueField.isRepeated()) {
+      valueWriter.writeStrict(msg.getField(valueField), jacksonGenerator);
+    } else {
+      int n = msg.getRepeatedFieldCount(valueField);
+      jacksonGenerator.writeStartArray(n);
+      for (int i = 0; i < n; i++) {
+        valueWriter.writeStrict(msg.getRepeatedField(valueField, i), jacksonGenerator);
+      }
+      jacksonGenerator.writeEndArray();
+    }
+  }
 }

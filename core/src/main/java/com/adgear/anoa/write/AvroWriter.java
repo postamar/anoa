@@ -8,6 +8,7 @@ import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.specific.SpecificData;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -110,7 +111,9 @@ class AvroWriter<R extends IndexedRecord> extends AbstractRecordWriter<R> {
     for (Map.Entry<Schema.Field, AbstractWriter<Object>> entry : fieldWriters.entrySet()) {
       final Schema.Field field = entry.getKey();
       final Object value = record.get(field.pos());
-      if (value != null) {
+      if (!(value == null
+            || (value instanceof Map && ((Map) value).isEmpty())
+            || (value instanceof Collection && ((Collection) value).isEmpty()))) {
         final Object defaultValue = fieldDefaults.get(field);
         if (defaultValue == null || tester.testInequality(value, defaultValue, field.schema())) {
           jacksonGenerator.writeFieldName(field.name());
@@ -120,4 +123,23 @@ class AvroWriter<R extends IndexedRecord> extends AbstractRecordWriter<R> {
     }
     jacksonGenerator.writeEndObject();
   }
+
+  @Override
+  void writeStrict(R record, JsonGenerator jacksonGenerator) throws IOException {
+    if (!record.getSchema().equals(schema)) {
+      throw new IOException("Record does not have correct Avro schema:\n"
+                            + record.getSchema().toString(true));
+    }
+    jacksonGenerator.writeStartObject();
+    for (Map.Entry<Schema.Field, AbstractWriter<Object>> entry : fieldWriters.entrySet()) {
+      final Schema.Field field = entry.getKey();
+      final Object value = record.get(field.pos());
+      if (!(value == null
+            || (value instanceof Map && ((Map) value).isEmpty())
+            || (value instanceof Collection && ((Collection) value).isEmpty()))) {
+        jacksonGenerator.writeFieldName(field.name());
+        entry.getValue().writeStrict(value, jacksonGenerator);
+      }
+    }
+    jacksonGenerator.writeEndObject();  }
 }

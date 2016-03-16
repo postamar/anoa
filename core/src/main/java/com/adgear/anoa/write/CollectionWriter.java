@@ -26,4 +26,17 @@ class CollectionWriter<E> extends AbstractWriter<Collection<E>> {
     }
     jacksonGenerator.writeEndArray();
   }
+
+  @Override
+  void writeStrict(Collection<E> array, JsonGenerator jacksonGenerator) throws IOException {
+    jacksonGenerator.writeStartArray(array.size());
+    for (E element : array) {
+      if (element == null) {
+        jacksonGenerator.writeNull();
+      } else {
+        elementWriter.writeStrict(element, jacksonGenerator);
+      }
+    }
+    jacksonGenerator.writeEndArray();
+  }
 }

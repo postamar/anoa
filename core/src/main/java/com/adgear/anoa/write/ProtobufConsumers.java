@@ -31,11 +31,13 @@ public class ProtobufConsumers {
    *
    * @param recordClass      Protobuf record class object
    * @param jacksonGenerator JsonGenerator instance to write into
+   * @param strict           If set, chooses correctness over compactness
    * @param <R>              Protobuf record type
    */
   static public <R extends Message> WriteConsumer<R> jackson(
       Class<R> recordClass,
-      JsonGenerator jacksonGenerator) {
-    return new ProtobufWriter<>(recordClass).writeConsumer(jacksonGenerator);
+      JsonGenerator jacksonGenerator,
+      boolean strict) {
+    return new ProtobufWriter<>(recordClass).writeConsumer(jacksonGenerator, strict);
   }
 }

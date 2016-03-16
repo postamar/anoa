@@ -5,20 +5,20 @@ log_event_type [ UNKNOWN_LOG_EVENT_TYPE, REQUEST, RESPONSE, ERROR ]
 log_event {
 
   /** Log event unique identifier. */
-  bytes 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 uuid;
+  1: bytes(0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00) uuid;
 
   /** Log event timestamp, in milliseconds from epoch. */
-  long timestamp;
+  2: long timestamp;
 
   /** Log event type. */
-  log_event_type type;
+  3: log_event_type type;
 
   /** Bid request received from the real-time bidding ad exchange. */
-  open_rtb.bid_request request;
+  4: open_rtb.bid_request request;
 
   /** Bid response submitted to the real-time bidding ad exchange. */
-  open_rtb.bid_response response;
+  5: open_rtb.bid_response response;
 
   /** Log event custom properties. */
-  map<string,string> properties;
+  6: map<string,string> properties;
 }

@@ -112,7 +112,7 @@ public class AnoaParser implements Closeable {
     String path = namespace.replace('.', File.separatorChar) + ".anoa";
     File completeFile = (baseDir == null) ? new File(path) : new File(baseDir, path);
     if (completeFile.exists()) {
-      return completeFile.toURL();
+      return completeFile.toURI().toURL();
     } else if (resourceLoader != null) {
       URL url = resourceLoader.getResource(path);
       if (url != null) {
@@ -526,7 +526,7 @@ void EnumSymbol(List<String> enumSymbols) :
 void FieldDeclaration(List<Field> fields) :
 {
   int before = fields.isEmpty() ? 0 : fields.get(fields.size() - 1).getJsonProp("ordinal").asInt();
-  IntNode ordinal;
+  int ordinal;
   Field auxField;
   String name;
   String fieldName = null;
@@ -546,11 +546,11 @@ void FieldDeclaration(List<Field> fields) :
   ) *
   <SEMICOLON>
   {
-    Field field = new Field((fieldName == null) ? ("field__" + ordinal.asInt()) : fieldName,
+    Field field = new Field((fieldName == null) ? ("field__" + ordinal) : fieldName,
                             auxField.schema(),
                             auxField.doc(),
                             auxField.defaultValue());
-    field.addProp("ordinal", ordinal);
+    field.addProp("ordinal", IntNode.valueOf(ordinal));
     for (Map.Entry<String, JsonNode> prop : auxField.getJsonProps().entrySet()) {
       field.addProp(prop.getKey(), prop.getValue());
     }
@@ -561,25 +561,23 @@ void FieldDeclaration(List<Field> fields) :
   }
 }
 
-IntNode FieldOrdinal(int previous_ordinal) :
+int FieldOrdinal(int previous_ordinal) :
 {
   long ordinal = 1L + previous_ordinal;
   Token t;
 }
 {
-  (
-    ordinal = IntegerLiteral()
-    t = <COLON>
-    {
-      if (ordinal <= 0L || ordinal > 536870911L) {
-        throw this.error("Tag number is out of range, must be positive and less than 2^29", t);
-      }
-      if (ordinal <= (long) previous_ordinal) {
-        throw this.error("Tag number collision", t);
-      }
+  ordinal = IntegerLiteral()
+  t = <COLON>
+  {
+    if (ordinal <= 0L || ordinal > 536870911L) {
+      throw this.error("Tag number is out of range, must be positive and less than 2^29", t);
     }
-  ) ?
-  { return IntNode.valueOf((int) ordinal); }
+    if (ordinal <= (long) previous_ordinal) {
+      throw this.error("Tag number collision", t);
+    }
+    return (int) ordinal;
+  }
 }
 
 Field FieldType() :
@@ -618,7 +616,9 @@ Field FieldType() :
 JsonNode BooleanDefault() :
 { BooleanNode n = BooleanNode.FALSE; }
 {
-  ( <FALSE> | ( <TRUE> { n = BooleanNode.TRUE; } ) ) ?
+  ( <LPAREN>
+    ( <FALSE> | <TRUE> { n = BooleanNode.TRUE; } )
+  <RPAREN> ) ?
   { return n; }
 }
 
@@ -629,27 +629,31 @@ JsonNode BytesDefault() :
   ByteArrayOutputStream baos = new ByteArrayOutputStream();
 }
 {
-  (
-    t = <INTEGER_LITERAL>
-    {
-      try {
-        byteValue = Long.decode(t.image);
-      } catch (NumberFormatException e) {
-        throw this.error("Byte value out of range: " + e, t);
+  ( <LPAREN>
+    (
+      t = <INTEGER_LITERAL>
+      {
+        try {
+          byteValue = Long.decode(t.image);
+        } catch (NumberFormatException e) {
+          throw this.error("Byte value out of range: " + e, t);
+        }
+        if (byteValue < 0L || byteValue > 255L) {
+          throw this.error("Byte value out of range", t);
+        }
+        baos.write(((int) byteValue) & 0xff);
       }
-      if (byteValue < 0L || byteValue > 255L) {
-        throw this.error("Byte value out of range", t);
-      }
-      baos.write(((int) byteValue) & 0xff);
-    }
-  ) *
+    ) +
+  <RPAREN> ) ?
   { return AnoaBinaryNode.valueOf(baos.toByteArray()); }
 }
 
 JsonNode FloatingPointDefault() :
 { double d = 0.0; }
 {
-  ( d = FloatingPointLiteral() ) ?
+  ( <LPAREN>
+    d = FloatingPointLiteral()
+  <RPAREN> ) ?
   { return DoubleNode.valueOf(d); }
 }
 
@@ -669,7 +673,9 @@ double FloatingPointLiteral() :
 JsonNode IntegerDefault() :
 { long l = 0L; }
 {
-  ( l = IntegerLiteral() ) ?
+  ( <LPAREN>
+    l = IntegerLiteral()
+  <RPAREN> ) ?
   { return LongNode.valueOf(l); }
 }
 
@@ -689,7 +695,9 @@ long IntegerLiteral() :
 JsonNode StringDefault() :
 { String s = ""; }
 {
-  ( s = StringLiteral() ) ?
+  ( <LPAREN>
+    s = StringLiteral()
+  <RPAREN> ) ?
   { return TextNode.valueOf(s); }
 }
 

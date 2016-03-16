@@ -33,7 +33,7 @@ abstract class AbstractRecordReader<R, F extends FieldWrapper>
             name -> fieldLookUp.put(name, Optional.of(fw))));
   }
 
-  <P extends JsonParser> Function<P, R> decoder(boolean strict) {
+  final <P extends JsonParser> Function<P, R> decoder(boolean strict) {
     if (Boolean.TRUE.equals(strict)) {
       return (P jp) -> {
         try {
@@ -53,7 +53,7 @@ abstract class AbstractRecordReader<R, F extends FieldWrapper>
     }
   }
 
-  <P extends JsonParser, M> Function<Anoa<P, M>, Anoa<R, M>> decoder(
+  final <P extends JsonParser, M> Function<Anoa<P, M>, Anoa<R, M>> decoder(
       AnoaHandler<M> anoaHandler,
       boolean strict) {
     if (Boolean.TRUE.equals(strict)) {
@@ -63,7 +63,7 @@ abstract class AbstractRecordReader<R, F extends FieldWrapper>
     }
   }
 
-  Stream<R> stream(
+  final Stream<R> stream(
       boolean strict,
       JsonParser jacksonParser) {
     return LookAheadIteratorFactory.jackson(jacksonParser).asStream()
@@ -71,7 +71,7 @@ abstract class AbstractRecordReader<R, F extends FieldWrapper>
         .map(decoder(strict));
   }
 
-  <M> Stream<Anoa<R, M>> stream(
+  final <M> Stream<Anoa<R, M>> stream(
       AnoaHandler<M> anoaHandler,
       boolean strict,
       JsonParser jacksonParser) {
@@ -93,15 +93,19 @@ abstract class AbstractRecordReader<R, F extends FieldWrapper>
   abstract protected RecordWrapper<R, F> newWrappedInstance();
 
   @Override
-  protected R read(JsonParser jacksonParser) throws IOException {
+  final protected R read(JsonParser jacksonParser) throws IOException {
     if (jacksonParser.getCurrentToken() == JsonToken.START_OBJECT) {
       final RecordWrapper<R, F> recordWrapper = newWrappedInstance();
       doMap(jacksonParser, (fieldName, p) -> {
-        final Optional<F> fieldWrapper = fieldLookUp.get(fieldName);
-        if (fieldWrapper == null) {
+        final Optional<F> maybeFieldWrapper = fieldLookUp.get(fieldName);
+        if (maybeFieldWrapper == null) {
           fieldLookUp.put(fieldName, Optional.<F>empty());
-        } else if (fieldWrapper.isPresent()) {
-          recordWrapper.put(fieldWrapper.get(), fieldWrapper.get().getReader().read(p));
+        } else if (maybeFieldWrapper.isPresent()) {
+          final F fieldWrapper = maybeFieldWrapper.get();
+          Object value = fieldWrapper.getReader().read(p);
+          if (!fieldWrapper.equalsDefaultValue(value)) {
+            recordWrapper.put(fieldWrapper, value);
+          }
         } else {
           gobbleValue(p);
         }
@@ -114,18 +118,20 @@ abstract class AbstractRecordReader<R, F extends FieldWrapper>
   }
 
   @Override
-  protected R readStrict(JsonParser jacksonParser) throws AnoaJacksonTypeException, IOException {
+  final protected R readStrict(JsonParser jacksonParser)
+      throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;
       case START_OBJECT:
         final RecordWrapper<R, F> recordWrapper = newWrappedInstance();
         doMap(jacksonParser, (fieldName, p) -> {
-          final Optional<F> fieldWrapper = fieldLookUp.get(fieldName);
-          if (fieldWrapper == null) {
+          final Optional<F> maybeFieldWrapper = fieldLookUp.get(fieldName);
+          if (maybeFieldWrapper == null) {
             fieldLookUp.put(fieldName, Optional.<F>empty());
-          } else if (fieldWrapper.isPresent()) {
-            recordWrapper.put(fieldWrapper.get(), fieldWrapper.get().getReader().readStrict(p));
+          } else if (maybeFieldWrapper.isPresent()) {
+            final F fieldWrapper = maybeFieldWrapper.get();
+            recordWrapper.put(fieldWrapper, fieldWrapper.getReader().readStrict(p));
           } else {
             gobbleValue(p);
           }

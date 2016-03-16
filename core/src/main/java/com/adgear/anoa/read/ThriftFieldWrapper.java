@@ -11,18 +11,25 @@ import org.apache.thrift.meta_data.SetMetaData;
 import org.apache.thrift.meta_data.StructMetaData;
 import org.apache.thrift.protocol.TType;
 
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 class ThriftFieldWrapper<F extends TFieldIdEnum> implements FieldWrapper {
 
   final F tFieldIdEnum;
   final boolean isRequired;
+  final private Object defaultValue;
+  final Supplier<Object> defaultValueSupplier;
   final private AbstractReader<?> reader;
 
-  ThriftFieldWrapper(F tFieldIdEnum, FieldMetaData fieldMetaData) {
+  ThriftFieldWrapper(F tFieldIdEnum,
+                     FieldMetaData fieldMetaData,
+                     Supplier<Object> defaultValueSupplier) {
     this.tFieldIdEnum = tFieldIdEnum;
     this.isRequired = (fieldMetaData.requirementType == TFieldRequirementType.REQUIRED);
     this.reader = createReader(fieldMetaData.valueMetaData);
+    this.defaultValue = defaultValueSupplier.get();
+    this.defaultValueSupplier = defaultValueSupplier;
   }
 
   @Override
@@ -68,5 +75,10 @@ class ThriftFieldWrapper<F extends TFieldIdEnum> implements FieldWrapper {
         return metaData.isBinary() ? new ByteBufferReader() : new StringReader();
     }
     throw new RuntimeException("Unknown type in metadata " + metaData);
+  }
+
+  @Override
+  public boolean equalsDefaultValue(Object value) {
+    return value == null || value.equals(defaultValue);
   }
 }

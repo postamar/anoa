@@ -32,6 +32,13 @@ public class AnoaTestSample extends TestSample {
       .map(Unchecked.function(OBJECT_MAPPER::readTree))
       .collect(Collectors.toList());
 
+
+  public JsonParser jsonNullsObjectParser() {
+    String json = "{\"properties\":null,\"timestamp\":null,\"type\":null,\"uuid\":null,\"request\":null,\"response\":null}";
+    return Unchecked.supplier(() -> AnoaTestSample.OBJECT_MAPPER.getFactory().createParser(json))
+        .get();
+  }
+
   public Stream<JsonNode> jsonNodes() {
     return jsonObjects.stream().sequential();
   }

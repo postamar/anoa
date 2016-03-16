@@ -43,7 +43,8 @@ public class AvroTest {
           .map(AvroDecoders.jackson(f, ATS.avroClass, true))
           .map(AvroEncoders.jackson(f,
                                     ATS.avroClass,
-                                    () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false)))
+                                    () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
+                                    false))
           .map(f.function(TokenBuffer::asParser))
           .map(f.functionChecked(JsonParser::readValueAsTree))
           .filter(Anoa::isPresent)

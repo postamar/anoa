@@ -7,4 +7,6 @@ interface FieldWrapper {
   Stream<String> getNames();
 
   AbstractReader<?> getReader();
+
+  boolean equalsDefaultValue(Object value);
 }

@@ -29,15 +29,11 @@ class ThriftWriter<F extends TFieldIdEnum, T extends TBase<?, F>> extends Abstra
   ThriftWriter(Class<T> thriftClass) {
     fieldWriters = new LinkedHashMap<>();
     fieldDefaults = new HashMap<>();
-    T originalInstance = Unchecked.supplier(thriftClass::newInstance).get();
     T defaultInstance = createDefaultValue(thriftClass);
     AnoaReflectionUtils.getThriftMetaDataMap(thriftClass).forEach((f, md) -> {
       fieldWriters.put(f, (AbstractWriter<Object>) createWriter(md.valueMetaData));
-      if (originalInstance.getFieldValue(f) == null) {
-        fieldDefaults.put(f, defaultInstance.getFieldValue(f));
-      }
+      fieldDefaults.put(f, defaultInstance.getFieldValue(f));
     });
-
   }
 
   static private <F extends TFieldIdEnum, T extends TBase<?, F>>
@@ -104,13 +100,29 @@ class ThriftWriter<F extends TFieldIdEnum, T extends TBase<?, F>> extends Abstra
     jacksonGenerator.writeStartObject();
     for (Map.Entry<F, AbstractWriter<Object>> entry : fieldWriters.entrySet()) {
       F f = entry.getKey();
-      t.getFieldValue(f);
       if (t.isSet(f)) {
         Object value = t.getFieldValue(f);
-        Object defaultValue = fieldDefaults.get(f);
-        if (value != null && !value.equals(defaultValue)) {
+        if (value != null && !value.equals(fieldDefaults.get(f))) {
           jacksonGenerator.writeFieldName(f.getFieldName());
           entry.getValue().write(value, jacksonGenerator);
+        }
+      }
+    }
+    jacksonGenerator.writeEndObject();
+  }
+
+  @Override
+  void writeStrict(T t, JsonGenerator jacksonGenerator) throws IOException {
+    jacksonGenerator.writeStartObject();
+    for (Map.Entry<F, AbstractWriter<Object>> entry : fieldWriters.entrySet()) {
+      F f = entry.getKey();
+      if (t.isSet(f)) {
+        jacksonGenerator.writeFieldName(f.getFieldName());
+        Object value = t.getFieldValue(f);
+        if (value == null) {
+          jacksonGenerator.writeNull();
+        } else {
+          entry.getValue().writeStrict(value, jacksonGenerator);
         }
       }
     }

@@ -27,4 +27,17 @@ class MapWriter<V> extends AbstractWriter<Map<CharSequence, V>> {
     }
     jacksonGenerator.writeEndObject();
   }
+
+  @Override
+  void writeStrict(Map<CharSequence, V> map, JsonGenerator jacksonGenerator) throws IOException {
+    jacksonGenerator.writeStartObject();
+    for (Map.Entry<CharSequence, V> entry : map.entrySet()) {
+      jacksonGenerator.writeFieldName(entry.getKey().toString());
+      if (entry.getValue() == null) {
+        jacksonGenerator.writeNull();
+      } else {
+        valueElementWriter.writeStrict(entry.getValue(), jacksonGenerator);
+      }
+    }
+    jacksonGenerator.writeEndObject();  }
 }

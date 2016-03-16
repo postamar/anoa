@@ -4,6 +4,7 @@ import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
 import com.adgear.anoa.test.AnoaTestSample;
 import com.adgear.anoa.test.ad_exchange.LogEventAvro;
+import com.adgear.anoa.test.ad_exchange.LogEventTypeAvro;
 import com.fasterxml.jackson.core.TreeNode;
 
 import org.junit.Assert;
@@ -89,6 +90,25 @@ public class AvroDecodersTest {
             .map(anoaHandler.function(TreeNode::traverse))
             .map(AvroDecoders.jackson(anoaHandler, ATS.avroClass, false))
             .map(Anoa::get));
+  }
+
+  @Test
+  public void testJacksonStrictness() {
+    LogEventAvro strict = AvroDecoders.jackson(ATS.avroClass, true)
+        .apply(ATS.jsonNullsObjectParser());
+    LogEventAvro loose = AvroDecoders.jackson(ATS.avroClass, false)
+        .apply(ATS.jsonNullsObjectParser());
+    Assert.assertNotNull(strict.getRequest());
+    Assert.assertNotNull(strict.getResponse());
+    Assert.assertNotNull(strict.getTimestamp());
+    Assert.assertEquals(0L, strict.getTimestamp().longValue());
+    Assert.assertNotNull(strict.getType());
+    Assert.assertEquals(LogEventTypeAvro.UNKNOWN_LOG_EVENT_TYPE, strict.getType());
+    Assert.assertNotNull(strict.getUuid());
+    Assert.assertEquals(16, strict.getUuid().remaining());
+    Assert.assertNotNull(strict.getProperties());
+    Assert.assertTrue(strict.getProperties().isEmpty());
+    Assert.assertEquals(strict, loose);
   }
 
   @Test

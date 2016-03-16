@@ -23,10 +23,11 @@ class ThriftRecordWrapper<F extends TFieldIdEnum, T extends TBase<?, F>>
 
   @Override
   public void put(ThriftFieldWrapper<F> fieldWrapper, Object value) {
+    F field = fieldWrapper.tFieldIdEnum;
     if (fieldWrapper.isRequired) {
       ++n;
     }
-    record.setFieldValue(fieldWrapper.tFieldIdEnum, value);
+    record.setFieldValue(field, (value == null) ? fieldWrapper.defaultValueSupplier.get() : value);
   }
 
   @Override

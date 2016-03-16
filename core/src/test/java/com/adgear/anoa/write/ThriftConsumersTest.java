@@ -51,7 +51,7 @@ public class ThriftConsumersTest {
   @Test
   public void testJackson() throws IOException {
     TokenBuffer tb = new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false);
-    try (WriteConsumer<LogEventThrift> wc = ThriftConsumers.jackson(ATS.thriftClass, tb)) {
+    try (WriteConsumer<LogEventThrift> wc = ThriftConsumers.jackson(ATS.thriftClass, tb, true)) {
       ATS.thrift().forEach(wc);
     }
     ATS.assertThriftObjects(ThriftStreams.jackson(ATS.thriftClass, true, tb.asParser()));

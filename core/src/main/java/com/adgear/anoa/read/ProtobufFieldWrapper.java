@@ -8,12 +8,15 @@ import java.util.stream.Stream;
 class ProtobufFieldWrapper implements FieldWrapper {
 
   final Descriptors.FieldDescriptor field;
+  final private Object defaultValue;
   final private AbstractReader<?> reader;
 
-  ProtobufFieldWrapper(Descriptors.FieldDescriptor field,
-                       Message.Builder parentBuilder) {
+  ProtobufFieldWrapper(Descriptors.FieldDescriptor field, Message.Builder parentBuilder) {
     this.field = field;
     this.reader = createReader(field, parentBuilder);
+    this.defaultValue = field.isRepeated()
+                        ? null
+                        : parentBuilder.getDefaultInstanceForType().getField(field);
   }
 
   @Override
@@ -82,5 +85,8 @@ class ProtobufFieldWrapper implements FieldWrapper {
     throw new RuntimeException("Unknown type for " + field);
   }
 
-
+  @Override
+  public boolean equalsDefaultValue(Object value) {
+    return value == null || value.equals(defaultValue);
+  }
 }

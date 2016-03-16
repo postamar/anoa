@@ -26,14 +26,14 @@ class AvroRecordWrapper<R extends IndexedRecord> implements RecordWrapper<R, Avr
     flag[fieldWrapper.index] = true;
     if (value != null) {
       record.put(fieldWrapper.field.pos(), value);
-    } else if (fieldWrapper.defaultValue == null) {
+    } else if (fieldWrapper.hasDefaultValue()) {
+      record.put(fieldWrapper.field.pos(), fieldWrapper.defaultValueCopy());
+    } else {
       if (fieldWrapper.unboxed) {
         throw new AnoaJacksonTypeException(
             "Cannot set unboxed field to null: " + fieldWrapper.field.name());
       }
       record.put(fieldWrapper.field.pos(), null);
-    } else {
-      record.put(fieldWrapper.field.pos(), fieldWrapper.defaultValueCopy());
     }
   }
 
@@ -41,7 +41,7 @@ class AvroRecordWrapper<R extends IndexedRecord> implements RecordWrapper<R, Avr
   public R get() {
     for (AvroFieldWrapper fieldWrapper : fieldWrappers) {
       if (!flag[fieldWrapper.index]) {
-        if (fieldWrapper.defaultValue != null) {
+        if (fieldWrapper.hasDefaultValue()) {
           record.put(fieldWrapper.field.pos(), fieldWrapper.defaultValueCopy());
         } else if (fieldWrapper.unboxed) {
           throw new AnoaJacksonTypeException(

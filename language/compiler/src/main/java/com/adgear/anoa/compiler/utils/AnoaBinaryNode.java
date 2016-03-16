@@ -9,7 +9,6 @@ import org.codehaus.jackson.node.ValueNode;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.util.regex.Pattern;
 
 final public class AnoaBinaryNode extends ValueNode {

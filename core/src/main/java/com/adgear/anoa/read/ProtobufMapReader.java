@@ -30,17 +30,19 @@ class ProtobufMapReader extends AbstractReader<List<Object>> {
 
   private List<Object> toEntryList(Map<CharSequence, Object> map) {
     ArrayList<Object> result = new ArrayList<>();
-    for (Map.Entry<CharSequence, Object> entry : map.entrySet()) {
-      mapEntryBuilder.clear();
-      mapEntryBuilder.setField(keyDescriptor, entry.getKey());
-      if (valueDescriptor.isRepeated()) {
-        for (Object element : (Iterable) entry.getValue()) {
-          mapEntryBuilder.addRepeatedField(valueDescriptor, element);
+    if (map != null) {
+      for (Map.Entry<CharSequence, Object> entry : map.entrySet()) {
+        mapEntryBuilder.clear();
+        mapEntryBuilder.setField(keyDescriptor, entry.getKey());
+        if (valueDescriptor.isRepeated()) {
+          for (Object element : (Iterable) entry.getValue()) {
+            mapEntryBuilder.addRepeatedField(valueDescriptor, element);
+          }
+        } else {
+          mapEntryBuilder.setField(valueDescriptor, entry.getValue());
         }
-      } else {
-        mapEntryBuilder.setField(valueDescriptor, entry.getValue());
+        result.add(mapEntryBuilder.build());
       }
-      result.add(mapEntryBuilder.build());
     }
     return result;
   }

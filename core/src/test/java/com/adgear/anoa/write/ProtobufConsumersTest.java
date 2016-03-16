@@ -30,7 +30,7 @@ public class ProtobufConsumersTest {
   public void testJackson() throws IOException {
     TokenBuffer tb = new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false);
     try (WriteConsumer<AdExchangeProtobuf.LogEvent> wc =
-             ProtobufConsumers.jackson(ATS.protobufClass, tb)) {
+             ProtobufConsumers.jackson(ATS.protobufClass, tb, true)) {
       ATS.protobuf().forEach(wc);
     }
     ATS.assertProtobufObjects(

@@ -29,10 +29,8 @@ import org.jooq.lambda.Unchecked;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Scanner;
@@ -74,7 +72,7 @@ public class JacksonTest {
 
     try (CsvGenerator tsvGenerator = new CsvConsumers(schema).generator(outputStream)) {
       AvroStreams.jackson(SimpleAvro.class, false, csvParser)
-          .map(AvroEncoders.jackson(SimpleAvro.class, () -> tsvGenerator))
+          .map(AvroEncoders.jackson(SimpleAvro.class, () -> tsvGenerator, true))
           .forEach(Unchecked.consumer(CsvGenerator::flush));
     }
 
@@ -98,7 +96,7 @@ public class JacksonTest {
       JsonStreams jsonStreams = new JsonStreams();
       try (WriteConsumer<ObjectNode> writeConsumer = jsonConsumers.to(baos)) {
         writeConsumer.accept(
-            AvroEncoders.jackson(SimpleAvro.class, jsonConsumers::generator)
+            AvroEncoders.jackson(SimpleAvro.class, jsonConsumers::generator, true)
                 .apply(simple)
                 .asParser(jsonStreams.objectCodec)
                 .readValueAsTree());
@@ -110,7 +108,7 @@ public class JacksonTest {
 
     {
       try (CBORGenerator cborGenerator = new CborConsumers().generator(baos)) {
-        AvroConsumers.jackson(SimpleAvro.class, cborGenerator).accept(simple);
+        AvroConsumers.jackson(SimpleAvro.class, cborGenerator, true).accept(simple);
       }
       System.out.println(baos);
       Assert.assertEquals(simple, readFn.apply(new CborStreams().parser(baos.toByteArray())));
@@ -119,7 +117,7 @@ public class JacksonTest {
 
     {
       try (SmileGenerator smileGenerator = new SmileConsumers().generator(baos)) {
-        AvroConsumers.jackson(SimpleAvro.class, smileGenerator).accept(simple);
+        AvroConsumers.jackson(SimpleAvro.class, smileGenerator, true).accept(simple);
       }
       System.out.println(baos);
       Assert.assertEquals(simple, readFn.apply(new SmileStreams().parser(baos.toByteArray())));

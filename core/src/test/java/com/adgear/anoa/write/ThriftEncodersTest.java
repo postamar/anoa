@@ -5,9 +5,13 @@ import com.adgear.anoa.AnoaHandler;
 import com.adgear.anoa.read.ThriftDecoders;
 import com.adgear.anoa.test.AnoaTestSample;
 import com.adgear.anoa.test.ad_exchange.LogEventThrift;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
+import org.junit.Assert;
 import org.junit.Test;
+
+import java.io.IOException;
 
 public class ThriftEncodersTest {
 
@@ -43,9 +47,24 @@ public class ThriftEncodersTest {
     ATS.assertThriftObjects(
         ATS.thrift()
             .map(ThriftEncoders.jackson(ATS.thriftClass,
-                                        () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false)))
+                                        () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
+                                        true))
             .map(TokenBuffer::asParser)
             .map(ThriftDecoders.jackson(ATS.thriftClass, true)));
+  }
+
+
+  @Test
+  public void testJacksonStrictness() throws IOException {
+    LogEventThrift thrift = ThriftDecoders.jackson(ATS.thriftClass, false)
+        .apply(ATS.jsonNullsObjectParser());
+    JsonNode node = ThriftEncoders.jackson(ATS.thriftClass,
+                                           () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
+                                           false)
+        .apply(thrift).asParser().readValueAsTree();
+    Assert.assertTrue(node.isObject());
+    Assert.assertEquals(1, node.size());
+    Assert.assertTrue(node.has("uuid"));
   }
 
   @Test
@@ -85,7 +104,8 @@ public class ThriftEncodersTest {
             .map(anoaHandler::<LogEventThrift>of)
             .map(ThriftEncoders.jackson(anoaHandler,
                                         ATS.thriftClass,
-                                        () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false)))
+                                        () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
+                                        true))
             .map(anoaHandler.function(TokenBuffer::asParser))
             .map(ThriftDecoders.jackson(anoaHandler, ATS.thriftClass, true))
             .flatMap(Anoa::asStream));

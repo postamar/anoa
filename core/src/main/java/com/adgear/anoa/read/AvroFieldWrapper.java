@@ -23,7 +23,7 @@ class AvroFieldWrapper implements FieldWrapper {
   final int index;
   final Schema.Field field;
   final boolean unboxed;
-  final Object defaultValue;
+  final private Object defaultValue;
   final AbstractReader<?> reader;
 
   AvroFieldWrapper(int index, Schema.Field field) {
@@ -115,5 +115,14 @@ class AvroFieldWrapper implements FieldWrapper {
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }
+  }
+
+  boolean hasDefaultValue() {
+    return defaultValue != null;
+  }
+
+  @Override
+  public boolean equalsDefaultValue(Object value) {
+    return value == null || value.equals(defaultValue);
   }
 }

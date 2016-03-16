@@ -2,6 +2,9 @@ package com.adgear.anoa.read;
 
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
+import com.google.protobuf.UninitializedMessageException;
+
+import com.adgear.anoa.AnoaJacksonTypeException;
 
 class ProtobufRecordWrapper<R extends Message> implements RecordWrapper<R, ProtobufFieldWrapper> {
 
@@ -14,7 +17,11 @@ class ProtobufRecordWrapper<R extends Message> implements RecordWrapper<R, Proto
   @Override
   @SuppressWarnings("unchecked")
   public R get() {
-    return (R) builder.build();
+    try {
+      return (R) builder.build();
+    } catch (UninitializedMessageException e) {
+      throw new AnoaJacksonTypeException(e);
+    }
   }
 
   @Override
@@ -22,19 +29,13 @@ class ProtobufRecordWrapper<R extends Message> implements RecordWrapper<R, Proto
   public void put(ProtobufFieldWrapper fieldWrapper, Object value) {
     Descriptors.FieldDescriptor field = fieldWrapper.field;
     if (field.isRepeated()) {
-      for (Object element : (Iterable<Object>) value) {
-        builder.addRepeatedField(field, nonNullValue(field, element));
+      if (value != null) {
+        for (Object element : (Iterable<Object>) value) {
+          builder.addRepeatedField(field, element);
+        }
       }
-    } else {
-      builder.setField(field, nonNullValue(field, value));
+    } else  {
+      builder.setField(field, (value == null) ? builder.getField(field) : value);
     }
   }
-
-  private Object nonNullValue(Descriptors.FieldDescriptor field, Object value) {
-    if (value != null) {
-      return value;
-    }
-    return builder.newBuilderForField(field).getDefaultInstanceForType();
-  }
-
 }

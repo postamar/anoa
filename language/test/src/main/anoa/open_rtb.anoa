@@ -5,46 +5,46 @@ The “banner” object _must_ be included directly in the impression object if 
 banner {
 
   /** Width of the impression in pixels. Since some ad types are not restricted by size this field is not required, but it’s highly recommended that this information be included when possible. */
-  int w;
+  1: int w;
 
   /** Height of the impression in pixels. Since some ad types are not restricted by size this field is not required, but it’s highly recommended that this information be included when possible.*/
-  int h;
+  2: int h;
 
   /** Maximum width of the impression in pixels. If included, it indicates that a range of sizes is allowed with this maximum width and "w" is taken as recommended. If not included, then "w" should be considered an exact requirement.*/
-  int wmax;
+  3: int wmax;
 
   /** Maximum height of the impression in pixels. If included, it indicates that a range of sizes is allowed with this maximum height and "h" is taken as recommended. If not included, then "h" should be considered an exact requirement.*/
-  int hmax;
+  4: int hmax;
 
   /** Minimum width of the impression in pixels. If included, it indicates that a range of sizes is allowed with this minimum width and "w" is taken as recommended. If not included, then "w" should be considered an exact requirement.*/
-  int wmin;
+  5: int wmin;
 
   /** Minimum height of the impression in pixels. If included, it indicates that a range of sizes is allowed with this minimum height and "h" is taken as recommended. If not included, then "h" should be considered an exact requirement.*/
-  int hmin;
+  6: int hmin;
 
   /** Unique identifier for this banner object. Useful for tracking multiple banner objects (e.g., in companion banner array). Usually starts with 1, increasing with each object. Combination of impression id banner object should be unique.*/
-  string id;
+  7: string id;
 
   /** Ad Position. Use Table 6.5 */
-  int pos;
+  8: int pos;
 
   /** Blocked creative types. See Table 6.2 Banner Ad Types. If blank, assume all types are allowed.*/
-  list<int> btype;
+  9: list<int> btype;
 
   /** Blocked creative attributes. See Table 6.3 Creative Attributes. If blank assume all types are allowed. */
-  list<int> battr;
+  10: list<int> battr;
 
   /** Whitelist of content MIME types supported. Popular MIME types include, but are not limited to “image/jpg”, “image/gif” and “application/x-shockwave-flash”.*/
-  list<string> mimes;
+  11: list<string> mimes;
 
   /** Specify if the banner is delivered in the top frame or in an iframe. “0” means it is not in the top frame, and “1” means that it is.*/
-  int topframe;
+  12: int topframe;
 
   /** Specify properties for an expandable ad. See Table 6.11 Expandable Direction for possible values.*/
-  list<int> expdir;
+  13: list<int> expdir;
 
   /** List of supported API frameworks for this banner. (See Table 6.4 API Frameworks). If an API is not explicitly listed it is assumed not to be supported.*/
-  list<int> api;
+  14: list<int> api;
 }
 
 
@@ -56,69 +56,69 @@ Note that for the video object, many of the fields are non-essential for a minim
 video {
 
   /** Content MIME types supported. Popular MIME types include, but are not limited to “video/x-ms- wmv” for Windows Media, and “video/x-flv” for Flash Video.*/
-  list<string> mimes;
+  1: list<string> mimes;
 
   /** Minimum video ad duration in seconds.*/
-  int -1 minduration;
+  2: int(-1) minduration;
 
   /** Maximum video ad duration in seconds.*/
-  int -1 maxduration;
+  3: int(-1) maxduration;
 
   /** Video bid response protocols. See Table 6.7 Video Bid Response Protocols for a list of possible values. NOTE: Use “protocols” when multiple protocols are supported. Its use is also highly recommended even for one since this “protocol” attribute is likely to be deprecated in a future version.
       At least one supported protocol must be specified in either the “protocol” or “protocols” attribute.*/
-  int protocol;
+  4: int protocol;
 
   /** Video bid response protocols. See Table 6.7 Video Bid Response Protocols for a list of possible values.
       At least one supported protocol must be specified in either the “protocol” or “protocols” attribute.*/
-  list<int> protocols;
+  5: list<int> protocols;
 
   /** Width of the player in pixels. This field is not required, but it’s highly recommended that this information be included.*/
-  int w;
+  6: int w;
 
   /** Height of the player in pixels. This field is not required, but it’s highly recommended that this information be included.*/
-  int h;
+  7: int h;
 
   /** Indicates the start delay in seconds for preroll, midroll, or postroll ad placement. See Table 6.9 Video Start Delay for generic placement values.*/
-  int startdelay;
+  8: int startdelay;
 
   /** Indicates whether the ad impression must be linear, non- linear or can be of any type (field not set). See Table 6.6 Video Linearity for a list of the possible values and recommended bidder interpretation.*/
-  int linearity;
+  9: int linearity;
 
   /** If multiple ad impressions are offered in the same bid request, the sequence number will allow for the coordinated delivery of multiple creatives.*/
-  int 1 sequence;
+  10: int(1) sequence;
 
   /** Blocked creative attributes. See Table 6.3 Creative Attributes. If blank assume all types are allowed.*/
-  list<int> battr;
+  11: list<int> battr;
 
   /** Maximum extended video ad duration, if extension is allowed. If blank or 0, extension is not allowed. If -1, extension is allowed, and there is no time limit imposed. If greater than 0, then the value represents the number of seconds of extended play supported beyond the maxduration value.*/
-  int maxextended;
+  12: int maxextended;
 
   /** Minimum bit rate in Kbps. Exchange may set this dynamically, or universally across their set of publishers.*/
-  int minbitrate;
+  13: int minbitrate;
 
   /** Maximum bit rate in Kbps. Exchange may set this dynamically, or universally across their set of publishers.*/
-  int maxbitrate;
+  14: int maxbitrate;
 
   /** If exchange publisher has rules preventing letter boxing of 4x3 content to play in a 16x9 window, then this should be set to false. Default setting is true, which assumes that boxing of content to fit into a window is allowed. “1” indicates boxing is allowed. “0” indicates it is not allowed.*/
-  int 1 boxingallowed;
+  15: int(1) boxingallowed;
 
   /** List of allowed playback methods. If blank, assume that all are allowed. See Table 6.8 Video Playback Methods for a list of possible values.*/
-  list<int> playbackmethod;
+  16: list<int> playbackmethod;
 
   /** List of supported delivery methods (streaming, progressive). If blank, assume all are supported. See Table 6.12 Content Delivery Methods for a list of possible values.*/
-  list<int> deliverymethod;
+  17: list<int> deliverymethod;
 
   /** Ad Position (see table 6.5). Default: unknown.*/
-  int pos;
+  18: int pos;
 
   /** If companion ads are available, they can be listed as an array of banner objects. See Banner Object.*/
-  list<banner> companionad;
+  19: list<banner> companionad;
 
   /** List of supported API frameworks for this impression. (See Table 6.4 API Frameworks). If an API is not explicitly listed it is assumed not to be supported.*/
-  list<int> api;
+  20: list<int> api;
 
   /** Recommended if companion objects are included. See Table 6.17 VAST Companion Types for a list of possible values.*/
-  list<int> vast_companion_type;
+  21: list<int> vast_companion_type;
 }
 
 
@@ -129,22 +129,22 @@ A “deal” object constitutes a deal struck a priori between a buyer and a sel
 deal {
 
   /** A unique identifier for the direct deal.*/
-  string id;
+  1: string id;
 
   /** Bid floor for this impression (in CPM of bidfloorcur).*/
-  double bidfloor;
+  2: double bidfloor;
 
   /** If bid floor is specified and multiple currencies supported per bid request, then currency should be specified here using ISO- 4217 alphabetic codes. Note, this may be different from bid currency returned by bidder, if this is allowed on an exchange.*/
-  string "USD" bidfloorcur;
+  3: string("USD") bidfloorcur;
 
   /** Array of buyer seats allowed to bid on this Direct Deal. Seats are an optional feature of an exchange. For example, [“4”,”34”,”82”,”45”] indicates that only advertisers using these exchange seats are allowed to bid on this direct deal.*/
-  list<string> wseat;
+  4: list<string> wseat;
 
   /** Array of advertiser domains allowed to bid on this Direct Deal. For example, [“advertiser1.com”,”advertiser2.com”] indicates that only the listed advertisers are allowed to bid on this direct deal.*/
-  list<string> wadomain;
+  5: list<string> wadomain;
 
   /** Auction type. If “1”, then first price auction. If “2”, then second price auction. If “3”, the passed bidfloor indicates the apriori agreed upon deal price. Additional auction types can be defined as per the exchange’s business rules.*/
-  int at;
+  10: int at;
 }
 
 
@@ -155,10 +155,10 @@ The “pmp” object contains a parent object for usage within the context of pr
 pmp {
 
   /** An integer flag indicating that this impression is a private auction eligible only to seats named in the Direct Deals object. (e.g., 1 = bids for this impression are restricted to the deals specified and the terms thereof; 0 = all bids are accepted) */
-  int private_auction;
+  1: int private_auction;
 
   /** A collection of “deal” objects encapsulating a list of direct deals eligible for this impression.*/
-  list<deal> deals;
+  2: list<deal> deals;
 }
 
 
@@ -169,40 +169,40 @@ The “imp” object describes the ad position or impression being auctioned. A 
 impression {
 
   /** A unique identifier for this impression within the context of the bid request (typically, value starts with 1, and increments up to n for n impressions).*/
-  string id;
+  1: string id;
 
   /** A reference to a banner object. Either a banner or video object (or both if the impression could be either) must be included in an impression object. See Banner Object.*/
-  banner banner;
+  2: banner banner;
 
   /** A reference to a video object. Either a banner or video object (or both if the impression could be either) must be included in an impression object. See Video Object.*/
-  video video;
+  3: video video;
 
   /** Name of ad mediation partner, SDK technology, or native player responsible for rendering ad (typically video or mobile). Used by some ad servers to customize ad code by partner.*/
-  string displaymanager;
+  4: string displaymanager;
 
   /** Version of ad mediation partner, SDK technology, or native player responsible for rendering ad (typically video or mobile). Used by some ad servers to customize ad code by partner.*/
-  string displaymanagerver;
+  5: string displaymanagerver;
 
   /** 1 if the ad is interstitial or full screen; else 0 (i.e., no).*/
-  int instl;
+  6: int instl;
 
   /** Identifier for specific ad placement or ad tag that was used to initiate the auction. This can be useful for debugging of any issues, or for optimization by the buyer.*/
-  string tagid;
+  7: string tagid;
 
   /** Bid floor for this impression (in CPM of bidfloorcur).*/
-  double bidfloor;
+  8: double bidfloor;
 
   /** If bid floor is specified and multiple currencies supported per bid request, then currency should be specified here using ISO-4217 alphabetic codes. Note, this may be different from bid currency returned by bidder, if this is allowed on an exchange.*/
-  string "USD" bidfloorcur;
+  9: string("USD") bidfloorcur;
 
   /** Flag to indicate whether the impression requires secure HTTPS URL creative assets and markup. A value of “1” means that the impression requires secure assets. A value of "0" means non-secure assets. If this field is omitted the bidder should interpret the secure state is unknown and assume HTTP is supported.*/
-  int secure;
+  10: int secure;
 
   /** Array of names for supported iframe busters. Exchange specific.*/
-  list<string> iframebuster;
+  11: list<string> iframebuster;
 
   /** A reference to the PMP object containing any Deals eligible for the impression object. See the PMP Object definition.*/
-  pmp pmp;
+  12: pmp pmp;
 }
 
 
@@ -213,16 +213,16 @@ The publisher object itself and all of its parameters are optional, so default v
 publisher {
 
   /** Publisher ID on the exchange. */
-  string id;
+  1: string id;
 
   /** Publisher initialName (may be masked at publisher’s request).*/
-  string initial_name;
+  2: string initial_name;
 
   /** Array of IAB content categories for the publisher. See Table 6.1 Content Categories.*/
-  list<string> cat;
+  3: list<string> cat;
 
   /** Publisher’s highest level domain initialName, for example “foopub.com”.*/
-  string domain;
+  4: string domain;
 }
 
 
@@ -233,16 +233,16 @@ The producer is useful when content where the ad is shown is syndicated, and may
 producer {
 
   /** Content producer or originator ID. Useful if content is syndicated, and may be posted on a site using embed tags.*/
-  string id;
+  1: string id;
 
   /** Content producer or originator initialName (e.g., “Warner Bros”).*/
-  string initial_name;
+  2: string initial_name;
 
   /** Array of IAB content categories for the content producer. See Table 6.1 Content Categories.*/
-  list<string> cat;
+  3: list<string> cat;
 
   /** URL of the content producer.*/
-  string domain;
+  4: string domain;
 }
 
 
@@ -254,65 +254,65 @@ This object may be useful in the situation where syndicated content contains imp
 content {
 
   /** ID uniquely identifying the content.*/
-  string id;
+  1: string id;
 
   /** Content episode number (typically applies to video content).*/
-  int episode;
+  2: int episode;
 
   /** Content title.
            Video examples: “Search Committee” (television) or “A New Hope” (movie) or “Endgame” (made for web)
            Non-video example: “Why an Antarctic Glacier Is Melting So Quickly” (Time magazine article)*/
-  string title;
+  3: string title;
 
   /** Content series.
            Video examples: “The Office” (television) or “Star Wars” (movie) or “Arby ‘N’ The Chief” (made for web)
            Non-video example: “Ecocentric” (Time magazine blog)*/
-  string series;
+  4: string series;
 
   /** Content season. E.g., “Season 3” (typically applies to video content).*/
-  string season;
+  5: string season;
 
   /** Original URL of the content, for buy-side contextualization or review.*/
-  string url;
+  6: string url;
 
   /** Array of IAB content categories for the content. See Table 6.1 Content Categories.*/
-  list<string> cat;
+  7: list<string> cat;
 
   /** Video quality per the IAB’s classification. See Table 6.14 Video Quality.*/
-  int videoquality;
+  8: int videoquality;
 
   /** Comma separated list of keywords describing the content.*/
-  string keywords;
+  9: string keywords;
 
   /** Content rating (e.g., MPAA)*/
-  string contentrating;
+  10: string contentrating;
 
   /** User rating of the content (e.g., number of stars, likes, etc.).*/
-  string userrating;
+  11: string userrating;
 
   /** Specifies the type of content (game, video, text, etc.). See Table 6.13 Content Context.*/
-  string context;
+  12: string context;
 
   /** Is content live? E.g., live video stream, live blog. “1” means content is live. “0” means it is not live.*/
-  int livestream;
+  13: int livestream;
 
   /** 1 for “direct”; 0 for “indirect”.*/
-  int sourcerelationship;
+  14: int sourcerelationship;
 
   /** See Producer Object.*/
-  producer producer;
+  15: producer producer;
 
   /** Length of content (appropriate for video or audio) in seconds.*/
-  int len;
+  16: int len;
 
   /** Media rating of the content, per QAG guidelines. See Table 0 QAG Media Ratings for list of possible values.*/
-  int qagmediarating;
+  17: int qagmediarating;
 
   /** From QAG Video Addendum. If content can be embedded (such as an embeddable video player) this value should be set to “1”. If content cannot be embedded, then this should be set to “0”.*/
-  int embeddable;
+  18: int embeddable;
 
   /** Language of the content. Use alpha-2/ISO 639-1 codes.*/
-  string language;
+  19: string language;
 }
 
 /**
@@ -323,43 +323,43 @@ The site object itself and all of its parameters are optional, so default values
 site {
 
   /** Site ID on the exchange.*/
-  string id;
+  1: string id;
 
   /** Site initialName (may be masked at publisher’s request).*/
-  string initial_name;
+  2: string initial_name;
 
   /** Domain of the site, used for advertiser side blocking. For example, “foo.com”.*/
-  string domain;
+  3: string domain;
 
   /** Array of IAB content categories for the overall site. See Table 6.1 Content Categories.*/
-  list<string> cat;
+  4: list<string> cat;
 
   /** Array of IAB content categories for the current subsection of the site. See Table 6.1 Content Categories.*/
-  list<string> sectioncat;
+  5: list<string> sectioncat;
 
   /** Array of IAB content categories for the current page. See Table 6.1 Content Categories.*/
-  list<string> pagecat;
+  6: list<string> pagecat;
 
   /** URL of the page where the impression will be shown.*/
-  string page;
+  7: string page;
 
   /** Specifies whether the site has a privacy policy. “1” means there is a policy. “0” means there is not.*/
-  int privacypolicy;
+  8: int privacypolicy;
 
   /** Referrer URL that caused navigation to the current page.*/
-  string ref;
+  9: string ref;
 
   /** Search string that caused navigation to the current page.*/
-  string search;
+  10: string search;
 
   /** See Publisher Object.*/
-  publisher publisher;
+  11: publisher publisher;
 
   /** See Content Object.*/
-  content content;
+  12: content content;
 
   /** List of keywords describing this site in a comma separated string.*/
-  string keywords;
+  13: string keywords;
 }
 
 
@@ -371,46 +371,46 @@ The app object itself and all of its parameters are optional, so default values 
 app {
 
   /** Application ID on the exchange.*/
-  string id;
+  1: string id;
 
   /** Application initialName (may be masked at publisher’s request).*/
-  string initial_name;
+  2: string initial_name;
 
   /** Domain of the application (e.g., “mygame.foo.com”).*/
-  string domain;
+  3: string domain;
 
   /** Array of IAB content categories for the overall application. See Table 6.1 Content Categories.*/
-  list<string> cat;
+  4: list<string> cat;
 
   /** Array of IAB content categories for the current subsection of the app. See Table 6.1 Content Categories.*/
-  list<string> sectioncat;
+  5: list<string> sectioncat;
 
   /** Array of IAB content categories for the current page/view of the app. See Table 6.1 Content Categories.*/
-  list<string> pagecat;
+  6: list<string> pagecat;
 
   /** Application version.*/
-  string ver;
+  7: string ver;
 
   /** Application bundle or package initialName (e.g., com.foo.mygame). This is intended to be a unique ID across multiple exchanges.*/
-  string bundle;
+  8: string bundle;
 
   /** Specifies whether the app has a privacy policy. “1” means there is a policy and “0” means there is not.*/
-  int privacypolicy;
+  9: int privacypolicy;
 
   /** “1” if the application is a paid version; else “0” (i.e., free).*/
-  int paid;
+  10: int paid;
 
   /** See Publisher Object.*/
-  publisher publisher;
+  11: publisher publisher;
 
   /** See Content Object.*/
-  content content;
+  12: content content;
 
   /** List of keywords describing this app in a comma separated string.*/
-  string keywords;
+  13: string keywords;
 
   /** For QAG 1.5 compliance, an app store URL for an installed app should be passed in the bid request.*/
-  string storeurl;
+  14: string storeurl;
 }
 
 
@@ -422,31 +422,31 @@ Note that the Geo Object may appear in one or both the Device Object and the Use
 geo {
 
   /** Latitude from -90 to 90. South is negative. This should only be passed if known to be accurate (For example, not the centroid of a postal code).*/
-  float lat;
+  1: float lat;
 
   /** Longitude from -180 to 180. West is negative. This should only be passed if known to be accurate.*/
-  float lon;
+  2: float lon;
 
   /** Country using ISO-3166-1 Alpha-3.*/
-  string country;
+  3: string country;
 
   /** Region using ISO 3166-2.*/
-  string region;
+  4: string region;
 
   /** Region of a country using FIPS 10-4 notation (alternative to ISO 3166-2).*/
-  string regionfips104;
+  5: string regionfips104;
 
   /** Pass the metro code (seehttp://code.google.com/apis/adwords/docs/appendix/metrocodes.html). Metro codes are similar to but not exactly the same as Nielsen DMAs.*/
-  string metro;
+  6: string metro;
 
   /** City using United Nations Code for Trade and Transport Locations (http://www.unece.org/cefact/locode/ser vice/location.htm).*/
-  string city;
+  7: string city;
 
   /** Zip/postal code.*/
-  string zip;
+  8: string zip;
 
   /** Indicate the source of the geo data (GPS, IP address, user provided). See Table 6.15 Location Type for a list of potential values. Type should be provided when lat/lon is provided.*/
-  int type;
+  9: int type;
 }
 
 
@@ -459,70 +459,70 @@ In general, the most essential fields are either the IP address (to enable geo-l
 device {
 
   /** If “0”, then do not track Is set to false, if “1”, then do no track is set to true in browser. */
-  int dnt;
+  1: int dnt;
 
   /** Browser user agent string.*/
-  string ua;
+  2: string ua;
 
   /** IPv4 address closest to device.*/
-  string ip;
+  3: string ip;
 
   /** Geography as derived from the device’s location services (e.g., cell tower triangulation, GPS) or IP address. See Geo Object.*/
-  geo geo;
+  4: geo geo;
 
   /** SHA1 hashed device ID; IMEI when available, else MEID or ESN. OpenRTB’s preferred method for device ID hashing is SHA1.*/
-  string didsha1;
+  5: string didsha1;
 
   /** MD5 hashed device ID; IMEI when available, else MEID or ESN. Should be interpreted as case insensitive.*/
-  string didmd5;
+  6: string didmd5;
 
   /** SHA1 hashed platform-specific ID (e.g., Android ID or UDID for iOS). OpenRTB’s preferred method for device ID hash is SHA1.*/
-  string dpidsha1;
+  7: string dpidsha1;
 
   /** MD5 hashed platform-specific ID (e.g., Android ID or UDID for iOS). Should be interpreted as case insensitive.*/
-  string dpidmd5;
+  8: string dpidmd5;
 
   /** SHA1 hashed MAC address of the device.*/
-  string macsha1;
+  9: string macsha1;
 
   /** MD5 hashed MAC address of the device.*/
-  string macmd5;
+  10: string macmd5;
 
   /** IP address in IPv6.*/
-  string ipv6;
+  11: string ipv6;
 
   /** Carrier or ISP derived from the IP address. Should be specified using Mobile Network Code (MNC) http://en.wikipedia.org/wiki/Mobile_Network_Code */
-  string carrier;
+  12: string carrier;
 
   /** Browser language; use alpha-2/ISO 639-1 codes.*/
-  string language;
+  13: string language;
 
   /** Device make (e.g., “Apple”).*/
-  string make;
+  14: string make;
 
   /** Device model (e.g., “iPhone”).*/
-  string model;
+  15: string model;
 
   /** Device operating system (e.g., “iOS”).*/
-  string os;
+  16: string os;
 
   /** Device operating system version (e.g., “3.1.2”).*/
-  string osv;
+  17: string osv;
 
   /** “1” if the device supports JavaScript; else “0”.*/
-  int js;
+  18: int js;
 
   /** Return the detected data connection type for the device. See Table 6.10 Connection Type.*/
-  int connectiontype;
+  19: int connectiontype;
 
   /** Return the device type being used. See Table 6.16 Device Type.*/
-  int devicetype;
+  20: int devicetype;
 
   /** Return the Flash version detected.*/
-  string flashver;
+  21: string flashver;
 
   /** Native identifier for advertisers; an opaque ID assigned by the device or browser for use as an advertising identifier. (e.g. Apple's IFA, Android's Advertising ID, etc)*/
-  string ifa;
+  22: string ifa;
 }
 
 
@@ -534,13 +534,13 @@ The segment object itself and all of its parameters are optional, so default val
 segment {
 
   /** ID of a data provider’s segment applicable to the user. */
-  string id;
+  1: string id;
 
   /** Name of a data provider’s segment applicable to the user. */
-  string initial_name;
+  2: string initial_name;
 
   /** String representing the value of the segment. The method for transmitting this data should be negotiated offline with the data provider. For example for gender, “male”, or “female”, for age, “30-40”).*/
-  string value;
+  3: string value;
 }
 
 
@@ -552,13 +552,13 @@ The data object itself and all of its parameters are optional, so default values
 data {
 
   /** Exchange specific ID for the data provider. */
-  string id;
+  1: string id;
 
   /** Data provider initialName.*/
-  string initial_name;
+  2: string initial_name;
 
   /** Array of segment objects.*/
-  list<segment> segment;
+  3: list<segment> segment;
 }
 
 /**
@@ -570,28 +570,28 @@ If device ID is used as a proxy for unique user ID, use the device object.
 user {
 
   /** Unique consumer ID of this user on the exchange. */
-  string id;
+  1: string id;
 
   /** Buyer’s user ID for this user as mapped by exchange for the buyer. (AdGear cookie) */
-  string buyeruid;
+  2: string buyeruid;
 
   /** Year of birth as a 4-digit integer.*/
-  int yob;
+  3: int yob;
 
   /** Gender as “M” male, “F” female, “O” Other. (Null indicates unknown).*/
-  string gender;
+  4: string gender;
 
   /** Comma separated list of keywords of consumer interests or intent.*/
-  string keywords;
+  5: string keywords;
 
   /** If supported by the exchange, this is custom data that the bidder had stored in the exchange’s cookie. The string may be in base85 cookie safe characters, and be in any format. This may useful for storing user features. Note: Proper JSON encoding must be used to include “escaped” quotation marks.*/
-  string customdata;
+  6: string customdata;
 
   /** Home geo for the user (e.g., based off of registration data); this is different from the current location of the access device (that is defined by the geo object embedded in the Device Object); see Geo Object.*/
-  geo geo;
+  7: geo geo;
 
   /** See Data Object.*/
-  list<data> data;
+  8: list<data> data;
 }
 
 
@@ -604,7 +604,7 @@ The regs object itself and all of its parameters are optional, so default values
 regulations {
 
   /** Flag indicating whether or not this request falls under the COPPA regulations established by the USA FTC, where 0 = no, 1 = yes.*/
-  int coppa;
+  1: int coppa;
 }
 
 
@@ -615,46 +615,46 @@ The top-level bid request object contains a globally unique bid request or aucti
 bid_request {
 
   /** Unique ID of the bid request, provided by the exchange.*/
-  string id;
+  1: string id;
 
   /** Array of impression objects. Multiple impression auctions may be specified in a single bid request. At least one impression is required for a valid bid request.*/
-  list<impression> imp;
+  2: list<impression> imp;
 
   /** See Site Object.*/
-  site site;
+  3: site site;
 
   /** See App Object.*/
-  app app;
+  4: app app;
 
   /** See Device Object.*/
-  device device;
+  5: device device;
 
   /** See User Object.*/
-  user user;
+  6: user user;
 
   /** Auction Type. If “1”, then first price auction. If “2”, then second price auction. Additional auction types can be defined as per the exchange’s business rules. Exchange specific rules should be numbered over 500.*/
-  int 2 at;
+  7: int(2) at;
 
   /** Maximum amount of time in milliseconds to submit a bid (e.g., 120 means the bidder has 120ms to submit a bid before the auction is complete). If this value never changes across an exchange, then the exchange can supply this information offline.*/
-  int tmax;
+  8: int tmax;
 
   /** Array of buyer seats allowed to bid on this auction. Seats are an optional feature of exchange. For example, [“4”,”34”,”82”,”A45”] indicates that only advertisers using these exchange seats are allowed to bid on the impressions in this auction.*/
-  list<string> wseat;
+  9: list<string> wseat;
 
   /** Flag to indicate whether Exchange can verify that all impressions offered represent all of the impressions available in context (e.g., all impressions available on the web page; all impressions available for a video [pre, mid and postroll spots], etc.) to support road-blocking. A true value should only be passed if the exchange is aware of all impressions in context for the publisher. “0” means the exchange cannot verify, and “1” means that all impressions represent all impressions available.*/
-  int 0 allimps;
+  10: int allimps;
 
   /** Array of allowed currencies for bids on this bid request using ISO-4217 alphabetic codes. If only one currency is used by the exchange, this parameter is not required.*/
-  list<string> cur;
+  11: list<string> cur;
 
   /** Blocked Advertiser Categories. Note that there is no existing categorization / taxonomy of advertiser industries. However, as a substitute exchanges may decide to use IAB categories as an approximation (See Table 6.1 Content Categories)*/
-  list<string> bcat;
+  12: list<string> bcat;
 
   /** Array of strings of blocked top-level domains of advertisers. For example, {“company1.com”, “company2.com”}.*/
-  list<string> badv;
+  13: list<string> badv;
 
   /** This object is a container for any legal, governmental or industry regulations in force for the request.*/
-  regulations regs;
+  14: regulations regs;
 
 }
 
@@ -668,46 +668,46 @@ BEST PRACTICE: Substitution macros may allow a bidder to use a static notice URL
 bid {
 
   /** ID for the bid object chosen by the bidder for tracking and debugging purposes. Useful when multiple bids are submitted for a single impression for a given seat. */
-  string id;
+  1: string id;
 
   /** ID of the impression object to which this bid applies. */
-  string impid;
+  2: string impid;
 
   /** Bid price in CPM. WARNING/Best Practice Note: Although this value is a float, OpenRTB strongly suggests using integer math for accounting to avoid rounding errors.*/
-  double price;
+  3: double price;
 
   /** ID that references the ad to be served if the bid wins.*/
-  string adid;
+  4: string adid;
 
   /** Win notice URL. Note that ad markup is also typically, but not necessarily, returned via this URL.*/
-  string nurl;
+  5: string nurl;
 
   /** Actual ad markup. XHTML if a response to a banner object, or VAST XML if a response to a video object.*/
-  string adm;
+  6: string adm;
 
   /** Advertiser’s primary or top-level domain for advertiser checking. This can be a list of domains if there is a rotating creative. However, exchanges may mandate that only one landing domain is allowed.*/
-  list<string> adomain;
+  7: list<string> adomain;
 
   /** Sample image URL (without cache busting) for content checking.*/
-  string lurl;
+  8: string lurl;
 
   /** Campaign ID or similar that appears within the ad markup.*/
-  string cid;
+  9: string cid;
 
   /** Creative ID for reporting content issues or defects. This could also be used as a reference to a creative ID that is posted with an exchange.*/
-  string crid;
+  10: string crid;
 
   /** Array of creative attributes. See Table 6.3 Creative Attributes.*/
-  list<int> attr;
+  11: list<int> attr;
 
   /** A unique identifier for the direct deal associated with the bid. If the bid is associated and in response to a dealid in the request object it is _required_ in the response object.*/
-  string dealid;
+  12: string dealid;
 
   /** Width of the ad in pixels. If the bid request contained the wmax/hmax and wmin/hmin optional fields it is recommended that the response bid contains this field to signal the size of ad chosen.*/
-  int w;
+  13: int w;
 
   /** Height of the ad in pixels. If the bid request contained the wmax/hmax and wmin/hmin optional fields it is recommended that the response bid contains this field to signal the size of ad chosen.*/
-  int h;
+  14: int h;
 
 }
 
@@ -719,13 +719,13 @@ A bid response can contain multiple “seatbid” objects, each on behalf of a d
 seat_bid {
 
   /** Array of bid objects; each bid object relates to an imp object in the bid request. Note that, if supported by an exchange, one imp object can have many bid objects.*/
-  list<bid> bid;
+  1: list<bid> bid;
 
   /** ID of the bidder seat on whose behalf this bid is made.*/
-  string seat;
+  2: string seat;
 
   /** “1” means impressions must be won-lost as a group; default is “0”.*/
-  int group;
+  3: int group;
 }
 
 
@@ -737,20 +737,20 @@ No-Bids on all impressions should be indicated as a HTTP 204 response. For no-bi
 bid_response {
 
   /** ID of the bid request. */
-  string id;
+  1: string id;
 
   /** Array of seatbid objects. */
-  list<seat_bid> seatbid;
+  2: list<seat_bid> seatbid;
 
   /** Bid response ID to assist tracking for bidders. This value is chosen by the bidder for cross-reference.*/
-  string bidid;
+  3: string bidid;
 
   /** Bid currency using ISO-4217 alphabetic codes; default is “USD”. */
-  string "USD" cur;
+  4: string("USD") cur;
 
   /** This is an optional feature, which allows a bidder to set data in the exchange’s cookie. The string may be in base85 cookie safe characters, and be in any format. This may be useful for storing user features. Note: Proper JSON encoding must be used to include “escaped” quotation marks.*/
-  string customdata;
+  5: string customdata;
 
   /** Reason for not bidding. See Table 6.19 No-Bid Reason Codes. */
-  int nbr;
+  6: int nbr;
 }

@@ -3,6 +3,8 @@ package com.adgear.anoa.read;
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
 import com.adgear.anoa.test.AnoaTestSample;
+import com.adgear.anoa.test.ad_exchange.LogEventThrift;
+import com.adgear.anoa.test.ad_exchange.LogEventTypeThrift;
 import com.fasterxml.jackson.core.TreeNode;
 
 import org.junit.Assert;
@@ -43,6 +45,38 @@ public class ThriftDecodersTest {
         ATS.jsonObjects()
             .map(TreeNode::traverse)
             .map(ThriftDecoders.jackson(ATS.thriftClass, true)));
+  }
+
+  @Test
+  public void testJacksonStrictness() {
+    LogEventThrift strict = ThriftDecoders.jackson(ATS.thriftClass, true)
+        .apply(ATS.jsonNullsObjectParser());
+
+    LogEventThrift loose = ThriftDecoders.jackson(ATS.thriftClass, false)
+        .apply(ATS.jsonNullsObjectParser());
+
+    Assert.assertTrue(strict.isSetRequest());
+    Assert.assertTrue(strict.isSetResponse());
+    Assert.assertTrue(strict.isSetProperties());
+    Assert.assertTrue(strict.isSetTimestamp());
+    Assert.assertTrue(strict.isSetType());
+    Assert.assertTrue(strict.isSetUuid());
+
+    Assert.assertNotNull(strict.getRequest());
+    Assert.assertNotNull(strict.getResponse());
+    Assert.assertNotNull(strict.getProperties());
+    Assert.assertTrue(strict.getProperties().isEmpty());
+    Assert.assertEquals(0, strict.getTimestamp());
+    Assert.assertEquals(LogEventTypeThrift.UNKNOWN_LOG_EVENT_TYPE, strict.getType());
+    Assert.assertNotNull(strict.getUuid());
+    Assert.assertEquals(16, strict.getUuid().length);
+
+    Assert.assertFalse(loose.isSetRequest());
+    Assert.assertFalse(loose.isSetResponse());
+    Assert.assertFalse(loose.isSetProperties());
+    Assert.assertFalse(loose.isSetTimestamp());
+    Assert.assertTrue(loose.isSetType()); // thrift sucks and is poorly thought out
+    Assert.assertTrue(loose.isSetUuid()); // ditto
   }
 
   @Test
