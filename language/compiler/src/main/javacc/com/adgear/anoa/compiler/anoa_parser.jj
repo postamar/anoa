@@ -525,7 +525,10 @@ void EnumSymbol(List<String> enumSymbols) :
 
 void FieldDeclaration(List<Field> fields) :
 {
-  int before = fields.isEmpty() ? 0 : fields.get(fields.size() - 1).getJsonProp("ordinal").asInt();
+  int before = 0;
+  for (Field field : fields) {
+    before = java.lang.Math.max(before, field.getJsonProp("ordinal").asInt());
+  }
   int ordinal;
   Field auxField;
   String name;
@@ -550,10 +553,10 @@ void FieldDeclaration(List<Field> fields) :
                             auxField.schema(),
                             auxField.doc(),
                             auxField.defaultValue());
-    field.addProp("ordinal", IntNode.valueOf(ordinal));
     for (Map.Entry<String, JsonNode> prop : auxField.getJsonProps().entrySet()) {
       field.addProp(prop.getKey(), prop.getValue());
     }
+    field.addProp("ordinal", IntNode.valueOf(ordinal));
     for (String alias : auxField.aliases()) {
       field.addAlias(alias);
     }
@@ -574,7 +577,7 @@ int FieldOrdinal(int previous_ordinal) :
       throw this.error("Tag number is out of range, must be positive and less than 2^29", t);
     }
     if (ordinal <= (long) previous_ordinal) {
-      throw this.error("Tag number collision", t);
+      throw this.error("Tag number collision, should be greater than " + previous_ordinal, t);
     }
     return (int) ordinal;
   }

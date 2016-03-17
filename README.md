@@ -1,9 +1,9 @@
 # anoa
 
-Anoa is a Java 8 library built around [Avro](https://avro.apache.org),
-[Thrift](https://thrift.apache.org) and [Jackson](https://github.com/FasterXML/jackson) for
-de/serializing records in a consistent manner.
-
+Anoa is a Java 8 library, language, compiler and Maven plugin for serializing structured data with
+[Avro](https://avro.apache.org), [Protobuf](https://developers.google.com/protocol-buffers/),
+[Thrift](https://thrift.apache.org) and [Jackson](https://github.com/FasterXML/jackson) in a sane
+and consistent manner.
 
 ## Rationale
 
@@ -13,54 +13,154 @@ topologies, command-line tools, scripts of all kinds. And naturally event defini
 time, so change must be handled gracefully.
 
 We like to use tried-and-proven cross-platform serialization libraries because we hate reinventing
-the wheel. Avro is good for batches of records, Thrift is good over the wire and shares a very
-similar data model with Avro, JSON is simply ubiquitous and Jackson is its de-facto default parser
-in javaland.
+the wheel. Avro is good for batched data and long-term storage, Protobuf is good over the wire, JSON
+is simply ubiquitous and Jackson is its de-facto default parser in javaland. Thrift also exists.
 
-Anoa glues these tools together and expose them with a consistent API. Anoa also comes with a
-Maven plugin for Avro and Thrift code generation. Finally, Anoa has exception-handling facilities
-for dealing with broken data.
+Anoa glues these tools together and exposes them with a consistent API:
 
+  * Event schemata are defined using the Anoa language.
+  * The Anoa compiler transpiles these definitions to semantically equivalent Avro, Protobuf and
+    Thrift schemata; i.e. `.avpr`, `.proto` and `.thrift` files.
+  * The Anoa Maven plugin compiles these schemata into correct Java source code.
+  * The Anoa library provides facilities for working with these Java objects, namely factories for
+    generating de/serializers with one method call. No more writing error-prone badly-understood
+    boilerplate. Exception-handling facilities are provided for dealing with broken data in batch
+    de/serialization.
+  * Last but not least the Anoa tools provide comprehensive Jackson support. This allows conversion
+    of an Avro, Protobuf or Thrift object to and from a natural representation as a JSON object as
+    long as the schema allows it.
 
 ## Project Structure
 
-The Anoa project is divided into 4 modules to try to keep dependencies to a minimum:
+The Anoa project is divided into 7 Maven modules to try to keep dependencies to a minimum:
 
-  * `plugin` is the schema compiler Maven plugin, essentially just a hack of the Avro Maven plugin.
-  * `test` defines the entities used in tests of the next two modules.
-  * `core` contains the core components of Anoa with a minimal set of dependencies.
+  * `language` contains the 3 submodules related to the IDL, compiler and Maven plugin:
+    * `compiler` has code generation code and a javacc parser definition;
+    * `plugin` exposes the above as a Maven plugin;
+    * `test` applies the plugin to some Anoa IDL files.
+  * `test` extends `language-test` to define the entities used in tests in the last two modules.
+  * `core` contains the core components of the Anoa library with a minimal set of dependencies.
   * `tools` is an extension of the above with various tools and extended Jackson support.
 
+## Language
 
-### Plugin and Test
+Compared to Protobuf version 1 or 2, or to Avro, the Anoa language may seem needlessly restrictive
+in terms of its expressivity, but experience has brought us to the same conclusions as those arrived
+to by the maintainers of Protobuf 3, namely that required fields and default values are bad for
+schema evolution. What it comes down to is you can't remove required fields once you've added them,
+and altering default values has all sorts of unintended consequences.
 
-This maven plugin consumes `*.avdl` schema definition files and generates `*.avsc` Avro schema
-files, `*.thrift` Thrift schema files, as well as the corresponding code: `SpecificRecord` objects
-for Avro, `TBase` objects for thrift.
+### Namespaces
 
-The definition language is the Avro [IDL](https://avro.apache.org/docs/1.7.7/idl.html) with a few
-modifications notably for Thrift interop.
+An *anoa file* can contain multiple *schema definitions*. Each *schema definitions* is either that
+of a *structure* or of an *enumeration*. These definitions are scoped to a *namespace* inferred by
+the path of the file from the *anoa root directory*, similar to java source code.
 
-Restrictions:
+This is best described by example. Consider `language/test/src/anoa` to be the anoa root directory
+for this example. The files `openrtb.anoa` and `com.adgear.anoa.test.ad_exchange.anoa` respectively
+define the `open_rtb` and the `com.adgear.anoa.test.ad_exchange` namespaces. The latter file has two
+schema definitions: an enumeration named `log_event_type` and a structure named `log_event`.
 
-  * No protocols.
-  * Only simple unions with null are allowed, i.e. `union {null, <SUBTYPE>}`.
+All file paths, and hence namespaces, should follow lowercase-underscore naming conventions, much
+like java namespaces/packages.
 
-Enhancements:
+### Grammar
 
-  * Java-style imports with `require` block in top-level comment string.
-  * Thrift field index declaration with `/** [<THRIFTIDX>] <DOCSTRING> */` in field comment.
-  * Thrift integer subtypes with `@thrift(<SUBTYPE>)` field annotations.
+Every anoa file contains at least one schema definition, as explained above.
 
-The `test` module contains the schema definitions for the records used by tests in `core` and
-`tools`. Assuch, consider it a reference for `plugin` usage.
-Comprehensive examples of Anoa-flavored IDL syntax are available
-[here](https://github.com/postamar/anoa/tree/master/test/src/main/avro/com/adgear/avro).
+    AnoaFile             ::=  SchemaDefinition+
+    SchemaDefinition     ::=  EnumDefinition | StructDefinition
+    EnumDefinition       ::=  Name Alias* '[' EnumSymbolDefinition+ ']'
+    StructDefinition     ::=  Name Alias* '{' FieldDefinition+ '}'
 
+Enums and structs have names and aliases which also obey the lowercase-underscore convention. Enums
+are distinguished from structs in that they list their members between square brackets instead of
+curly braces. They both may have aliases, which if not qualified are assumed to belong to the
+current namespace.
 
-### Core
+    Name                 ::=  Identifier
+    Alias                ::=  Identifier | QualifiedIdentifier
+    QualifiedIdentifier  ::=  ( Identifier '.' )+ Identifier
+    Identifier           ::=  ['a'-'z'] ( '_' ['a'-'z'] | ['a'-'z''0'-'9'] )*
 
-The Anoa core API can be divided into three general categories:
+Enum symbols obey the uppercase-underscore convention, with the first ordinal being 0, as in java.
+Each enum symbol must be unique within the namespace (i.e. the file).
+
+    EnumSymbolDefinition ::=  EnumSymbol ( ',' | ';' ) ?
+    EnumSymbol           ::=  ['A'-'Z'] ( '_' ['A'-'Z'] | ['A'-'Z''0'-'9'] )*
+
+Struct fields are tagged, as in Protobuf and Thrift, and they may be named and aliased as in Avro.
+If a name is not provided, it will be auto-generated based on the ordinal. In a struct definition,
+field must be defined with increasing ordinal numbers. Furthermore, as in Avro, fields may have
+custom properties. Finally, each field is typed.
+
+Schemas evolve over time, and cross-compatibility is ensured provided certain rules are obeyed:
+  1. A field definition cannot be deleted.
+  2. A field ordinal cannot be altered.
+  3. A field type cannot be altered (this includes the default value -- more on that later).
+  4. A field name can be altered, as long as the old field name is added as an alias.
+
+If these rules are obeyed, the largest ordinal can be considered to be the *version number* of the
+struct.
+
+    FieldDefinition      ::=  FieldOrdinal ':' FieldType FieldProperty* FieldName? FieldAlias* ';'
+    FieldOrdinal         ::=  IntegerLiteral
+    FieldType            ::=  ReferenceType | ListType | MapType | PrimitiveType
+    FieldProperty        ::=  '@' PropertyKey ( '(' PropertyValue ')' )?
+    PropertyKey          ::=  Identifier
+    PropertyValue        ::=  BooleanLiteral | IntegerLiteral | FloatLiteral | StringLiteral
+    FieldName            ::=  Identifier
+    FieldAlias           ::=  Identifier
+
+A field's type can be another struct or enum, referred to by an identifier. If the identifier is
+unqualified, it must refer to a previous declaration in the same file. If it's qualified, the
+corresponding namespace will be imported. Circular dependencies are not allowed. The default value
+of a struct field is the default struct and the default value of an enum field is the first enum
+symbol of that type, as in Protobuf 3.
+
+    ReferenceType        ::=  QualifiedIdentifier | Identifier | '`' Identifier '`'
+
+A field's type can also be a list or a map of values, whose type is either a struct, or an enum, or
+a primitive type. The field's default value is the empty collection, as in Protobuf 3. At this time,
+only `string` is allowed as a map key type.
+
+    ListType             ::=  'list' '<' ValueType '>'
+    MapType              ::=  'map' '<' MapKeyType ',' ValueType '>'
+    MapKeyType           ::=  'string'
+    ValueType            ::=  ReferenceType | PrimitiveValueType
+    PrimitiveValueType   ::=  'boolean' | 'bytes' | 'string' | 'int' | 'long' | 'float' | 'double'
+
+Finally, a field's type can be a primitive type. In this case, the field can also specify a custom
+default value. This custom default value is considered to be part of the field's type: for example,
+`int(1)` is a type, and `int(2)` is another, different type. The standard default values are the
+same ones as in Protobuf 3: 0 for numerical types, `false` for the boolean, and the empty string for
+the string types. Consequently, the type `boolean` is equal to the type `boolean(false)`, and
+likewise `int`, `long`, `float`, `double`, `bytes`, `string` are equal to `int(0)`, `long(0L)`,
+`float(0x0p0)`, `double(0x0p0)`, `bytes()` and `string("")`, respectively.
+
+    PrimitiveType        ::=    'boolean'              ( '(' BooleanLiteral ')' )?
+                              | 'bytes'                ( '(' BytesLiteral   ')' )?
+                              | ( 'int' | 'long' )     ( '(' IntegerLiteral ')' )?
+                              | ( 'float' | 'double' ) ( '(' FloatLiteral   ')' )?
+                              | 'string'               ( '(' StringLiteral  ')' )?
+
+    BooleanLiteral       ::=  'true' | 'false'
+    BytesLiteral         ::=  IntegerLiteral+
+    FloatLiteral         ::=  <java_float_literal>
+    IntegerLiteral       ::=  <java_integer_literal>
+    StringLiteral        ::=  <json_string_literal>
+
+### Output
+
+TODO
+
+## Plugin
+
+TODO
+
+## Library
+
+The Anoa core library can be divided into three general categories:
 
   * reading serialized objects: public methods and classes in package `com.adgear.anoa.read`,
   * writing serialized objects: public methods and classes in package `com.adgear.anoa.write`,
@@ -68,11 +168,8 @@ The Anoa core API can be divided into three general categories:
 
 See the [anoa-core javadoc](http://www.javadoc.io/doc/com.adgear/anoa-core) for more details.
 
-
-### Tools
-
-We made sure to include only minimal dependencies in `core`, for this reason this module contains
-all the stuff that didn't fit in there, and more:
+We made sure to include only minimal dependencies in `core`, for this reason the `tools` module
+contains all the stuff that didn't fit in there, and more:
 
   * JDBC support,
   * extended Jackson support: CSV, CBOR, Smile, etc.
@@ -81,16 +178,20 @@ all the stuff that didn't fit in there, and more:
 
 See the [anoa-tools javadoc](http://www.javadoc.io/doc/com.adgear/anoa-tools) for more details.
 
-
-## Version Info
+## Version and build info
 
 Anoa is currently built with:
 
     Apache Avro 1.7.7
-    Apache Thrift 0.9.2
-    FasterXML Jackson 2.7.1
+    Google Protobuf 3.0.0-beta-2
+    Apache Thrift 0.9.3
+    FasterXML Jackson 2.7.3
 
-We're also slowly adding support for Google Protobufs, version 2.6.1.
+Building Anoa requires Maven version 3.X. To build without modifying anything, you need the protobuf
+compiler `protoc` (version 3.X) and the thrift compiler `thrift` (version 0.9.3) to be invocable as
+such on the command line. If they are not on the path on your system, you need to add the
+`<protocCommand>` and `<thriftCommand>` configuration settigns to the `<anoa-maven-plugin>`
+invocation in `language/test/pom.xml`.
 
 ## License
 
