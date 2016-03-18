@@ -73,6 +73,8 @@ Every anoa file contains at least one schema definition, as explained above.
     EnumDefinition       ::=  Name Alias* '[' EnumSymbolDefinition+ ']'
     StructDefinition     ::=  Name Alias* '{' FieldDefinition+ '}'
 
+#### Schema definition names
+
 Enums and structs have names and aliases which also obey the lowercase-underscore convention. Enums
 are distinguished from structs in that they list their members between square brackets instead of
 curly braces. They both may have aliases, which if not qualified are assumed to belong to the
@@ -83,11 +85,15 @@ current namespace.
     QualifiedIdentifier  ::=  ( Identifier '.' )+ Identifier
     Identifier           ::=  ['a'-'z'] ( '_' ['a'-'z'] | ['a'-'z''0'-'9'] )*
 
+#### Enumerations
+
 Enum symbols obey the uppercase-underscore convention, with the first ordinal being 0, as in java.
 Each enum symbol must be unique within the namespace (i.e. the file).
 
     EnumSymbolDefinition ::=  EnumSymbol ( ',' | ';' ) ?
     EnumSymbol           ::=  ['A'-'Z'] ( '_' ['A'-'Z'] | ['A'-'Z''0'-'9'] )*
+
+#### Structure fields
 
 Struct fields are tagged, as in Protobuf and Thrift, and they may be named and aliased as in Avro.
 If a name is not provided, it will be auto-generated based on the ordinal. In a struct definition,
@@ -106,11 +112,25 @@ struct.
     FieldDefinition      ::=  FieldOrdinal ':' FieldType FieldProperty* FieldName? FieldAlias* ';'
     FieldOrdinal         ::=  IntegerLiteral
     FieldType            ::=  ReferenceType | ListType | MapType | PrimitiveType
+    FieldName            ::=  Identifier
+    FieldAlias           ::=  Identifier
+
+
+#### Field properties
+
+Fields can be tagged with custom properties, as in Avro. Property keys can be set to an explicit
+primitive JSON value. If not explicit, then the value is `true`. The anoa compiler recognizes only
+two property keys: `deprecated` and `removed`. For instance, a field decorated with `@deprecated` or
+`@deprecated(true)`, which is equivalent, will be marked as deprecated in its Avro and Protobuf
+schemata. Decorating it with `@removed` will remove it from the Avro schema and declare the field
+tag number as `reserved` in the Protobuf schema. This helps deal with the rule that a field
+definition may not be deleted.
+
     FieldProperty        ::=  '@' PropertyKey ( '(' PropertyValue ')' )?
     PropertyKey          ::=  Identifier
     PropertyValue        ::=  BooleanLiteral | IntegerLiteral | FloatLiteral | StringLiteral
-    FieldName            ::=  Identifier
-    FieldAlias           ::=  Identifier
+
+#### Field types
 
 A field's type can be another struct or enum, referred to by an identifier. If the identifier is
 unqualified, it must refer to a previous declaration in the same file. If it's qualified, the
@@ -133,8 +153,8 @@ only `string` is allowed as a map key type.
 Finally, a field's type can be a primitive type. In this case, the field can also specify a custom
 default value. This custom default value is considered to be part of the field's type: for example,
 `int(1)` is a type, and `int(2)` is another, different type. The standard default values are the
-same ones as in Protobuf 3: 0 for numerical types, `false` for the boolean, and the empty string for
-the string types. Consequently, the type `boolean` is equal to the type `boolean(false)`, and
+same ones as in Protobuf 3: zero for numerical types, `false` for the boolean, and the empty string
+for the string types. Consequently, the type `boolean` is equal to the type `boolean(false)`, and
 likewise `int`, `long`, `float`, `double`, `bytes`, `string` are equal to `int(0)`, `long(0L)`,
 `float(0x0p0)`, `double(0x0p0)`, `bytes()` and `string("")`, respectively.
 
@@ -144,19 +164,55 @@ likewise `int`, `long`, `float`, `double`, `bytes`, `string` are equal to `int(0
                               | ( 'float' | 'double' ) ( '(' FloatLiteral   ')' )?
                               | 'string'               ( '(' StringLiteral  ')' )?
 
+#### Literals
+
+Beyond the `Identifier` and `EnumSymbol` literals presented above, the anoa language supports the
+usual primitive value literals. Boolean and text value literals are the same as in JSON and strings
+obey the same escaping rules. Byte strings however are represented as a sequence of integer value
+literals, which must be in the range `[ 0x00, 0xff ]`. Numeric literals are represented the same way
+as in Java in base 10 or in base 16. Integers can also be represented in base 8, and floats also
+accept the tokens `NaN` and `Infinity`.
+
     BooleanLiteral       ::=  'true' | 'false'
     BytesLiteral         ::=  IntegerLiteral+
     FloatLiteral         ::=  <java_float_literal>
     IntegerLiteral       ::=  <java_integer_literal>
     StringLiteral        ::=  <json_string_literal>
 
-### Output
+### Schema generation
 
-TODO
+Avro, Protobuf and Thrift schema generation obeys the principle of least surprise and produces
+pretty much what you'd expect. A few things to note:
 
-## Plugin
+  * Although Anoa requires Protobuf 3, the generated language level is `proto2` to allow custom
+    default values.
+  * Integer types `int` and `long` are mapped to `sint32` and `sint64` in Protobuf.
+  * Floating point type `float` is mapped to `double` in Thrift.
 
-TODO
+### Java generation
+
+Subsequent Java code generation is also pretty straightforward and is handled by the Anoa maven
+plugin:
+
+  * Avro SpecificRecord implementations are generated with "Avro" appended to the struct or enum
+    name. For example, the struct `bid_request` in the `open_rtb` namespace becomes
+    `open_rtb.BidRequestAvro`. The generated code is a drop-in replacement to that which would have
+    been generated by Avro's `SpecificCompiler` invoked by `avro-maven-plugin`.
+  * Protobuf protocols are generated with "Protobuf" appended to the name: `open_rtb` becomes
+    the class `OpenRtbProtobuf` and `bid_request` becomes its subclass `BidRequest`. Code generation
+    occurs by invoking the command-line `protoc` compiler.
+  * Thrift TBase implementations are generated with "Thrift" appended to the struct or enum name,
+    thus `bid_request` becomes `open_rtb.BidRequestThrift`. Code generation occurs by invoking the
+    command-line `thrift` compiler.
+  * Unfortunately the Thrift compiler is buggy and `binary` thrift types with custom default values
+    are broken. The Anoa plugin repairs the broken java code before it is compiled.
+
+Plugin configuration settings which are of note:
+
+  * `generateAvro`, `generateProtobuf` and `generateThrift` set whether Java code is generated
+    along with the schemas or not. These are set to `true` by default.
+  * `protocCommand` and `thriftCommand` set the command for invoking the Protobuf and Thrift
+    compilers, and are respectively set to `protoc` and `thrift` by default.
 
 ## Library
 

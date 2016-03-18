@@ -95,6 +95,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
  */
 public class AnoaParser implements Closeable {
 
+  static final public String ORDINAL_PROP_KEY = "ordinal_";
   static final private ThreadLocal<String> DOC = new ThreadLocal<String>();
 
   static void setDoc(String doc) {
@@ -527,7 +528,7 @@ void FieldDeclaration(List<Field> fields) :
 {
   int before = 0;
   for (Field field : fields) {
-    before = java.lang.Math.max(before, field.getJsonProp("ordinal").asInt());
+    before = java.lang.Math.max(before, field.getJsonProp(ORDINAL_PROP_KEY).asInt());
   }
   int ordinal;
   Field auxField;
@@ -556,7 +557,7 @@ void FieldDeclaration(List<Field> fields) :
     for (Map.Entry<String, JsonNode> prop : auxField.getJsonProps().entrySet()) {
       field.addProp(prop.getKey(), prop.getValue());
     }
-    field.addProp("ordinal", IntNode.valueOf(ordinal));
+    field.addProp(ORDINAL_PROP_KEY, IntNode.valueOf(ordinal));
     for (String alias : auxField.aliases()) {
       field.addAlias(alias);
     }

@@ -53,7 +53,7 @@ final class ProtobufGenerator extends AnoaCodeGeneratorBase {
       StringBuilder reservedNames = new StringBuilder();
       StringBuilder fields = new StringBuilder();
       for (Schema.Field field : type.getFields()) {
-        doField(field, ++ordinal, reservedOrdinals, reservedNames, fields);
+        doField(field, reservedOrdinals, reservedNames, fields);
       }
       if (reservedOrdinals.length() > 0) {
         sb.append("\n  ").append(reservedOrdinals).append(';');
@@ -65,10 +65,10 @@ final class ProtobufGenerator extends AnoaCodeGeneratorBase {
   }
 
   private void doField(Schema.Field field,
-                       int ordinal,
                        StringBuilder reservedOrdinals,
                        StringBuilder reservedNames,
                        StringBuilder fields) {
+    int ordinal = field.getJsonProp(AnoaParser.ORDINAL_PROP_KEY).asInt();
     for (String alias : field.aliases()) {
       reservedNames.append((reservedNames.length() == 0) ? "reserved \"" : ", \"")
           .append(alias).append('"');
