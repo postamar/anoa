@@ -68,7 +68,7 @@ final class ProtobufGenerator extends AnoaCodeGeneratorBase {
                        StringBuilder reservedOrdinals,
                        StringBuilder reservedNames,
                        StringBuilder fields) {
-    int ordinal = field.getJsonProp(AnoaParser.ORDINAL_PROP_KEY).asInt();
+    long ordinal = field.getJsonProp(AnoaParserBase.ORDINAL_PROP_KEY).asLong();
     for (String alias : field.aliases()) {
       reservedNames.append((reservedNames.length() == 0) ? "reserved \"" : ", \"")
           .append(alias).append('"');

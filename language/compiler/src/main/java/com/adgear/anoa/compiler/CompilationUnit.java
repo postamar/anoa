@@ -55,7 +55,7 @@ final public class CompilationUnit {
   }
 
   Stream<String> getImportedNamespaces() {
-    return anoaParser.imports.stream();
+    return anoaParser.getImportedNamespaces();
   }
 
 

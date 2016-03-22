@@ -66,7 +66,7 @@ final class ThriftGenerator extends AnoaCodeGeneratorBase {
         ++ordinal;
         if (!BooleanNode.TRUE.equals(field.getJsonProp("removed"))) {
           sb.append(comments(field.doc(), "\n  ", ""));
-          sb.append("\n  ").append(field.getJsonProp(AnoaParser.ORDINAL_PROP_KEY).asInt())
+          sb.append("\n  ").append(field.getJsonProp(AnoaParserBase.ORDINAL_PROP_KEY).asLong())
               .append(": optional ").append(fieldType(field.schema()))
               .append(' ').append(field.name());
           fieldDefault(field.schema(), field.defaultValue())
