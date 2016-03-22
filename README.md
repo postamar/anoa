@@ -81,7 +81,7 @@ curly braces. They both may have aliases, which if not qualified are assumed to 
 current namespace.
 
     Name                 ::=  Identifier
-    Alias                ::=  Identifier | QualifiedIdentifier
+    Alias                ::=  ','? ( Identifier | QualifiedIdentifier )
     QualifiedIdentifier  ::=  ( Identifier '.' )+ Identifier
     Identifier           ::=  ['a'-'z'] ( '_' ['a'-'z'] | ['a'-'z''0'-'9'] )*
 
@@ -91,7 +91,7 @@ Enum symbols obey the uppercase-underscore convention, with the first ordinal be
 Each enum symbol must be unique within the namespace (i.e. the file).
 
     EnumSymbolDefinition ::=  EnumSymbol ( ',' | ';' ) ?
-    EnumSymbol           ::=  ['A'-'Z'] ( '_' ['A'-'Z'] | ['A'-'Z''0'-'9'] )*
+    EnumSymbol           ::=  ['A'-'Z'] ( '_'? ['A'-'Z''0'-'9'] )*
 
 #### Structure fields
 
@@ -113,7 +113,7 @@ struct.
     FieldOrdinal         ::=  IntegerLiteral
     FieldType            ::=  ReferenceType | ListType | MapType | PrimitiveType
     FieldName            ::=  Identifier
-    FieldAlias           ::=  Identifier
+    FieldAlias           ::=  ','? Identifier
 
 
 #### Field properties

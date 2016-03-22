@@ -249,6 +249,12 @@ public class AnoaParser implements Closeable {
     String msg = message + ", line " + token.beginLine + ", column " + token.beginColumn;
     return new ParseException(msg);
   }
+
+  protected ParseException importError(String namespace, Exception e, Token token) {
+    String msg = "Error importing namespace '" + namespace +  "' at line " + token.beginLine
+                 + ", column " + token.beginColumn + ": " + e;
+    return new ParseException(msg);
+  }
 }
 
 PARSER_END(AnoaParser)
@@ -397,7 +403,7 @@ TOKEN :
 {
   < BADLY_FORMED_IDENTIFIER: ( ("_")? (["0"-"9"])? (["a"-"z"]["A"-"Z"]|["A"-"Z"]["a"-"z"]) )+ >
 | < IDENTIFIER: ["a"-"z"] ( "_" ["a"-"z"] | ["a"-"z","0"-"9"] )* >
-| < ENUM_SYMBOL: ["A"-"Z"] ( "_" ["A"-"Z"] | ["A"-"Z","0"-"9"] )* >
+| < ENUM_SYMBOL: ["A"-"Z"] ( ("_")? ["A"-"Z","0"-"9"] )* >
 
 }
 
@@ -491,6 +497,7 @@ String TypeName() :
 void TypeAlias(String typeName, List<String> aliases) :
 { Token t; }
 {
+  ( <COMMA> ) ?
   ( t = Identifier() | t = <QUALIFIED_IDENTIFIER> )
   {
     String fullName = this.buildFullName(t.image);
@@ -750,8 +757,8 @@ Schema ReferenceType() :
         }
       } catch (FileNotFoundException e) {
         throw this.error("Unknown namespace '" + namespace + "': " + e, id);
-      } catch (IOException e) {
-        throw this.error("Error importing namespace: " + e, id);
+      } catch (Exception e) {
+        throw this.importError(namespace, e, id);
       }
       types = this.findByFullName(fullName);
       if (types.size() == 0) {
@@ -783,6 +790,7 @@ String FieldName(List<Field> structFields) :
 String FieldAlias(List<Field> structFields) :
 { Token t; }
 {
+  ( <COMMA> ) ?
   t = Identifier()
   {
     String fieldName = t.image;

@@ -144,7 +144,7 @@ deal {
   5: list<string> wadomain;
 
   /** Auction type. If “1”, then first price auction. If “2”, then second price auction. If “3”, the passed bidfloor indicates the apriori agreed upon deal price. Additional auction types can be defined as per the exchange’s business rules.*/
-  10: int at;
+  6: int at;
 }
 
 
@@ -215,13 +215,13 @@ publisher {
   /** Publisher ID on the exchange. */
   1: string id;
 
-  /** Publisher initialName (may be masked at publisher’s request).*/
-  2: string initial_name;
+  /** Publisher name (may be masked at publisher’s request).*/
+  2: string name;
 
   /** Array of IAB content categories for the publisher. See Table 6.1 Content Categories.*/
   3: list<string> cat;
 
-  /** Publisher’s highest level domain initialName, for example “foopub.com”.*/
+  /** Publisher’s highest level domain name, for example “foopub.com”.*/
   4: string domain;
 }
 
@@ -235,8 +235,8 @@ producer {
   /** Content producer or originator ID. Useful if content is syndicated, and may be posted on a site using embed tags.*/
   1: string id;
 
-  /** Content producer or originator initialName (e.g., “Warner Bros”).*/
-  2: string initial_name;
+  /** Content producer or originator name (e.g., “Warner Bros”).*/
+  2: string name;
 
   /** Array of IAB content categories for the content producer. See Table 6.1 Content Categories.*/
   3: list<string> cat;
@@ -325,8 +325,8 @@ site {
   /** Site ID on the exchange.*/
   1: string id;
 
-  /** Site initialName (may be masked at publisher’s request).*/
-  2: string initial_name;
+  /** Site name (may be masked at publisher’s request).*/
+  2: string name;
 
   /** Domain of the site, used for advertiser side blocking. For example, “foo.com”.*/
   3: string domain;
@@ -373,8 +373,8 @@ app {
   /** Application ID on the exchange.*/
   1: string id;
 
-  /** Application initialName (may be masked at publisher’s request).*/
-  2: string initial_name;
+  /** Application name (may be masked at publisher’s request).*/
+  2: string name;
 
   /** Domain of the application (e.g., “mygame.foo.com”).*/
   3: string domain;
@@ -391,7 +391,7 @@ app {
   /** Application version.*/
   7: string ver;
 
-  /** Application bundle or package initialName (e.g., com.foo.mygame). This is intended to be a unique ID across multiple exchanges.*/
+  /** Application bundle or package name (e.g., com.foo.mygame). This is intended to be a unique ID across multiple exchanges.*/
   8: string bundle;
 
   /** Specifies whether the app has a privacy policy. “1” means there is a policy and “0” means there is not.*/
@@ -537,7 +537,7 @@ segment {
   1: string id;
 
   /** Name of a data provider’s segment applicable to the user. */
-  2: string initial_name;
+  2: string name;
 
   /** String representing the value of the segment. The method for transmitting this data should be negotiated offline with the data provider. For example for gender, “male”, or “female”, for age, “30-40”).*/
   3: string value;
@@ -554,8 +554,8 @@ data {
   /** Exchange specific ID for the data provider. */
   1: string id;
 
-  /** Data provider initialName.*/
-  2: string initial_name;
+  /** Data provider name.*/
+  2: string name;
 
   /** Array of segment objects.*/
   3: list<segment> segment;
