@@ -65,7 +65,7 @@ PARSER_BEGIN(AnoaParser)
 
 package com.adgear.anoa.compiler;
 
-import com.adgear.anoa.compiler.utils.AnoaBinaryNode;
+import com.adgear.anoa.compiler.AnoaBinaryNode;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

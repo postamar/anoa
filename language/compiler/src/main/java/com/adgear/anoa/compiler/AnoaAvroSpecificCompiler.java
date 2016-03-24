@@ -1,4 +1,4 @@
-package com.adgear.anoa.compiler.utils;
+package com.adgear.anoa.compiler;
 
 import org.apache.avro.JsonProperties;
 import org.apache.avro.Protocol;

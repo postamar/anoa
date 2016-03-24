@@ -1,0 +1,14 @@
+#if ($protocol.getNamespace())
+package $protocol.getNamespace();
+#end
+
+#if ($protocol.getDoc())
+/** $protocol.getDoc() */
+#end
+#foreach ($annotation in $this.javaAnnotations($protocol))
+@$annotation
+#end
+public interface ${this.mangle($protocol.getName())} {
+
+
+}

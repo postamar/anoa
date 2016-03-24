@@ -34,23 +34,27 @@ final public class CompilationUnit {
     return this;
   }
 
-  public AnoaCodeGenerator avroGenerator() {
-    return new AvroCodeGenerator(this, logger);
+  public Generator interfaceGenerator(boolean withAvro, boolean withProtobuf, boolean withThrift) {
+    return new InterfaceGenerator(this, logger, withAvro, withProtobuf, withThrift);
   }
 
-  public AnoaCodeGenerator protobufGenerator() {
+  public Generator avroGenerator() {
+    return new AvroGenerator(this, logger);
+  }
+
+  public Generator protobufGenerator() {
     return protobufGenerator("protoc");
   }
 
-  public AnoaCodeGenerator protobufGenerator(String protocCommand) {
+  public Generator protobufGenerator(String protocCommand) {
     return new ProtobufGenerator(this, logger, protocCommand);
   }
 
-  public AnoaCodeGenerator thriftGenerator() {
+  public Generator thriftGenerator() {
     return thriftGenerator("thrift");
   }
 
-  public AnoaCodeGenerator thriftGenerator(String thriftCommand) {
+  public Generator thriftGenerator(String thriftCommand) {
     return new ThriftGenerator(this, logger, thriftCommand);
   }
 

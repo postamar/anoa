@@ -12,31 +12,32 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-abstract class AnoaCodeGeneratorBase implements AnoaCodeGenerator {
+abstract class GeneratorBase implements Generator {
 
   final protected Protocol protocol;
   final private List<String> importedNamespaces;
   final private Consumer<String> logger;
 
-  protected AnoaCodeGeneratorBase(CompilationUnit cu, String suffix, Consumer<String> logger) {
+  protected GeneratorBase(CompilationUnit cu, String suffix, Consumer<String> logger) {
     this.protocol = cu.generate(suffix);
     this.importedNamespaces = cu.getImportedNamespaces().collect(Collectors.toList());
     this.logger = logger;
   }
 
-  final protected Stream<Path> getImports() {
+
+  protected Stream<Path> getImports() {
     return importedNamespaces.stream().sequential()
         .map(ns -> new File(ns.replace('.', File.separatorChar), schemaFileName(ns)).toPath());
   }
 
-  @Override
-  final public File getSchemaFile() {
+
+  File getSchemaFile() {
     return new File(protocol.getNamespace().replace('.', File.separatorChar),
                     schemaFileName(protocol.getNamespace()));
   }
 
   @Override
-  final public void generateSchema(File schemaRootDir) throws SchemaGenerationException {
+  public void generateSchema(File schemaRootDir) throws SchemaGenerationException {
     File outputFile = new File(schemaRootDir, getSchemaFile().toString());
     try {
       outputFile.getParentFile().mkdirs();
@@ -50,13 +51,13 @@ abstract class AnoaCodeGeneratorBase implements AnoaCodeGenerator {
 
   abstract protected String schemaFileName(String namespace);
 
-  final protected String comments(String docString, String prefix, String suffix) {
+  protected String comments(String docString, String prefix, String suffix) {
     return (docString == null || docString.trim().isEmpty())
            ? ""
            : (prefix + "/** " + docString.trim() + " */" + suffix);
   }
 
-  final protected void log(String message) {
+  protected void log(String message) {
     logger.accept(message);
   }
 

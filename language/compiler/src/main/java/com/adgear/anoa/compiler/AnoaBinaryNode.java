@@ -1,4 +1,4 @@
-package com.adgear.anoa.compiler.utils;
+package com.adgear.anoa.compiler;
 
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonNode;

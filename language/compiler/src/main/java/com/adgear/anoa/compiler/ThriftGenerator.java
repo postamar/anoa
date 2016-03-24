@@ -1,7 +1,5 @@
 package com.adgear.anoa.compiler;
 
-import com.adgear.anoa.compiler.utils.AnoaBinaryNode;
-
 import org.apache.avro.Schema;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.BooleanNode;
@@ -26,7 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
-final class ThriftGenerator extends AnoaCodeGeneratorBase {
+final class ThriftGenerator extends GeneratorBase {
 
   final String thriftCommand;
 

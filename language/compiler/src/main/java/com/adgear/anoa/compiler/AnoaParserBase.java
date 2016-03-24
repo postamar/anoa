@@ -105,7 +105,7 @@ abstract class AnoaParserBase implements Closeable {
   /* PROTECTED METHODS INVOKED BY SUBCLASS */
 
   protected Protocol exportProtocol() {
-    String name = buildFullName(getNamespace());
+    String name = capitalizeQualified(getNamespace());
     name = name.substring(name.lastIndexOf('.') + 1);
     Protocol p = new Protocol(name, getNamespace());
     List<Schema> exportedTypes = new ArrayList<>();
@@ -343,13 +343,16 @@ abstract class AnoaParserBase implements Closeable {
 
   private String buildFullName(String name) {
     int index = name.lastIndexOf('.');
-    String namespace = getNamespace();
+    return capitalizeQualified(((index < 0) ? (getNamespace() + ".") : "") + name);
+  }
+
+  static String capitalizeQualified(String name) {
+    StringBuilder sb = new StringBuilder();
+    int index = name.lastIndexOf('.');
     if (index >= 0) {
-      namespace = name.substring(0, index);
+      sb.append(name.substring(0, index)).append('.');
       name = name.substring(index + 1);
     }
-    StringBuilder sb = new StringBuilder();
-    sb.append((namespace == null) ? getNamespace() : namespace).append('.');
     boolean capitalize = true;
     for (char c : name.toCharArray()) {
       if (c == '_') {

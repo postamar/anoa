@@ -1,0 +1,163 @@
+#if ($schema.getNamespace())
+package $schema.getNamespace();
+#end
+
+#if ($schema.getDoc())
+/** $schema.getDoc() */
+#end
+#if ($this.isDeprecated($schema))
+@Deprecated
+#end
+#foreach ($annotation in $this.javaAnnotations($schema))
+@$annotation
+#end
+public interface ${this.mangle($schema.getName())}<T> {
+
+#if ($this.isWithAvro())
+  /** Returns Avro class for this struct. */
+  public static Class<${this.avroClassName($schema)}> getAvroClass() {
+    return ${this.avroClassName($schema)}.class;
+  }
+
+  /** Returns Avro schema for this struct. */
+  public static org.apache.avro.Schema getAvroSchema() {
+    return ${this.avroClassName($schema)}.SCHEMA$;
+  }
+
+  /** Returns new Avro builder for this struct with default values. */
+  public static ${this.avroClassName($schema)}.Builder newAvroBuilder() {
+    return ${this.avroClassName($schema)}.newBuilder();
+  }
+
+  /** Returns new Avro builder for this struct based on an existing prototype. */
+  public static ${this.avroClassName($schema)}.Builder newAvroBuilder(${this.avroClassName($schema)} other) {
+    return ${this.avroClassName($schema)}.newBuilder(other);
+  }
+
+  /** Returns new Avro builder for this struct based on an existing prototype. */
+  public static ${this.avroClassName($schema)}.Builder newAvroBuilder(${this.avroClassName($schema)}.Builder otherBuilder) {
+    return ${this.avroClassName($schema)}.newBuilder(otherBuilder);
+  }
+
+  /** Wraps an Avro object. */
+  public static ${this.mangle($schema.getName())} fromAvro(${this.avroClassName($schema)} o) {
+    return new ${this.mangle($schema.getName())}<${this.avroClassName($schema)}>() {
+
+      @Override
+      public boolean isAvro() { return true; }
+
+      @Override
+      public ${this.avroClassName($schema)} get() { return o; }
+
+#foreach ($field in $schema.getFields())
+      @Override
+      public ${this.anoaType($field.schema())} ${this.anoaGetter($schema, $field)}() {
+        return ${this.avroValue($schema, $field)};
+      }
+
+#end
+    };
+  }
+
+#end
+#if ($this.isWithProtobuf())
+  /** Returns Protobuf class for this struct. */
+  public static Class<${this.protobufClassName($schema)}> getProtobufClass() {
+    return ${this.protobufClassName($schema)}.class;
+  }
+
+  /** Returns Protobuf descriptor for this struct. */
+  public static com.google.protobuf.Descriptors.Descriptor getProtobufDescriptor() {
+    return ${this.protobufClassName($schema)}.getDescriptor();
+  }
+
+  /** Returns new Protobuf builder instance with default values. */
+  public static ${this.protobufClassName($schema)}.Builder newProtobufBuilder() {
+    return ${this.protobufClassName($schema)}.newBuilder();
+  }
+
+  /** Returns new Protobuf builder instance based on existing prototype. */
+  public static ${this.protobufClassName($schema)}.Builder newProtobufBuilder(${this.protobufClassName($schema)} other) {
+    return ${this.protobufClassName($schema)}.newBuilder(other);
+  }
+
+  /** Wraps a Protobuf object. */
+  public static ${this.mangle($schema.getName())} fromProtobuf(${this.protobufClassName($schema)} o) {
+    return new ${this.mangle($schema.getName())}<${this.protobufClassName($schema)}>() {
+
+      @Override
+      public boolean isProtobuf() { return true; }
+
+      @Override
+      public ${this.protobufClassName($schema)} get() { return o; }
+
+#foreach ($field in $schema.getFields())
+      @Override
+      public ${this.anoaType($field.schema())} ${this.anoaGetter($schema, $field)}() {
+        return ${this.protobufValue($schema, $field)};
+      }
+
+#end
+    };
+  }
+
+#end
+#if ($this.isWithThrift())
+  /** Returns Thrift class for this struct. */
+  public static Class<${this.thriftClassName($schema)}> getThriftClass() {
+    return ${this.thriftClassName($schema)}.class;
+  }
+
+  /** Returns Thrift metadata map for this struct. */
+  public static java.util.Map<${this.thriftClassName($schema)}._Fields, org.apache.thrift.meta_data.FieldMetaData> getThriftMetadataMap() {
+    return ${this.thriftClassName($schema)}.metaDataMap;
+  }
+
+  /** Returns new Thrift instance with default values. */
+  public static ${this.thriftClassName($schema)} newThriftInstance() {
+    return new ${this.thriftClassName($schema)}();
+  }
+
+  /** Returns new Thrift instance based on existing prototype. */
+  public static ${this.thriftClassName($schema)} newThriftInstance(${this.thriftClassName($schema)} other) {
+    return new ${this.thriftClassName($schema)}(other);
+  }
+
+  /** Wraps a Thrift object. */
+  public static ${this.mangle($schema.getName())} fromThrift(${this.thriftClassName($schema)} o) {
+    return new ${this.mangle($schema.getName())}<${this.thriftClassName($schema)}>() {
+
+      @Override
+      public boolean isThrift() { return true; }
+
+      @Override
+      public ${this.thriftClassName($schema)} get() { return o; }
+
+#foreach ($field in $schema.getFields())
+      @Override
+      public ${this.anoaType($field.schema())} ${this.anoaGetter($schema, $field)}() {
+        return ${this.thriftValue($schema, $field)};
+      }
+
+#end
+    };
+  }
+
+#end
+
+  default boolean isAvro() { return false; }
+  default boolean isProtobuf() { return false; }
+  default boolean isThrift() { return false; }
+
+  /** Returns underlying struct object. */
+  T get();
+
+#foreach ($field in $schema.getFields())
+#if ($field.doc())  /** $field.doc() */
+#end
+#if ($this.isDeprecated($field))  @Deprecated
+#end
+  ${this.anoaType($field.schema())} ${this.anoaGetter($schema, $field)}();
+
+#end
+}

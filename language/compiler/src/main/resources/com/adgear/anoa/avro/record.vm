@@ -38,7 +38,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #foreach ($annotation in $this.javaAnnotations($field))
   @$annotation
 #end
-  #if (${this.deprecatedFields()})@Deprecated #elseif ($this.isDeprecated($field))@Deprecated #end#if (${this.publicFields()})public#elseif (${this.privateFields()})private#end ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())};
+  #if ($this.isDeprecated($field))@Deprecated #end ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())};
 #end
 #if ($schema.isError())
 

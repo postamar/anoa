@@ -1,16 +1,14 @@
 package com.adgear.anoa.compiler;
 
-import com.adgear.anoa.compiler.utils.AnoaAvroSpecificCompiler;
-
 import org.apache.avro.compiler.specific.SpecificCompiler;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-final class AvroCodeGenerator extends AnoaCodeGeneratorBase {
+final class AvroGenerator extends GeneratorBase {
 
-  AvroCodeGenerator(CompilationUnit cu, Consumer<String> logger) {
+  AvroGenerator(CompilationUnit cu, Consumer<String> logger) {
     super(cu, "Avro", logger);
   }
 

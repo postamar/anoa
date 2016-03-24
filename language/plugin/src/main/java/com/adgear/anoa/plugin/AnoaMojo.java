@@ -73,15 +73,11 @@ public class AnoaMojo extends AbstractMojo {
     }
     if (source.isPresent()) {
       execute(source.get(), outputDirectory);
-      if (generateAvro || generateProtobuf || generateThrift) {
-        project.addCompileSourceRoot(new File(outputDirectory, "java").getAbsolutePath());
-      }
+      project.addCompileSourceRoot(new File(outputDirectory, "java").getAbsolutePath());
     }
     if (test.isPresent()) {
       execute(test.get(), testOutputDirectory);
-      if (generateAvro || generateProtobuf || generateThrift) {
-        project.addTestCompileSourceRoot(new File(testOutputDirectory, "java").getAbsolutePath());
-      }
+      project.addTestCompileSourceRoot(new File(testOutputDirectory, "java").getAbsolutePath());
     }
   }
 
@@ -90,20 +86,19 @@ public class AnoaMojo extends AbstractMojo {
     getLog().info("Parsing all anoa files in '" + anoaSourceDir + "'...");
     List<CompilationUnit> parsed = parse(anoaSourceDir);
     getLog().info("Successfully parsed all anoa files.");
-    File anoaDir = new File(outDir, "anoa");
-    if (anoaDir.exists() && anoaDir.delete()) {
-      throw new MojoExecutionException("Could not delete existing directory " + anoaDir);
+    File schemaDir = new File(outDir, "anoa");
+    if (schemaDir.exists() && schemaDir.delete()) {
+      throw new MojoExecutionException("Could not delete existing directory " + schemaDir);
     }
-    if (!anoaDir.exists() && !anoaDir.mkdirs()) {
-      throw new MojoExecutionException("Could not create directory " + anoaDir);
+    if (!schemaDir.exists() && !schemaDir.mkdirs()) {
+      throw new MojoExecutionException("Could not create directory " + schemaDir);
     }
     File javaDir = new File(outDir, "java");
-    if ((generateAvro || generateProtobuf || generateThrift)
-        && !javaDir.exists() && !javaDir.mkdirs()) {
+    if (!javaDir.exists() && !javaDir.mkdirs()) {
       throw new MojoExecutionException("Could not create directory " + javaDir);
     }
     try {
-      compile(parsed, anoaDir, javaDir);
+      compile(parsed, anoaSourceDir, schemaDir, javaDir);
     } catch (SchemaGenerationException e) {
       throw new MojoExecutionException("Error generating schema.", e);
     } catch (JavaCodeGenerationException e) {
@@ -111,7 +106,7 @@ public class AnoaMojo extends AbstractMojo {
     }
   }
 
-  private void compile(Iterable<CompilationUnit> parsed, File schemaDir, File javaDir)
+  private void compile(Iterable<CompilationUnit> parsed, File anoaDir, File schemaDir, File javaDir)
       throws SchemaGenerationException, JavaCodeGenerationException {
     for (CompilationUnit cu : parsed) {
       cu.avroGenerator().generateSchema(schemaDir);
@@ -119,6 +114,8 @@ public class AnoaMojo extends AbstractMojo {
       cu.thriftGenerator().generateSchema(schemaDir);
     }
     for (CompilationUnit cu : parsed) {
+      cu.interfaceGenerator(generateAvro, generateProtobuf, generateThrift)
+          .generateJava(anoaDir, javaDir);
       if (generateAvro) {
         cu.avroGenerator().generateJava(schemaDir, javaDir);
       }
