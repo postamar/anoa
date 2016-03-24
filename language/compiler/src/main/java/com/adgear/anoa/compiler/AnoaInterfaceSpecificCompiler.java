@@ -121,7 +121,7 @@ public class AnoaInterfaceSpecificCompiler extends AnoaAvroSpecificCompiler {
 
 
   public String protobufValue(Schema schema, Schema.Field field) {
-    String s = ARG + "." + generateGetMethod(schema, field);
+    String s = ARG + "." + generateGetMethod(schema, field).replace("$", "");
     switch (field.schema().getType()) {
       case ARRAY:
         s += "List().stream()";
