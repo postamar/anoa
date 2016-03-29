@@ -29,13 +29,24 @@ package $schema.getNamespace();
 @$annotation
 #end
 @org.apache.avro.specific.AvroGenerated
-public enum ${this.mangle($schema.getName())} {
+public enum ${this.mangle($schema.getName())} implements ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> {
   #foreach ($symbol in ${schema.getEnumSymbols()})
   ${this.mangle($symbol)}#if ($velocityHasNext), #end#end;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("${this.javaEscape($schema.toString())}");
-  public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
-  public static ${this.mangle($schema.getName())} fromInteger(java.lang.Integer ordinal, ${this.mangle($schema.getName())} defaultValue) {
+  @Override
+  public boolean isAvro() { return true; }
+
+  @Override
+  public ${this.mangle($schema.getName())} get() { return this; }
+
+  @Override
+  public int getOrdinal() { return this.ordinal(); }
+
+  static public final long serialVersionUID = ${this.getVersion($schema)};
+  static public final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("${this.javaEscape($schema.toString())}");
+  static public org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+
+  static public ${this.mangle($schema.getName())} fromInteger(java.lang.Integer ordinal, ${this.mangle($schema.getName())} defaultValue) {
     if (ordinal == null) {
       return defaultValue;
     }
@@ -49,19 +60,18 @@ public enum ${this.mangle($schema.getName())} {
     return defaultValue;
   }
 
-  public static ${this.mangle($schema.getName())} fromInteger(java.lang.Integer ordinal) {
+  static public ${this.mangle($schema.getName())} fromInteger(java.lang.Integer ordinal) {
     return fromInteger(ordinal, null);
   }
 
-  public static boolean hasFromInteger(java.lang.Integer ordinal) {
+  static public boolean hasFromInteger(java.lang.Integer ordinal) {
     if (ordinal == null) {
       return false;
     }
     return ordinal >= 0 && ordinal < ${schema.getEnumSymbols().size()};
   }
 
-
-  public static ${this.mangle($schema.getName())} fromString(java.lang.CharSequence str, ${this.mangle($schema.getName())} defaultValue) {
+  static public ${this.mangle($schema.getName())} fromString(java.lang.CharSequence str, ${this.mangle($schema.getName())} defaultValue) {
     if (str == null) {
       return defaultValue;
     }
@@ -76,11 +86,11 @@ public enum ${this.mangle($schema.getName())} {
       return defaultValue;
   }
 
-  public static ${this.mangle($schema.getName())} fromString(java.lang.CharSequence str) {
+  static public ${this.mangle($schema.getName())} fromString(java.lang.CharSequence str) {
     return fromString(str, null);
   }
 
-  public static boolean hasFromString(java.lang.CharSequence str) {
+  static public boolean hasFromString(java.lang.CharSequence str) {
     if (str == null) {
       return false;
     }

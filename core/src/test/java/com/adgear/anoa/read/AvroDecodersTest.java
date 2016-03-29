@@ -101,7 +101,7 @@ public class AvroDecodersTest {
     Assert.assertNotNull(strict.getRequest());
     Assert.assertNotNull(strict.getResponse());
     Assert.assertNotNull(strict.getTimestamp());
-    Assert.assertEquals(0L, strict.getTimestamp().longValue());
+    Assert.assertEquals(0L, strict.getTimestamp());
     Assert.assertNotNull(strict.getType());
     Assert.assertEquals(LogEventTypeAvro.UNKNOWN_LOG_EVENT_TYPE, strict.getType());
     Assert.assertNotNull(strict.getUuid());

@@ -36,17 +36,7 @@ public interface ${this.mangle($schema.getName())}<T> {
 
   /** Wraps an Avro object. */
   public static ${this.mangle($schema.getName())} fromAvro(${this.avroClassName($schema)} o) {
-    return new ${this.mangle($schema.getName())}<${this.avroClassName($schema)}>() {
-
-      @Override
-      public boolean isAvro() { return true; }
-
-      @Override
-      public ${this.avroClassName($schema)} get() { return o; }
-
-      @Override
-      public int getOrdinal() { return o.ordinal(); }
-    };
+    return o;
   }
 
 #end
@@ -69,13 +59,28 @@ public interface ${this.mangle($schema.getName())}<T> {
 
   /** Wraps a Protobuf object. */
   public static ${this.mangle($schema.getName())} fromProtobuf(${this.protobufClassName($schema)} o) {
+    assert o != null;
     return new ${this.mangle($schema.getName())}<${this.protobufClassName($schema)}>() {
+
+      static public final long serialVersionUID = ${this.getVersion($schema)};
 
       @Override
       public boolean isProtobuf() { return true; }
 
       @Override
       public ${this.protobufClassName($schema)} get() { return o; }
+
+      @Override
+      public boolean equals(Object other) {
+        if (other == this) return true;
+        if (other == null || !(other instanceof ${this.mangle($schema.getName())})) return false;
+        return getOrdinal() == ((${this.mangle($schema.getName())}) other).getOrdinal();
+      }
+
+      @Override
+      public int hashCode() {
+        return getOrdinal();
+      }
 
       @Override
       public int getOrdinal() { return o.getNumber(); }
@@ -98,11 +103,25 @@ public interface ${this.mangle($schema.getName())}<T> {
   public static ${this.mangle($schema.getName())} fromThrift(${this.thriftClassName($schema)} o) {
     return new ${this.mangle($schema.getName())}<${this.thriftClassName($schema)}>() {
 
+      static public final long serialVersionUID = ${this.getVersion($schema)};
+
       @Override
       public boolean isThrift() { return true; }
 
       @Override
       public ${this.thriftClassName($schema)} get() { return o; }
+
+      @Override
+      public boolean equals(Object other) {
+        if (other == this) return true;
+        if (other == null || !(other instanceof ${this.mangle($schema.getName())})) return false;
+        return getOrdinal() == ((${this.mangle($schema.getName())}) other).getOrdinal();
+      }
+
+      @Override
+      public int hashCode() {
+        return getOrdinal();
+      }
 
       @Override
       public int getOrdinal() { return o.getValue(); }

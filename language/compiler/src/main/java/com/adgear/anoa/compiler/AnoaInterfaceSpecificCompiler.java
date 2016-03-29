@@ -24,139 +24,79 @@ public class AnoaInterfaceSpecificCompiler extends AnoaAvroSpecificCompiler {
     return withAvro;
   }
 
-  public String avroClassName(Schema schema) {
-    return mangle(schema.getFullName()) + "Avro";
-  }
-
   public boolean isWithProtobuf() {
     return withProtobuf;
-  }
-
-  public String protobufClassName(Schema schema) {
-    String lcus = schema.getNamespace();
-    lcus += "." + lcus.substring(lcus.lastIndexOf('.') + 1) + "_protobuf";
-    String protobufClassName = AnoaParserBase.capitalizeQualified(lcus);
-    return mangle(AnoaParserBase.capitalizeQualified(protobufClassName + "." + schema.getName()));
   }
 
   public boolean isWithThrift() {
     return withThrift;
   }
 
+  @Override
+  public String anoaInterfaceName(Schema schema) {
+    return mangle(schema.getName());
+  }
+
+  @Override
+  public String anoaInterfaceFullName(Schema schema) {
+    return mangle(schema.getFullName());
+  }
+
+  public String avroClassName(Schema schema) {
+    return anoaInterfaceFullName(schema) + "Avro";
+  }
+
+  public String protobufClassName(Schema schema) {
+    String ns = schema.getNamespace();
+    ns += "." + ns.substring(ns.lastIndexOf('.') + 1) + "_protobuf";
+    String protobufClassName = AnoaParserBase.capitalizeQualified(ns);
+    return mangle(AnoaParserBase.capitalizeQualified(protobufClassName + "." + schema.getName()));
+  }
+
   public String thriftClassName(Schema schema) {
     return mangle(schema.getFullName()) + "Thrift";
   }
 
-  public String anoaType(Schema schema) {
-    return anoaType(schema, false);
-  }
-
-  public String anoaType(Schema schema, boolean boxed) {
-    switch (schema.getType()) {
-      case RECORD:
-      case ENUM:
-        return mangle(schema.getFullName());
-      case ARRAY:
-        return "java.util.List<" + anoaType(schema.getElementType(), true) + ">";
-      case MAP:
-        return "java.util.Map<java.lang.CharSequence," + anoaType(schema.getValueType(), true) + ">";
-      case STRING:  return "java.lang.CharSequence";
-      case BYTES:   return "java.nio.ByteBuffer";
-      case INT:     return boxed ? "java.lang.Integer" : "int";
-      case LONG:    return boxed ? "java.lang.Long" : "long";
-      case FLOAT:   return boxed ? "java.lang.Float" : "float";
-      case DOUBLE:  return boxed ? "java.lang.Double" : "double";
-      case BOOLEAN: return boxed ? "java.lang.Boolean" : "boolean";
-      default: throw new RuntimeException("Unsupported type: " + schema);
-    }
-  }
-
-  public String anoaGetter(Schema schema, Schema.Field field) {
-    return generateGetMethod(schema, field);
-  }
-
-  static public String ARG = "o";
-
-  public String avroValue(Schema schema, Schema.Field field) {
-    String s = ARG + "." + mangle(field.name());
-    switch (field.schema().getType()) {
-      case ARRAY:
-        s += ".stream()";
-        Schema e = field.schema().getElementType();
-        switch (e.getType()) {
-          case ENUM:
-          case RECORD:
-            s += ".map(" + mangle(e.getFullName()) + "::fromAvro)";
-            break;
-          case BYTES:
-            s += ".map(java.nio.ByteBuffer::asReadOnlyBuffer)";
-            break;
-        }
-        return s + ".collect(java.util.stream.Collectors.toList())";
-      case MAP:
-        s += ".entrySet().stream().collect(java.util.stream.Collectors.toMap("
-             + "java.util.Map.Entry::getKey,";
-        Schema v = field.schema().getValueType();
-        switch (v.getType()) {
-          case ENUM:
-          case RECORD:
-            s += "e -> " + mangle(v.getFullName()) + ".fromAvro(e.getValue())";
-            break;
-          case BYTES:
-            s += "e -> e.getValue().asReadOnlyBuffer()";
-            break;
-          default:
-            s += "java.util.Map.Entry::getValue";
-        }
-        return s + "))";
-      case BYTES:
-        return s + ".asReadOnlyBuffer()";
-      case ENUM:
-      case RECORD:
-        return mangle(field.schema().getFullName()) + ".fromAvro(" + s + ")";
-      default:
-        return s;
-    }
-  }
-
+  static String ARG = "o";
 
   public String protobufValue(Schema schema, Schema.Field field) {
     String s = ARG + "." + generateGetMethod(schema, field).replace("$", "");
     switch (field.schema().getType()) {
       case ARRAY:
-        s += "List().stream()";
-        Schema e = field.schema().getElementType();
-        switch (e.getType()) {
+        switch (field.schema().getElementType().getType()) {
           case ENUM:
           case RECORD:
-            s += ".map(" + mangle(e.getFullName()) + "::fromProtobuf)";
-            break;
+            return "java.util.Collections.unmodifiableList(" + s + "List().stream().map(" +
+                   mangle(field.schema().getElementType().getFullName()) + "::fromProtobuf)" +
+                   ".collect(java.util.stream.Collectors.toList()))";
           case BYTES:
-            s += ".map(com.google.protobuf.ByteString::asReadOnlyByteBuffer)";
-            break;
-        }
-        return s + ".collect(java.util.stream.Collectors.toList())";
-      case MAP:
-        s += "().entrySet().stream().collect(java.util.stream.Collectors.toMap("
-             + "java.util.Map.Entry::getKey,";
-        Schema v = field.schema().getValueType();
-        switch (v.getType()) {
-          case ENUM:
-          case RECORD:
-            s += "e -> " + mangle(v.getFullName()) + ".fromProtobuf(e.getValue())";
-            break;
-          case BYTES:
-            s += "e -> e.getValue().asReadOnlyByteBuffer()";
-            break;
+            return "java.util.Collections.unmodifiableList(" + s + "List().stream()" +
+                   ".map(v -> v.asReadOnlyByteBuffer())" +
+                   ".collect(java.util.stream.Collectors.toList()))";
           default:
-            s += "java.util.Map.Entry::getValue";
+            return s + "List()";
         }
-        return s + "))";
-      case BYTES:
-        return s + "().asReadOnlyByteBuffer()";
+      case MAP:
+        switch (field.schema().getValueType().getType()) {
+          case ENUM:
+          case RECORD:
+            return "java.util.Collections.unmodifiableMap(" + s + "().entrySet().stream()" +
+                   ".collect(java.util.stream.Collectors.toMap(e -> e.getKey(), e -> " +
+                   mangle(field.schema().getValueType().getFullName()) +
+                   ".fromProtobuf(e.getValue())))";
+          case BYTES:
+            return "java.util.Collections.unmodifiableMap(" + s + "().entrySet().stream()" +
+                   ".collect(java.util.stream.Collectors.toMap(" +
+                   "e -> e.getKey(), " +
+                   "e -> e.getValue().asReadOnlyByteBuffer())))";
+          default:
+            return s + "()";
+        }
       case ENUM:
       case RECORD:
         return mangle(field.schema().getFullName()) + ".fromProtobuf(" + s + "())";
+      case BYTES:
+        return s + "().asReadOnlyByteBuffer()";
       default:
         return s + "()";
     }
@@ -175,15 +115,14 @@ public class AnoaInterfaceSpecificCompiler extends AnoaAvroSpecificCompiler {
             s += ".map(" + mangle(e.getFullName()) + "::fromThrift)";
             break;
           case BYTES:
-            s += ".map(java.nio.ByteBuffer::wrap).map(java.nio.ByteBuffer::asReadOnlyBuffer)";
+            s += ".map(java.nio.ByteBuffer::asReadOnlyBuffer)";
             break;
           case FLOAT:
             s += ".map(d -> (float) d)";
         }
         return s + ".collect(java.util.stream.Collectors.toList())";
       case MAP:
-        s += ".entrySet().stream().collect(java.util.stream.Collectors.toMap("
-             + "java.util.Map.Entry::getKey,";
+        s += ".entrySet().stream().collect(java.util.stream.Collectors.toMap(e -> e.getKey(),";
         Schema v = field.schema().getValueType();
         switch (v.getType()) {
           case ENUM:
@@ -191,13 +130,13 @@ public class AnoaInterfaceSpecificCompiler extends AnoaAvroSpecificCompiler {
             s += "e -> " + mangle(v.getFullName()) + ".fromThrift(e.getValue())";
             break;
           case BYTES:
-            s += "e -> java.nio.ByteBuffer.wrap(e.getValue()).asReadOnlyBuffer()";
+            s += "e -> e.getValue().asReadOnlyBuffer()";
             break;
           case FLOAT:
             s += "e -> (float) e.getValue()";
             break;
           default:
-            s += "java.util.Map.Entry::getValue";
+            s += "e -> e.getValue()";
         }
         return s + "))";
       case BYTES:

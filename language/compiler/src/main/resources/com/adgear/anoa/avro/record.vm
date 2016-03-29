@@ -28,9 +28,70 @@ package $schema.getNamespace();
 @$annotation
 #end
 @org.apache.avro.specific.AvroGenerated
-public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends org.apache.avro.specific.SpecificExceptionBase#else extends org.apache.avro.specific.SpecificRecordBase#end implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(${this.javaSplit($schema.toString())});
-  public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.SpecificRecordBase implements ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> {
+
+  static public final long serialVersionUID = ${this.getVersion($schema)};
+  static public final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(${this.javaSplit($schema.toString())});
+  static public org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+
+  static private java.lang.ThreadLocal<org.apache.avro.specific.SpecificDatumReader<${this.mangle($schema.getName())}>> SPECIFIC_DATUM_READER = new java.lang.ThreadLocal<org.apache.avro.specific.SpecificDatumReader<${this.mangle($schema.getName())}>>() {
+    @Override protected org.apache.avro.specific.SpecificDatumReader initialValue() {
+      return new org.apache.avro.specific.SpecificDatumReader<${this.mangle($schema.getName())}>(${this.mangle($schema.getName())}.class);
+    }
+  };
+
+  static private java.lang.ThreadLocal<org.apache.avro.io.BinaryDecoder> BINARY_DECODER = new java.lang.ThreadLocal<org.apache.avro.io.BinaryDecoder>() {
+    @Override protected org.apache.avro.io.BinaryDecoder initialValue() {
+      return org.apache.avro.io.DecoderFactory.get().binaryDecoder(new byte[0], null);
+    }
+  };
+
+  static public ${this.mangle($schema.getName())} fromBytes(byte[] binaryEncoding) {
+    final ${this.mangle($schema.getName())} instance;
+    try {
+      instance = SPECIFIC_DATUM_READER.get().read(null, org.apache.avro.io.DecoderFactory.get().binaryDecoder(binaryEncoding, BINARY_DECODER.get()));
+    } catch (java.io.IOException e) {
+      throw new java.io.UncheckedIOException(e);
+    }
+    instance.lock((byte[]) binaryEncoding.clone());
+    return instance;
+  }
+
+  static private java.lang.ThreadLocal<org.apache.avro.specific.SpecificDatumWriter<${this.mangle($schema.getName())}>> SPECIFIC_DATUM_WRITER = new java.lang.ThreadLocal<org.apache.avro.specific.SpecificDatumWriter<${this.mangle($schema.getName())}>>() {
+    @Override protected org.apache.avro.specific.SpecificDatumWriter initialValue() {
+      return new org.apache.avro.specific.SpecificDatumWriter<${this.mangle($schema.getName())}>(${this.mangle($schema.getName())}.class);
+    }
+  };
+
+  static private java.lang.ThreadLocal<java.io.ByteArrayOutputStream> BINARY_ENCODER_STREAM = new java.lang.ThreadLocal<java.io.ByteArrayOutputStream>() {
+    @Override protected java.io.ByteArrayOutputStream initialValue() {
+      return new java.io.ByteArrayOutputStream();
+    }
+  };
+
+  static private java.lang.ThreadLocal<org.apache.avro.io.BinaryEncoder> BINARY_ENCODER = new java.lang.ThreadLocal<org.apache.avro.io.BinaryEncoder>() {
+    @Override protected org.apache.avro.io.BinaryEncoder initialValue() {
+      return org.apache.avro.io.EncoderFactory.get().binaryEncoder(BINARY_ENCODER_STREAM.get(), null);
+    }
+  };
+
+  private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+    if (!isLocked()) {
+      lock();
+    }
+    out.defaultWriteObject();
+  }
+
+  private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
+    in.defaultReadObject();
+    byte[] bytes = _binaryEncoding;
+    _binaryEncoding = null;
+    SPECIFIC_DATUM_READER.get().read(this, org.apache.avro.io.DecoderFactory.get().binaryDecoder(bytes, BINARY_DECODER.get()));
+    _binaryEncoding = bytes;
+  }
+
+  private byte[] _binaryEncoding;
+
 #foreach ($field in $schema.getFields())
 #if ($field.doc())
   /** $field.doc() */
@@ -38,28 +99,9 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #foreach ($annotation in $this.javaAnnotations($field))
   @$annotation
 #end
-  #if ($this.isDeprecated($field))@Deprecated #end ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())};
+  transient private ${this.avroType($field.schema())} ${this.mangle($field.name())};
+#if ($this.isUnboxedJavaTypeNullable($field.schema()))  transient private ${this.viewType($field.schema())} ${this.mangle($field.name())}_view;#end
 #end
-#if ($schema.isError())
-
-  public ${this.mangle($schema.getName())}() {
-    super();
-  }
-
-  public ${this.mangle($schema.getName())}(Object value) {
-    super(value);
-  }
-
-  public ${this.mangle($schema.getName())}(Throwable cause) {
-    super(cause);
-  }
-
-  public ${this.mangle($schema.getName())}(Object value, Throwable cause) {
-    super(value, cause);
-  }
-
-#else
-#if ($schema.getFields().size() > 0)
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -68,192 +110,186 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
    */
   public ${this.mangle($schema.getName())}() {}
 
-  /**
-   * All-args constructor.
-   */
-  public ${this.mangle($schema.getName())}(#foreach($field in $schema.getFields())${this.javaType($field.schema())} ${this.mangle($field.name())}#if($velocityCount < $schema.getFields().size()), #end#end) {
-#foreach ($field in $schema.getFields())
-    this.${this.mangle($field.name())} = ${this.mangle($field.name())};
-#end
-  }
-#end
-
-#end
+  @Override
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
+
   // Used by DatumWriter.  Applications should not call.
+  @Override
   public java.lang.Object get(int field$) {
     switch (field$) {
 #set ($i = 0)
 #foreach ($field in $schema.getFields())
-    case $i: return ${this.mangle($field.name(), $schema.isError())};
+    case $i: return ${this.mangle($field.name())};
 #set ($i = $i + 1)
 #end
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
+
   // Used by DatumReader.  Applications should not call.
+  @Override
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
+    if (isLocked()) {
+      throw new org.apache.avro.AvroRuntimeException("This record has already been locked.");
+    }
     switch (field$) {
 #set ($i = 0)
 #foreach ($field in $schema.getFields())
-    case $i: ${this.mangle($field.name(), $schema.isError())} = (${this.javaType($field.schema())})value$; break;
+    case $i: ${this.mangle($field.name())} = (${this.avroType($field.schema())}) value$; break;
 #set ($i = $i + 1)
 #end
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
 
+  public boolean isLocked() {
+    return _binaryEncoding != null;
+  }
+
+  private void lock() {
+    java.io.ByteArrayOutputStream baos = BINARY_ENCODER_STREAM.get();
+    org.apache.avro.io.BinaryEncoder enc = BINARY_ENCODER.get();
+    baos.reset();
+    try {
+      SPECIFIC_DATUM_WRITER.get().write(this, enc);
+      enc.flush();
+    } catch (java.io.IOException e) {
+      throw new java.io.UncheckedIOException(e);
+    }
+    lock(baos.toByteArray());
+  }
+
+  private void lock(byte[] binaryEncoding) {
+    _binaryEncoding = binaryEncoding;
+#foreach ($field in $schema.getFields())
+#if ($this.isUnboxedJavaTypeNullable($field.schema()))
+  ${this.mangle($field.name())}_view = ${this.getView($field)};
+#end
+#end
+  }
+
+  public byte[] toByteArray() {
+    return (byte[]) get()._binaryEncoding.clone();
+  }
+
+  public java.nio.ByteBuffer toByteBuffer() {
+    return java.nio.ByteBuffer.wrap(get()._binaryEncoding).asReadOnlyBuffer();
+  }
+
+  @Override
+  public boolean isAvro() { return true; }
+
+  @Override
+  public ${this.mangle($schema.getName())} get() {
+    if (!isLocked()) {
+      lock();
+    }
+    return this;
+  }
+
 #foreach ($field in $schema.getFields())
   /**
-   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
+   * Gets the value of the '${this.mangle($field.name())}' field.
 #if ($field.doc())   * $field.doc()
 #end
    */
+  @Override
 #if ($this.isDeprecated($field))  @Deprecated
 #end
-  public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
-    return ${this.mangle($field.name(), $schema.isError())};
+  public ${this.viewType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+    return #if ($this.isUnboxedJavaTypeNullable($field.schema()))get().${this.mangle($field.name())}_view#else${this.mangle($field.name())}#end;
   }
 #foreach ($alias in $field.aliases())
   @Deprecated
-  public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, ${this.getAliasField($field, $alias)})}() {
-    return ${this.generateGetMethod($schema, $field)}();
+  public ${this.viewType($field.schema())} ${this.generateGetMethod($schema, ${this.getAliasField($field, $alias)})}() {
+    return #if ($this.isUnboxedJavaTypeNullable($field.schema()))get().${this.mangle($field.name())}_view#else${this.mangle($field.name())}#end;
   }
-#end
-
-#if ($this.createSetters)
-  /**
-   * Sets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
-#if ($field.doc())   * $field.doc()
-#end
-   * @param value the value to set.
-   */
-#if ($this.isDeprecated($field))  @Deprecated
-#end
-  public void ${this.generateSetMethod($schema, $field)}(${this.javaType($field.schema())} value) {
-    this.${this.mangle($field.name(), $schema.isError())} = value;
-  }
-#foreach ($alias in $field.aliases())
-  @Deprecated
-  public void ${this.generateSetMethod($schema, $this.getAliasField($field, $alias))}(${this.javaType($field.schema())} value) {
-    ${this.generateSetMethod($schema, $field)}(value);
-  }
-#end
 #end
 
 #end
   /** Creates a new ${this.mangle($schema.getName())} RecordBuilder */
-  public static #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder newBuilder() {
-    return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder();
+  static public ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder newBuilder() {
+    return new ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder();
   }
 
   /** Creates a new ${this.mangle($schema.getName())} RecordBuilder by copying an existing Builder */
-  public static #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder newBuilder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder other) {
-    return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder(other);
+  static public ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder newBuilder(${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder other) {
+    return new ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder(other);
   }
 
-  /** Creates a new ${this.mangle($schema.getName())} RecordBuilder by copying an existing $this.mangle($schema.getName()) instance */
-  public static #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder newBuilder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())} other) {
-    return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder(other);
+  /** Creates a new ${this.mangle($schema.getName())} RecordBuilder by copying an existing ${this.anoaInterfaceFullName($schema)} instance */
+  static public ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder newBuilder(${schema.getNamespace()}.${this.mangle($schema.getName())} other) {
+    return new ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder(other);
   }
 
   /**
    * RecordBuilder for ${this.mangle($schema.getName())} instances.
    */
-  public static class Builder extends#if ($schema.isError()) org.apache.avro.specific.SpecificErrorBuilderBase<${this.mangle($schema.getName())}>#else org.apache.avro.specific.SpecificRecordBuilderBase<${this.mangle($schema.getName())}>#end
-
-    implements#if ($schema.isError()) org.apache.avro.data.ErrorBuilder<${this.mangle($schema.getName())}>#else org.apache.avro.data.RecordBuilder<${this.mangle($schema.getName())}>#end {
+  static public class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<${this.mangle($schema.getName())}> implements org.apache.avro.data.RecordBuilder<${this.mangle($schema.getName())}> {
 
 #foreach ($field in $schema.getFields())
-    private ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())};
+    private ${this.avroType($field.schema())} ${this.mangle($field.name())};
 #end
 
     /** Creates a new Builder */
     private Builder() {
-      super(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.SCHEMA$);
+      super(${schema.getNamespace()}.${this.mangle($schema.getName())}.SCHEMA$);
     }
 
     /** Creates a Builder by copying an existing Builder */
-    private Builder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder other) {
+    private Builder(${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder other) {
       super(other);
 #foreach ($field in $schema.getFields())
-      if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name(), $schema.isError())})) {
-        this.${this.mangle($field.name(), $schema.isError())} = data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name(), $schema.isError())});
+      if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name())})) {
+        this.${this.mangle($field.name())} = data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name())});
         fieldSetFlags()[$field.pos()] = true;
       }
 #end
     }
 
-    /** Creates a Builder by copying an existing $this.mangle($schema.getName()) instance */
-    private Builder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())} other) {
-      #if ($schema.isError())super(other)#else
-      super(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.SCHEMA$)#end;
+    /** Creates a Builder by copying an existing ${schema.getNamespace()}.${this.mangle($schema.getName())} instance */
+    private Builder(${schema.getNamespace()}.${this.mangle($schema.getName())} other) {
+      super(${schema.getNamespace()}.${this.mangle($schema.getName())}.SCHEMA$);
 #foreach ($field in $schema.getFields())
-      if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name(), $schema.isError())})) {
-        this.${this.mangle($field.name(), $schema.isError())} = data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name(), $schema.isError())});
+      if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name())})) {
+        this.${this.mangle($field.name())} = data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name())});
         fieldSetFlags()[$field.pos()] = true;
       }
 #end
     }
-#if ($schema.isError())
-
-    @Override
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder setValue(Object value) {
-      super.setValue(value);
-      return this;
-    }
-
-    @Override
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder clearValue() {
-      super.clearValue();
-      return this;
-    }
-
-    @Override
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder setCause(Throwable cause) {
-      super.setCause(cause);
-      return this;
-    }
-
-    @Override
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder clearCause() {
-      super.clearCause();
-      return this;
-    }
-#end
 
 #foreach ($field in $schema.getFields())
-    /** Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field */
+    /** Gets the value of the '${this.mangle($field.name())}' field */
 #if ($this.isDeprecated($field))    @Deprecated
 #end
-    public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
-      return ${this.mangle($field.name(), $schema.isError())};
+    public ${this.avroType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+      return ${this.mangle($field.name())};
     }
 #foreach ($alias in $field.aliases())
     @Deprecated
-    public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $this.getAliasField($field, $alias))}() {
+    public ${this.avroType($field.schema())} ${this.generateGetMethod($schema, $this.getAliasField($field, $alias))}() {
       return ${this.generateGetMethod($schema, $field)}();
     }
 #end
 
-    /** Sets the value of the '${this.mangle($field.name(), $schema.isError())}' field */
+    /** Sets the value of the '${this.mangle($field.name())}' field */
 #if ($this.isDeprecated($field))    @Deprecated
 #end
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema())} value) {
+    public ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(${this.avroType($field.schema())} value) {
       validate(fields()[$field.pos()], value);
-      this.${this.mangle($field.name(), $schema.isError())} = value;
+      this.${this.mangle($field.name())} = value;
       fieldSetFlags()[$field.pos()] = true;
       return this;
     }
 #foreach ($alias in $field.aliases())
     @Deprecated
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $this.getAliasField($field, $alias))}(${this.javaUnbox($field.schema())} value) {
+    public ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $this.getAliasField($field, $alias))}(${this.avroType($field.schema())} value) {
       return ${this.generateSetMethod($schema, $field)}(value);
     }
 #end
 
-    /** Checks whether the '${this.mangle($field.name(), $schema.isError())}' field has been set */
+    /** Checks whether the '${this.mangle($field.name())}' field has been set */
 #if ($this.isDeprecated($field))    @Deprecated
 #end
     public boolean ${this.generateHasMethod($schema, $field)}() {
@@ -266,19 +302,19 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     }
 #end
 
-    /** Clears the value of the '${this.mangle($field.name(), $schema.isError())}' field */
+    /** Clears the value of the '${this.mangle($field.name())}' field */
 #if ($this.isDeprecated($field))    @Deprecated
 #end
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateClearMethod($schema, $field)}() {
+    public ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder ${this.generateClearMethod($schema, $field)}() {
 #if (${this.isUnboxedJavaTypeNullable($field.schema())})
-      ${this.mangle($field.name(), $schema.isError())} = null;
+      ${this.mangle($field.name())} = null;
 #end
       fieldSetFlags()[$field.pos()] = false;
       return this;
     }
 #foreach ($alias in $field.aliases())
     @Deprecated
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateClearMethod($schema, $this.getAliasField($field, $alias))}() {
+    public ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder ${this.generateClearMethod($schema, $this.getAliasField($field, $alias))}() {
       return ${this.generateClearMethod($schema, $field)}();
     }
 #end
@@ -286,15 +322,17 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
     @Override
     public ${this.mangle($schema.getName())} build() {
+      final ${this.mangle($schema.getName())} record;
       try {
-        ${this.mangle($schema.getName())} record = new ${this.mangle($schema.getName())}(#if ($schema.isError())getValue(), getCause()#end);
+        record = new ${this.mangle($schema.getName())}(#if ($schema.isError())getValue(), getCause()#end);
 #foreach ($field in $schema.getFields())
-        record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : (${this.javaType($field.schema())}) defaultValue(fields()[$field.pos()]);
+        record.${this.mangle($field.name())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name())} : (${this.avroType($field.schema())}) defaultValue(fields()[$field.pos()]);
 #end
-        return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
       }
+      record.lock();
+      return record;
     }
   }
 }

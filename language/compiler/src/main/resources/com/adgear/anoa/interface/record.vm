@@ -11,7 +11,7 @@ package $schema.getNamespace();
 #foreach ($annotation in $this.javaAnnotations($schema))
 @$annotation
 #end
-public interface ${this.mangle($schema.getName())}<T> {
+public interface ${this.mangle($schema.getName())}<T> extends java.io.Serializable {
 
 #if ($this.isWithAvro())
   /** Returns Avro class for this struct. */
@@ -41,22 +41,7 @@ public interface ${this.mangle($schema.getName())}<T> {
 
   /** Wraps an Avro object. */
   public static ${this.mangle($schema.getName())} fromAvro(${this.avroClassName($schema)} o) {
-    return new ${this.mangle($schema.getName())}<${this.avroClassName($schema)}>() {
-
-      @Override
-      public boolean isAvro() { return true; }
-
-      @Override
-      public ${this.avroClassName($schema)} get() { return o; }
-
-#foreach ($field in $schema.getFields())
-      @Override
-      public ${this.anoaType($field.schema())} ${this.anoaGetter($schema, $field)}() {
-        return ${this.avroValue($schema, $field)};
-      }
-
-#end
-    };
+    return o;
   }
 
 #end
@@ -83,23 +68,64 @@ public interface ${this.mangle($schema.getName())}<T> {
 
   /** Wraps a Protobuf object. */
   public static ${this.mangle($schema.getName())} fromProtobuf(${this.protobufClassName($schema)} o) {
+    return fromProtobuf(o, o.toByteArray());
+  }
+
+  /** Wraps a serialized Protobuf object. */
+  public static ${this.mangle($schema.getName())} fromProtobuf(byte[] protobufBytes) {
+    return fromProtobuf(null, protobufBytes);
+  }
+
+  static ${this.mangle($schema.getName())} fromProtobuf(${this.protobufClassName($schema)} protobufPojo, byte[] protobufBytes) {
+    assert protobufBytes != null;
     return new ${this.mangle($schema.getName())}<${this.protobufClassName($schema)}>() {
+
+      static public final long serialVersionUID = ${this.getVersion($schema)};
+
+      transient private ${this.protobufClassName($schema)} o = protobufPojo;
+
+      private ${this.protobufClassName($schema)} deserialize() {
+        try {
+          return ${this.protobufClassName($schema)}.parseFrom(protobufBytes);
+        } catch (java.io.IOException e) {
+          throw new java.io.UncheckedIOException(e);
+        }
+      }
 
       @Override
       public boolean isProtobuf() { return true; }
 
       @Override
-      public ${this.protobufClassName($schema)} get() { return o; }
+      public ${this.protobufClassName($schema)} get() {
+        if (o == null) { o = deserialize(); }
+        return o;
+      }
+
+      @Override
+      public boolean equals(Object other) {
+        if (other == this) return true;
+        if (other == null || !(other instanceof ${this.mangle($schema.getName())})) return false;
+        if (o == null) { o = deserialize(); }
+        return o.equals(((${this.mangle($schema.getName())}) other).get());
+      }
+
+      @Override
+      public int hashCode() {
+        if (o == null) { o = deserialize(); }
+        return o.hashCode();
+      }
 
 #foreach ($field in $schema.getFields())
       @Override
-      public ${this.anoaType($field.schema())} ${this.anoaGetter($schema, $field)}() {
+      public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+        if (o == null) { o = deserialize(); }
         return ${this.protobufValue($schema, $field)};
       }
 
 #end
     };
   }
+
 
 #end
 #if ($this.isWithThrift())
@@ -125,7 +151,10 @@ public interface ${this.mangle($schema.getName())}<T> {
 
   /** Wraps a Thrift object. */
   public static ${this.mangle($schema.getName())} fromThrift(${this.thriftClassName($schema)} o) {
+    assert o != null;
     return new ${this.mangle($schema.getName())}<${this.thriftClassName($schema)}>() {
+
+      static public final long serialVersionUID = ${this.getVersion($schema)};
 
       @Override
       public boolean isThrift() { return true; }
@@ -133,9 +162,19 @@ public interface ${this.mangle($schema.getName())}<T> {
       @Override
       public ${this.thriftClassName($schema)} get() { return o; }
 
+      @Override
+      public boolean equals(Object other) {
+        if (other == this) return true;
+        if (other == null || !(other instanceof ${this.mangle($schema.getName())})) return false;
+        return o.equals(((${this.mangle($schema.getName())}) other).get());
+      }
+
+      @Override
+      public int hashCode() { return o.hashCode(); }
+
 #foreach ($field in $schema.getFields())
       @Override
-      public ${this.anoaType($field.schema())} ${this.anoaGetter($schema, $field)}() {
+      public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
         return ${this.thriftValue($schema, $field)};
       }
 
@@ -157,7 +196,7 @@ public interface ${this.mangle($schema.getName())}<T> {
 #end
 #if ($this.isDeprecated($field))  @Deprecated
 #end
-  ${this.anoaType($field.schema())} ${this.anoaGetter($schema, $field)}();
+  ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}();
 
 #end
 }
