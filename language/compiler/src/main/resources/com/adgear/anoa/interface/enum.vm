@@ -11,54 +11,64 @@ package $schema.getNamespace();
 #foreach ($annotation in $this.javaAnnotations($schema))
 @$annotation
 #end
-public interface ${this.mangle($schema.getName())}<T> {
+public interface ${this.mangle($schema.getName())}<T> extends java.util.function.Supplier<T> {
 
 #if ($this.isWithAvro())
   /** Returns Avro class for this enum. */
-  public static Class<${this.avroClassName($schema)}> getAvroClass() {
+  static Class<${this.avroClassName($schema)}> getAvroClass() {
     return ${this.avroClassName($schema)}.class;
   }
 
   /** Returns Avro schema for this enum. */
-  public static org.apache.avro.Schema getAvroSchema() {
+  static org.apache.avro.Schema getAvroSchema() {
     return ${this.avroClassName($schema)}.SCHEMA$;
   }
 
   /** Returns Avro enum instance for the given ordinal, defaults to first enum value. */
-  public static ${this.avroClassName($schema)} findAvroEnum(java.lang.Integer ordinal) {
+  static ${this.mangle($schema.getName())}<${this.avroClassName($schema)}> findAvroEnum(java.lang.Integer ordinal) {
     return ${this.avroClassName($schema)}.fromInteger(ordinal);
   }
 
   /** Returns Avro enum instance for the given label, defaults to first enum value. */
-  public static ${this.avroClassName($schema)} findAvroEnum(java.lang.CharSequence str) {
+  static ${this.mangle($schema.getName())}<${this.avroClassName($schema)}> findAvroEnum(java.lang.CharSequence str) {
     return ${this.avroClassName($schema)}.fromString(str);
   }
 
   /** Wraps an Avro object. */
-  public static ${this.mangle($schema.getName())} fromAvro(${this.avroClassName($schema)} o) {
+  static ${this.mangle($schema.getName())}<${this.avroClassName($schema)}> fromAvro(${this.avroClassName($schema)} o) {
     return o;
   }
 
 #end
 #if ($this.isWithProtobuf())
   /** Returns Protobuf class for this enum. */
-  public static Class<${this.protobufClassName($schema)}> getProtobufClass() {
+  static Class<${this.protobufClassName($schema)}> getProtobufClass() {
     return ${this.protobufClassName($schema)}.class;
   }
 
+  /** Returns Protobuf protocol class for this enum. */
+  static Class<${this.getProtocolFullName()}Protobuf> getProtobufProtocolClass() {
+    return ${this.getProtocolFullName()}Protobuf.class;
+  }
+
   /** Returns Protobuf descriptor for this enum. */
-  public static com.google.protobuf.Descriptors.EnumDescriptor getProtobufDescriptor() {
+  static com.google.protobuf.Descriptors.EnumDescriptor getProtobufDescriptor() {
     return ${this.protobufClassName($schema)}.getDescriptor();
   }
 
+  /** Returns Protobuf protocol descriptor for this enum. */
+  static com.google.protobuf.Descriptors.FileDescriptor getProtobufProtocolDescriptor() {
+    return ${this.getProtocolFullName()}Protobuf.getDescriptor();
+  }
+
   /** Returns Protobuf enum instance for the given ordinal, defaults to first enum value. */
-  public static ${this.protobufClassName($schema)} findProtobufEnum(int ordinal) {
+  static ${this.mangle($schema.getName())}<${this.protobufClassName($schema)}> findProtobufEnum(int ordinal) {
     ${this.protobufClassName($schema)} result = ${this.protobufClassName($schema)}.valueOf(ordinal);
-    return (result == null) ? ${this.protobufClassName($schema)}.valueOf(0) : result;
+    return fromProtobuf((result == null) ? ${this.protobufClassName($schema)}.valueOf(0) : result);
   }
 
   /** Wraps a Protobuf object. */
-  public static ${this.mangle($schema.getName())} fromProtobuf(${this.protobufClassName($schema)} o) {
+  static ${this.mangle($schema.getName())}<${this.protobufClassName($schema)}> fromProtobuf(${this.protobufClassName($schema)} o) {
     assert o != null;
     return new ${this.mangle($schema.getName())}<${this.protobufClassName($schema)}>() {
 
@@ -90,17 +100,17 @@ public interface ${this.mangle($schema.getName())}<T> {
 #end
 #if ($this.isWithThrift())
   /** Returns Thrift class for this enum. */
-  public static Class<${this.thriftClassName($schema)}> getThriftClass() {
+  static Class<${this.thriftClassName($schema)}> getThriftClass() {
     return ${this.thriftClassName($schema)}.class;
   }
 
   /** Returns Thrift enum instance for the given ordinal, defaults to first enum value. */
-  public static ${this.thriftClassName($schema)} findThriftEnum(int ordinal) {
-    return ${this.thriftClassName($schema)}.findByValue(ordinal);
+  static ${this.mangle($schema.getName())}<${this.thriftClassName($schema)}> findThriftEnum(int ordinal) {
+    return fromThrift(${this.thriftClassName($schema)}.findByValue(ordinal));
   }
 
   /** Wraps a Thrift object. */
-  public static ${this.mangle($schema.getName())} fromThrift(${this.thriftClassName($schema)} o) {
+  static ${this.mangle($schema.getName())}<${this.thriftClassName($schema)}> fromThrift(${this.thriftClassName($schema)} o) {
     return new ${this.mangle($schema.getName())}<${this.thriftClassName($schema)}>() {
 
       static public final long serialVersionUID = ${this.getVersion($schema)};
@@ -132,9 +142,6 @@ public interface ${this.mangle($schema.getName())}<T> {
   default boolean isAvro() { return false; }
   default boolean isProtobuf() { return false; }
   default boolean isThrift() { return false; }
-
-  /** Returns underlying enumeration object. */
-  T get();
 
   /** Returns enumeration ordinal. */
   int getOrdinal();

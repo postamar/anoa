@@ -8,7 +8,28 @@ package $protocol.getNamespace();
 #foreach ($annotation in $this.javaAnnotations($protocol))
 @$annotation
 #end
-public interface ${this.mangle($protocol.getName())} {
+public interface ${this.mangle($protocol.getName())}<T> {
+#if ($this.isWithAvro())
 
+  /** Returns Avro schema for this protocol. */
+  static org.apache.avro.Protocol getAvroProtocol() {
+    return #if ($protocol.getNamespace())$protocol.getNamespace().#end${this.mangle($protocol.getName())}Avro.PROTOCOL;
+  }
 
+  /** Returns class object for this protocol. */
+  static Class<#if ($protocol.getNamespace())$protocol.getNamespace().#end${this.mangle($protocol.getName())}Avro> getAvroProtocolClass() {
+    return #if ($protocol.getNamespace())$protocol.getNamespace().#end${this.mangle($protocol.getName())}Avro.class;
+  }
+#end
+#if ($this.isWithProtobuf())
+
+  /** Returns Protobuf descriptor for this protocol. */
+  static com.google.protobuf.Descriptors.FileDescriptor getProtobufProtocolDescriptor() {
+    return #if ($protocol.getNamespace())$protocol.getNamespace().#end${this.mangle($protocol.getName())}Protobuf.getDescriptor();
+  }
+
+  static Class<#if ($protocol.getNamespace())$protocol.getNamespace().#end${this.mangle($protocol.getName())}Protobuf> getProtobufProtocolClass() {
+    return #if ($protocol.getNamespace())$protocol.getNamespace().#end${this.mangle($protocol.getName())}Protobuf.class;
+  }
+#end
 }

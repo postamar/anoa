@@ -11,13 +11,12 @@ import java.util.Optional;
 
 public class AnoaAvroSpecificCompiler extends SpecificCompiler {
 
+  final private String protocolFullName;
+
   public AnoaAvroSpecificCompiler(Protocol protocol) {
     super(protocol);
-    anoaDefaults();
-  }
-
-  public AnoaAvroSpecificCompiler(Schema schema) {
-    super(schema);
+    protocolFullName = Optional.ofNullable(protocol.getNamespace()).map(ns -> ns + ".").orElse("")
+                   + protocol.getName();
     anoaDefaults();
   }
 
@@ -27,6 +26,10 @@ public class AnoaAvroSpecificCompiler extends SpecificCompiler {
     setFieldVisibility(FieldVisibility.PRIVATE);
     setCreateSetters(false);
     setOutputCharacterEncoding("UTF-8");
+  }
+
+  public String getProtocolFullName() {
+    return protocolFullName;
   }
 
   public String getVersion(Schema schema) {

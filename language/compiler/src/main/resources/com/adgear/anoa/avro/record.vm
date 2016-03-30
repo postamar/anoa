@@ -31,49 +31,23 @@ package $schema.getNamespace();
 public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.SpecificRecordBase implements ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> {
 
   static public final long serialVersionUID = ${this.getVersion($schema)};
-  static public final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(${this.javaSplit($schema.toString())});
   static public org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
-  static private java.lang.ThreadLocal<org.apache.avro.specific.SpecificDatumReader<${this.mangle($schema.getName())}>> SPECIFIC_DATUM_READER = new java.lang.ThreadLocal<org.apache.avro.specific.SpecificDatumReader<${this.mangle($schema.getName())}>>() {
-    @Override protected org.apache.avro.specific.SpecificDatumReader initialValue() {
-      return new org.apache.avro.specific.SpecificDatumReader<${this.mangle($schema.getName())}>(${this.mangle($schema.getName())}.class);
-    }
-  };
+  private byte[] _binaryEncoding;
+  transient private java.nio.ByteBuffer _binaryEncodingBuffer;
 
-  static private java.lang.ThreadLocal<org.apache.avro.io.BinaryDecoder> BINARY_DECODER = new java.lang.ThreadLocal<org.apache.avro.io.BinaryDecoder>() {
-    @Override protected org.apache.avro.io.BinaryDecoder initialValue() {
-      return org.apache.avro.io.DecoderFactory.get().binaryDecoder(new byte[0], null);
-    }
-  };
-
-  static public ${this.mangle($schema.getName())} fromBytes(byte[] binaryEncoding) {
-    final ${this.mangle($schema.getName())} instance;
-    try {
-      instance = SPECIFIC_DATUM_READER.get().read(null, org.apache.avro.io.DecoderFactory.get().binaryDecoder(binaryEncoding, BINARY_DECODER.get()));
-    } catch (java.io.IOException e) {
-      throw new java.io.UncheckedIOException(e);
-    }
-    instance.lock((byte[]) binaryEncoding.clone());
-    return instance;
-  }
-
-  static private java.lang.ThreadLocal<org.apache.avro.specific.SpecificDatumWriter<${this.mangle($schema.getName())}>> SPECIFIC_DATUM_WRITER = new java.lang.ThreadLocal<org.apache.avro.specific.SpecificDatumWriter<${this.mangle($schema.getName())}>>() {
-    @Override protected org.apache.avro.specific.SpecificDatumWriter initialValue() {
-      return new org.apache.avro.specific.SpecificDatumWriter<${this.mangle($schema.getName())}>(${this.mangle($schema.getName())}.class);
-    }
-  };
-
-  static private java.lang.ThreadLocal<java.io.ByteArrayOutputStream> BINARY_ENCODER_STREAM = new java.lang.ThreadLocal<java.io.ByteArrayOutputStream>() {
-    @Override protected java.io.ByteArrayOutputStream initialValue() {
-      return new java.io.ByteArrayOutputStream();
-    }
-  };
-
-  static private java.lang.ThreadLocal<org.apache.avro.io.BinaryEncoder> BINARY_ENCODER = new java.lang.ThreadLocal<org.apache.avro.io.BinaryEncoder>() {
-    @Override protected org.apache.avro.io.BinaryEncoder initialValue() {
-      return org.apache.avro.io.EncoderFactory.get().binaryEncoder(BINARY_ENCODER_STREAM.get(), null);
-    }
-  };
+#foreach ($field in $schema.getFields())
+#if ($field.doc())
+  /** $field.doc() */
+#end
+#foreach ($annotation in $this.javaAnnotations($field))
+  @$annotation
+#end
+  transient private ${this.avroType($field.schema())} ${this.mangle($field.name())};
+#if ($this.isUnboxedJavaTypeNullable($field.schema()))
+  transient private ${this.viewType($field.schema())} _view_${this.mangle($field.name())};
+#end
+#end
 
   private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
     if (!isLocked()) {
@@ -86,34 +60,63 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
     in.defaultReadObject();
     byte[] bytes = _binaryEncoding;
     _binaryEncoding = null;
-    SPECIFIC_DATUM_READER.get().read(this, org.apache.avro.io.DecoderFactory.get().binaryDecoder(bytes, BINARY_DECODER.get()));
-    _binaryEncoding = bytes;
+    _DECODER.get().decode(this, bytes);
+    lock(bytes);
   }
 
-  private byte[] _binaryEncoding;
+  private boolean isLocked() {
+    return _binaryEncoding != null;
+  }
 
+  private void lock() {
+    try {
+      lock(_ENCODER.get().encode(this));
+    } catch (java.io.IOException e) {
+      throw new java.io.UncheckedIOException(e);
+    }
+  }
+
+  private void lock(byte[] binaryEncoding) {
+    _binaryEncoding = binaryEncoding;
+    _binaryEncodingBuffer = java.nio.ByteBuffer.wrap(get()._binaryEncoding).asReadOnlyBuffer();
 #foreach ($field in $schema.getFields())
-#if ($field.doc())
-  /** $field.doc() */
+#if ($this.isUnboxedJavaTypeNullable($field.schema()))
+    _view_${this.mangle($field.name())} = ${this.getView($field)};
 #end
-#foreach ($annotation in $this.javaAnnotations($field))
-  @$annotation
 #end
-  transient private ${this.avroType($field.schema())} ${this.mangle($field.name())};
-#if ($this.isUnboxedJavaTypeNullable($field.schema()))  transient private ${this.viewType($field.schema())} ${this.mangle($field.name())}_view;#end
-#end
+  }
 
   /**
-   * Default constructor.  Note that this does not initialize fields
-   * to their default values from the schema.  If that is desired then
-   * one should use <code>newBuilder()</code>.
+   * Default constructor, does not initialize fields to their default values from the schema.
+   *
+   * @deprecated
+   * Use builder static methods instead.
    */
+  @Deprecated
   public ${this.mangle($schema.getName())}() {}
+
+  /**
+   * Constructs a new instance based on its canonical binary encoding.
+   *
+   * @param binaryEncoding  Field values encoded by Avro BinaryEncoder. Owned by the instance.
+   *
+   * @deprecated
+   * Only use this if you know what you are doing.
+   */
+  @Deprecated
+  public ${this.mangle($schema.getName())}(byte[] binaryEncoding) {
+    try {
+      _DECODER.get().decode(this, binaryEncoding);
+    } catch (java.io.IOException e) {
+      throw new java.io.UncheckedIOException(e);
+    }
+    lock(binaryEncoding);
+  }
 
   @Override
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
 
-  // Used by DatumWriter.  Applications should not call.
+  // Used by DatumWriter. Applications should not call.
   @Override
   public java.lang.Object get(int field$) {
     switch (field$) {
@@ -143,38 +146,14 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
     }
   }
 
-  public boolean isLocked() {
-    return _binaryEncoding != null;
-  }
-
-  private void lock() {
-    java.io.ByteArrayOutputStream baos = BINARY_ENCODER_STREAM.get();
-    org.apache.avro.io.BinaryEncoder enc = BINARY_ENCODER.get();
-    baos.reset();
-    try {
-      SPECIFIC_DATUM_WRITER.get().write(this, enc);
-      enc.flush();
-    } catch (java.io.IOException e) {
-      throw new java.io.UncheckedIOException(e);
-    }
-    lock(baos.toByteArray());
-  }
-
-  private void lock(byte[] binaryEncoding) {
-    _binaryEncoding = binaryEncoding;
-#foreach ($field in $schema.getFields())
-#if ($this.isUnboxedJavaTypeNullable($field.schema()))
-  ${this.mangle($field.name())}_view = ${this.getView($field)};
-#end
-#end
-  }
-
-  public byte[] toByteArray() {
+  /** Returns an Avro binary encoding of this record. */
+  public byte[] copyBinaryEncoding() {
     return (byte[]) get()._binaryEncoding.clone();
   }
 
-  public java.nio.ByteBuffer toByteBuffer() {
-    return java.nio.ByteBuffer.wrap(get()._binaryEncoding).asReadOnlyBuffer();
+  /** Returns the Avro binary encoding of this record wrapped in a read-only buffer. */
+  public java.nio.ByteBuffer getBinaryEncoding() {
+    return get()._binaryEncodingBuffer;
   }
 
   @Override
@@ -198,12 +177,12 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
 #if ($this.isDeprecated($field))  @Deprecated
 #end
   public ${this.viewType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
-    return #if ($this.isUnboxedJavaTypeNullable($field.schema()))get().${this.mangle($field.name())}_view#else${this.mangle($field.name())}#end;
+    return #if ($this.isUnboxedJavaTypeNullable($field.schema()))get()._view_${this.mangle($field.name())}#else${this.mangle($field.name())}#end;
   }
 #foreach ($alias in $field.aliases())
   @Deprecated
   public ${this.viewType($field.schema())} ${this.generateGetMethod($schema, ${this.getAliasField($field, $alias)})}() {
-    return #if ($this.isUnboxedJavaTypeNullable($field.schema()))get().${this.mangle($field.name())}_view#else${this.mangle($field.name())}#end;
+    return #if ($this.isUnboxedJavaTypeNullable($field.schema()))get()._view_${this.mangle($field.name())}#else${this.mangle($field.name())}#end;
   }
 #end
 
@@ -335,4 +314,42 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
       return record;
     }
   }
+
+  /**
+   * Utility class for deserializing ${this.mangle($schema.getName())} instances from Avro binary encoding.
+   * Not thread safe.
+   */
+  static public class Decoder {
+    final private org.apache.avro.io.BinaryDecoder decoder = org.apache.avro.io.DecoderFactory.get().binaryDecoder(new byte[0], null);
+    final private org.apache.avro.specific.SpecificDatumReader<${this.mangle($schema.getName())}> reader = new org.apache.avro.specific.SpecificDatumReader<>(${this.mangle($schema.getName())}.class);
+    public ${this.mangle($schema.getName())} decode(${this.mangle($schema.getName())} instance, byte[] bytes) throws java.io.IOException {
+      return reader.read(instance, org.apache.avro.io.DecoderFactory.get().binaryDecoder(bytes, decoder));
+    }
+  }
+
+  static private java.lang.ThreadLocal<Decoder> _DECODER = new java.lang.ThreadLocal<Decoder>() {
+    @Override protected Decoder initialValue() { return new Decoder(); }
+  };
+
+  /**
+   * Utility class for serializing ${this.mangle($schema.getName())} instances into Avro binary encoding.
+   * Not thread safe.
+   */
+  static public class Encoder {
+    final private java.io.ByteArrayOutputStream stream = new java.io.ByteArrayOutputStream();
+    final private org.apache.avro.io.BinaryEncoder encoder = org.apache.avro.io.EncoderFactory.get().binaryEncoder(stream, null);
+    final private org.apache.avro.specific.SpecificDatumWriter<${this.mangle($schema.getName())}> writer = new org.apache.avro.specific.SpecificDatumWriter<>(${this.mangle($schema.getName())}.class);
+    public byte[] encode(${this.mangle($schema.getName())} instance) throws java.io.IOException {
+      stream.reset();
+      writer.write(instance, encoder);
+      encoder.flush();
+      return stream.toByteArray();
+    }
+  }
+
+  static private java.lang.ThreadLocal<Encoder> _ENCODER = new java.lang.ThreadLocal<Encoder>() {
+    @Override protected Encoder initialValue() { return new Encoder(); }
+  };
+
+  static public final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(${this.javaSplit($schema.toString())});
 }
