@@ -46,9 +46,9 @@ public enum ${this.mangle($schema.getName())} implements ${this.anoaInterfaceFul
   static public final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("${this.javaEscape($schema.toString())}");
   static public org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
-  static public ${this.mangle($schema.getName())} fromInteger(java.lang.Integer ordinal, ${this.mangle($schema.getName())} defaultValue) {
+  static public ${this.mangle($schema.getName())} fromInteger(java.lang.Integer ordinal) {
     if (ordinal == null) {
-      return defaultValue;
+      return ${schema.getEnumSymbols().get(0)};
     }
     switch (ordinal) {
 #set( $i = 0 )
@@ -57,11 +57,7 @@ public enum ${this.mangle($schema.getName())} implements ${this.anoaInterfaceFul
 #set( $i = $i + 1 )
 #end
     }
-    return defaultValue;
-  }
-
-  static public ${this.mangle($schema.getName())} fromInteger(java.lang.Integer ordinal) {
-    return fromInteger(ordinal, null);
+    return ${schema.getEnumSymbols().get(0)};
   }
 
   static public boolean hasFromInteger(java.lang.Integer ordinal) {
@@ -71,9 +67,9 @@ public enum ${this.mangle($schema.getName())} implements ${this.anoaInterfaceFul
     return ordinal >= 0 && ordinal < ${schema.getEnumSymbols().size()};
   }
 
-  static public ${this.mangle($schema.getName())} fromString(java.lang.CharSequence str, ${this.mangle($schema.getName())} defaultValue) {
+  static public ${this.mangle($schema.getName())} fromString(java.lang.CharSequence str) {
     if (str == null) {
-      return defaultValue;
+      return ${schema.getEnumSymbols().get(0)};
     }
     final java.lang.String s = str.toString().toUpperCase();
 #set( $i = 0 )
@@ -83,11 +79,7 @@ public enum ${this.mangle($schema.getName())} implements ${this.anoaInterfaceFul
     } else
 #set( $i = $i + 1 )
 #end
-      return defaultValue;
-  }
-
-  static public ${this.mangle($schema.getName())} fromString(java.lang.CharSequence str) {
-    return fromString(str, null);
+      return ${schema.getEnumSymbols().get(0)};
   }
 
   static public boolean hasFromString(java.lang.CharSequence str) {

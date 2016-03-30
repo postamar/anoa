@@ -70,11 +70,15 @@ public class AnoaAvroSpecificCompiler extends SpecificCompiler {
 
 
   public String viewType(Schema schema) {
-    return javaType(schema, true, false);
+    return javaType(schema, true, false, false);
   }
 
   public String avroType(Schema schema) {
-    return javaType(schema, false, false);
+    return javaType(schema, false, false, false);
+  }
+
+  public String entryType(Schema schema) {
+    return javaType(schema, false, false, true);
   }
 
   @Override
@@ -82,18 +86,20 @@ public class AnoaAvroSpecificCompiler extends SpecificCompiler {
     return viewType(schema);
   }
 
-  private String javaType(Schema s, boolean view, boolean boxed) {
+  private String javaType(Schema s, boolean view, boolean boxed, boolean entry) {
     switch (s.getType()) {
       case RECORD:
       case ENUM:
         return view ? anoaInterfaceFullName(s) : mangle(s.getFullName());
       case ARRAY:
-        return "java.util.List<" + javaType(s.getElementType(), view, true) + ">";
+        return (entry ? "" : "java.util.List<") +
+               javaType(s.getElementType(), view, true, entry) +
+               (entry ? "" : ">");
       case MAP:
-        return "java.util.Map<" + (view ? "java.lang.String" : "? extends java.lang.CharSequence") +
-               "," + javaType(s.getValueType(), view, true) + ">";
-      case STRING:  return view ? "java.lang.String" :
-                           (boxed ? "? extends java.lang.CharSequence" : "java.lang.CharSequence");
+        return "java.util.Map" + (entry ? ".Entry" : "") +
+               " <" + (view ? "java.lang.String" : "java.lang.CharSequence") +
+               "," + javaType(s.getValueType(), view, true, entry) + ">";
+      case STRING:  return view ? "java.lang.String" : "java.lang.CharSequence";
       case BYTES:   return "java.nio.ByteBuffer";
       case INT:     return boxed ? "java.lang.Integer" : "int";
       case LONG:    return boxed ? "java.lang.Long" : "long";
@@ -139,7 +145,6 @@ public class AnoaAvroSpecificCompiler extends SpecificCompiler {
     return "";
   }
 
-
   private String getMapFn(Schema s) {
     switch (s.getType()) {
       case BYTES:
@@ -153,5 +158,104 @@ public class AnoaAvroSpecificCompiler extends SpecificCompiler {
     return "e -> e.getValue()";
   }
 
+  static final public String ENCODER = "_encoder";
 
+  public String fieldEncoder(Schema.Field field){
+    final String name = mangle(field.name());
+    switch (field.schema().getType()) {
+      case ARRAY:
+        return ENCODER + ".writeArrayStart(); " +
+               ENCODER + ".setItemCount(" + name + ".size()); " +
+               "for (" + entryType(field.schema()) + " e : " + name + ") { " +
+               fieldSingleEncoder("e", field.schema().getElementType()) + " } " +
+               ENCODER + ".writeArrayEnd(); ";
+
+      case MAP:
+        return ENCODER + ".writeMapStart(); " +
+               ENCODER + ".setItemCount(" + name + ".size()); " +
+               "for (" + entryType(field.schema()) + " e : " + name + ".entrySet()) { " +
+               ENCODER + ".writeString(e.getKey());" +
+               fieldSingleEncoder("e.getValue()", field.schema().getValueType()) + " } " +
+               ENCODER + ".writeMapEnd(); ";
+      default:
+        return fieldSingleEncoder(name, field.schema());
+    }
+  }
+
+  public String fieldSingleEncoder(String name, Schema schema) {
+    switch (schema.getType()) {
+      case BOOLEAN:
+        return ENCODER + ".writeBoolean(" + name + ");";
+      case BYTES:
+        return ENCODER + ".writeBytes(" + name + ");";
+      case DOUBLE:
+        return ENCODER + ".writeDouble(" + name + ");";
+      case ENUM:
+        return ENCODER + ".writeEnum(" + name + ".ordinal());";
+      case FLOAT:
+        return ENCODER + ".writeFloat(" + name + ");";
+      case INT:
+        return ENCODER + ".writeInt(" + name + ");";
+      case LONG:
+        return ENCODER + ".writeLong(" + name + ");";
+      case STRING:
+        return ENCODER + ".writeString(" + name + ");";
+      case RECORD:
+        return name + ".encode(" + ENCODER + ");";
+      default:
+        throw new RuntimeException("Unsupported type: " + schema);
+    }
+  }
+
+  static final public String DECODER = "_decoder";
+
+  public String fieldDecoder(Schema.Field field){
+    final String name = mangle(field.name());
+    String oc = "_i" + field.pos();
+    String ic = "_j" + field.pos();
+    switch (field.schema().getType()) {
+      case ARRAY:
+        return "long " + oc + " = " + DECODER + ".readArrayStart(); " +
+               name + " = new org.apache.avro.generic.GenericData.Array<" +
+               entryType(field.schema()) + ">((int) " + oc + ", " +
+               "SCHEMA$.getFields().get(" + field.pos() + ").schema()); " +
+               "for(; " + oc + " != 0; " + oc + " = " + DECODER + ".arrayNext()) { " +
+               " for (long " + ic + "= 0; " + ic + " < " + oc + "; " + ic + "++) { " +
+               name + ".add(" + fieldSingleDecoder(field.schema().getElementType()) + "); } }";
+      case MAP:
+        return "long " + oc + " = " + DECODER + ".readMapStart(); " +
+               name + " = new java.util.LinkedHashMap<>((int) " + oc + "); " +
+               "for(; " + oc + " != 0; " + oc + " = " + DECODER + ".mapNext()) { " +
+               " for (long " + ic + "= 0; " + ic + " < " + oc + "; " + ic + "++) { " +
+               name + ".put(" + DECODER + ".readString(null), " +
+               fieldSingleDecoder(field.schema().getValueType()) + "); } }";
+      default:
+        return name + " = " + fieldSingleDecoder(field.schema()) + ";";
+    }
+  }
+
+  public String fieldSingleDecoder(Schema schema) {
+    switch (schema.getType()) {
+      case BOOLEAN:
+        return DECODER + ".readBoolean()";
+      case BYTES:
+        return DECODER + ".readBytes(null)";
+      case DOUBLE:
+        return DECODER + ".readDouble()";
+      case ENUM:
+        return entryType(schema) + ".fromInteger(" + DECODER + ".readEnum())";
+      case FLOAT:
+        return DECODER + ".readFloat()";
+      case INT:
+        return DECODER + ".readInt()";
+      case LONG:
+        return DECODER + ".readLong()";
+      case STRING:
+        return DECODER + ".readString(null)";
+      case RECORD:
+        return "new " + entryType(schema) + "().decode(" + DECODER + ")";
+      default:
+        throw new RuntimeException("Unsupported type: " + schema);
+    }
+  }
 }
