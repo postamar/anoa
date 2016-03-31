@@ -1,44 +1,25 @@
-##
-## Licensed to the Apache Software Foundation (ASF) under one
-## or more contributor license agreements.  See the NOTICE file
-## distributed with this work for additional information
-## regarding copyright ownership.  The ASF licenses this file
-## to you under the Apache License, Version 2.0 (the
-## "License"); you may not use this file except in compliance
-## with the License.  You may obtain a copy of the License at
-##
-##     http://www.apache.org/licenses/LICENSE-2.0
-##
-## Unless required by applicable law or agreed to in writing, software
-## distributed under the License is distributed on an "AS IS" BASIS,
-## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-## See the License for the specific language governing permissions and
-## limitations under the License.
-##
 #if ($schema.getNamespace())
 package $schema.getNamespace();
 #end
-@SuppressWarnings("all")
+
 #if ($schema.getDoc())
 /** $schema.getDoc() */
 #end
-#if ($this.isDeprecated($schema))@Deprecated
+#if ($this.isDeprecated($schema))
+@Deprecated
 #end
 #foreach ($annotation in $this.javaAnnotations($schema))
 @$annotation
 #end
 @org.apache.avro.specific.AvroGenerated
-public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.SpecificRecordBase implements ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> {
-
-  static public final long serialVersionUID = ${this.getVersion($schema)};
-  static public org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+final public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.SpecificRecordBase implements ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> {
 
   private byte[] _binaryEncoding;
   transient private java.nio.ByteBuffer _binaryEncodingBuffer;
   transient private boolean _decoded;
   transient private boolean _put;
 
-#foreach ($field in $schema.getFields())
+#foreach ($field in ${this.fields($schema)})
 #if ($field.doc())
   /** $field.doc() */
 #end
@@ -46,8 +27,8 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
   @$annotation
 #end
   transient private ${this.avroType($field.schema())} ${this.mangle($field.name())};
-#if ($this.isUnboxedJavaTypeNullable($field.schema()))
-  transient private ${this.viewType($field.schema())} _view_${this.mangle($field.name())};
+#if ($this.hasView($field))
+  transient private ${this.javaType($field.schema())} _view_${this.mangle($field.name())};
 #end
 #end
 
@@ -82,11 +63,11 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
   }
 
   private void decoded(boolean strict) {
-    if (_decoded) {
-      return;
-    }
     if (_put) {
       reset();
+      return;
+    }
+    if (_decoded) {
       return;
     }
     if (strict) {
@@ -116,37 +97,24 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
     _decoded = true;
     _binaryEncoding = null;
     _binaryEncodingBuffer = null;
-#foreach ($field in $schema.getFields())
-#if ($this.isUnboxedJavaTypeNullable($field.schema()))
+#foreach ($field in ${this.fields($schema)})
+#if ($this.hasView($field))
     _view_${this.mangle($field.name())} = null;
 #end
 #end
   }
 
-  /**
-   * Default constructor, does not initialize fields to their default values from the schema.
-   * Only use this if you know what you are doing.
-   */
+  /** Default constructor, does not initialize fields to their default values from the schema. Only use this if you know what you are doing. */
   public ${this.mangle($schema.getName())}() {}
 
-  /**
-   * Constructs a new instance based on its canonical binary encoding.
-   * Only use this if you know what you are doing.
-   *
-   * @param binaryEncoding  Field values encoded by Avro BinaryEncoder. Owned by the instance.
-   */
-  @Deprecated
-  public ${this.mangle($schema.getName())}(byte[] binaryEncoding) {
-    setBinaryEncoding(binaryEncoding);
-  }
-
-  @Override
-  public ${this.mangle($schema.getName())} get() {
-    return this;
-  }
+  /** Constructs a new instance based on its canonical binary encoding. Only use this if you know what you are doing. */
+  public ${this.mangle($schema.getName())}(byte[] binaryEncoding) { setBinaryEncoding(binaryEncoding); }
 
   @Override
   public boolean isAvro() { return true; }
+
+  @Override
+  public ${this.mangle($schema.getName())} get() { return this; }
 
   @Override
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
@@ -166,32 +134,21 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
     }
     return _binaryEncodingBuffer;
   }
-#foreach ($field in $schema.getFields())
+#foreach ($field in ${this.fields($schema)})
 
-  /**
-   * Gets the value of the '${this.mangle($field.name())}' field.
-#if ($field.doc())   * $field.doc()
-#end
-   */
   @Override
-#if ($this.isDeprecated($field))  @Deprecated
+#if ($this.isDeprecated($field))
+  @Deprecated
 #end
-  public ${this.viewType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+  public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
     decoded(true);
-#if ($this.isUnboxedJavaTypeNullable($field.schema()))
+#if ($this.hasView($field))
     if (_view_${this.mangle($field.name())} == null) { _view_${this.mangle($field.name())} = ${this.getView($field)}; }
     return _view_${this.mangle($field.name())};
 #else
     return ${this.mangle($field.name())};
 #end
   }
-#foreach ($alias in $field.aliases())
-
-  @Deprecated
-  public ${this.viewType($field.schema())} ${this.generateGetMethod($schema, ${this.getAliasField($field, $alias)})}() {
-    return ${this.generateGetMethod($schema, $field)}();
-  }
-#end
 #end
 
   // Used by DatumWriter. Applications should not call.
@@ -200,7 +157,7 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
     decoded(false);
     switch (field$) {
 #set ($i = 0)
-#foreach ($field in $schema.getFields())
+#foreach ($field in ${this.fields($schema)})
       case $i: return ${this.mangle($field.name())};
 #set ($i = $i + 1)
 #end
@@ -211,7 +168,7 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
   /** Writes record to Avro Encoder. */
   public void encode(org.apache.avro.io.Encoder _encoder) throws java.io.IOException {
     decoded(true);
-#foreach ($field in $schema.getFields())
+#foreach ($field in ${this.fields($schema)})
     ${this.fieldEncoder($field)}
 #end
   }
@@ -223,7 +180,7 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
     _put = true;
     switch (field$) {
 #set ($i = 0)
-#foreach ($field in $schema.getFields())
+#foreach ($field in ${this.fields($schema)})
       case $i: ${this.mangle($field.name())} = (${this.avroType($field.schema())}) value$; break;
 #set ($i = $i + 1)
 #end
@@ -234,45 +191,28 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
   /** Reads record from Avro Decoder. */
   public ${this.mangle($schema.getName())} decode(org.apache.avro.io.Decoder _decoder) throws java.io.IOException {
     reset();
-#foreach ($field in $schema.getFields())
+#foreach ($field in ${this.fields($schema)})
     ${this.fieldDecoder($field)}
 #end
     return this;
   }
 
-  /** Creates a new ${this.mangle($schema.getName())} RecordBuilder */
-  static public ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder newBuilder() {
-    return new ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder();
-  }
-
-  /** Creates a new ${this.mangle($schema.getName())} RecordBuilder by copying an existing Builder */
-  static public ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder newBuilder(${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder other) {
-    return new ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder(other);
-  }
-
-  /** Creates a new ${this.mangle($schema.getName())} RecordBuilder by copying an existing ${this.anoaInterfaceFullName($schema)} instance */
-  static public ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder newBuilder(${schema.getNamespace()}.${this.mangle($schema.getName())} other) {
-    return new ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder(other);
-  }
-
   /**
-   * RecordBuilder for ${this.mangle($schema.getName())} instances.
+   * RecordBuilder for Avro instances.
    */
   static public class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<${this.mangle($schema.getName())}> implements org.apache.avro.data.RecordBuilder<${this.mangle($schema.getName())}> {
 
-#foreach ($field in $schema.getFields())
+#foreach ($field in ${this.fields($schema)})
     private ${this.avroType($field.schema())} ${this.mangle($field.name())};
 #end
 
-    /** Creates a new Builder */
     private Builder() {
-      super(${schema.getNamespace()}.${this.mangle($schema.getName())}.SCHEMA$);
+      super(${this.mangle($schema.getName())}.SCHEMA$);
     }
 
-    /** Creates a Builder by copying an existing Builder */
-    private Builder(${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder other) {
+    private Builder(${this.mangle($schema.getName())}.Builder other) {
       super(other);
-#foreach ($field in $schema.getFields())
+#foreach ($field in ${this.fields($schema)})
       if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name())})) {
         this.${this.mangle($field.name())} = data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name())});
         fieldSetFlags()[$field.pos()] = true;
@@ -280,64 +220,49 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
 #end
     }
 
-    /** Creates a Builder by copying an existing ${schema.getNamespace()}.${this.mangle($schema.getName())} instance */
-    private Builder(${schema.getNamespace()}.${this.mangle($schema.getName())} other) {
-      super(${schema.getNamespace()}.${this.mangle($schema.getName())}.SCHEMA$);
-#foreach ($field in $schema.getFields())
+    private Builder(${this.mangle($schema.getName())} other) {
+      super(${this.mangle($schema.getName())}.SCHEMA$);
+#foreach ($field in ${this.fields($schema)})
       if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name())})) {
         this.${this.mangle($field.name())} = data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name())});
         fieldSetFlags()[$field.pos()] = true;
       }
 #end
     }
+#foreach ($field in ${this.fields($schema)})
 
-#foreach ($field in $schema.getFields())
-    /** Gets the value of the '${this.mangle($field.name())}' field */
-#if ($this.isDeprecated($field))    @Deprecated
+    /** Gets the value of the '${this.mangle($field.name())}' field. */
+#if ($this.isDeprecated($field))
+    @Deprecated
 #end
     public ${this.avroType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
       return ${this.mangle($field.name())};
     }
-#foreach ($alias in $field.aliases())
-    @Deprecated
-    public ${this.avroType($field.schema())} ${this.generateGetMethod($schema, $this.getAliasField($field, $alias))}() {
-      return ${this.generateGetMethod($schema, $field)}();
-    }
-#end
 
-    /** Sets the value of the '${this.mangle($field.name())}' field */
-#if ($this.isDeprecated($field))    @Deprecated
+    /** Sets the value of the '${this.mangle($field.name())}' field. */
+#if ($this.isDeprecated($field))
+    @Deprecated
 #end
-    public ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(${this.avroType($field.schema())} value) {
+    public ${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(${this.avroType($field.schema())} value) {
       validate(fields()[$field.pos()], value);
       this.${this.mangle($field.name())} = value;
       fieldSetFlags()[$field.pos()] = true;
       return this;
     }
-#foreach ($alias in $field.aliases())
-    @Deprecated
-    public ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $this.getAliasField($field, $alias))}(${this.avroType($field.schema())} value) {
-      return ${this.generateSetMethod($schema, $field)}(value);
-    }
-#end
 
-    /** Checks whether the '${this.mangle($field.name())}' field has been set */
-#if ($this.isDeprecated($field))    @Deprecated
+    /** Checks whether the '${this.mangle($field.name())}' field has been set. */
+#if ($this.isDeprecated($field))
+    @Deprecated
 #end
     public boolean ${this.generateHasMethod($schema, $field)}() {
       return fieldSetFlags()[$field.pos()];
     }
-#foreach ($alias in $field.aliases())
-    @Deprecated
-    public boolean ${this.generateHasMethod($schema, $this.getAliasField($field, $alias))}() {
-      return ${this.generateHasMethod($schema, $field)}();
-    }
-#end
 
-    /** Clears the value of the '${this.mangle($field.name())}' field */
-#if ($this.isDeprecated($field))    @Deprecated
+    /** Clears the value of the '${this.mangle($field.name())}' field. */
+#if ($this.isDeprecated($field))
+    @Deprecated
 #end
-    public ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder ${this.generateClearMethod($schema, $field)}() {
+    public ${this.mangle($schema.getName())}.Builder ${this.generateClearMethod($schema, $field)}() {
 #if (${this.isUnboxedJavaTypeNullable($field.schema())})
       ${this.mangle($field.name())} = null;
 #end
@@ -345,19 +270,35 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
       return this;
     }
 #foreach ($alias in $field.aliases())
+
     @Deprecated
-    public ${schema.getNamespace()}.${this.mangle($schema.getName())}.Builder ${this.generateClearMethod($schema, $this.getAliasField($field, $alias))}() {
+    public ${this.avroType($field.schema())} ${this.generateGetMethod($schema, $this.aliasField($field, $alias))}() {
+      return ${this.generateGetMethod($schema, $field)}();
+    }
+
+    @Deprecated
+    public ${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $this.aliasField($field, $alias))}(${this.avroType($field.schema())} value) {
+      return ${this.generateSetMethod($schema, $field)}(value);
+    }
+
+    @Deprecated
+    public boolean ${this.generateHasMethod($schema, $this.aliasField($field, $alias))}() {
+      return ${this.generateHasMethod($schema, $field)}();
+    }
+
+    @Deprecated
+    public ${this.mangle($schema.getName())}.Builder ${this.generateClearMethod($schema, $this.aliasField($field, $alias))}() {
       return ${this.generateClearMethod($schema, $field)}();
     }
 #end
-
 #end
+
     @Override
     public ${this.mangle($schema.getName())} build() {
       final ${this.mangle($schema.getName())} record;
       try {
         record = new ${this.mangle($schema.getName())}();
-#foreach ($field in $schema.getFields())
+#foreach ($field in ${this.fields($schema)})
         record.${this.mangle($field.name())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name())} : (${this.avroType($field.schema())}) defaultValue(fields()[$field.pos()]);
 #end
       } catch (Exception e) {
@@ -379,5 +320,25 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
     @Override protected org.apache.avro.io.BinaryEncoder initialValue() { return org.apache.avro.io.EncoderFactory.get().binaryEncoder(_ENCODER_STREAM.get(), null); }
   };
 
-  static public final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(${this.javaSplit($schema.toString())});
+  /** Creates a new ${this.mangle($schema.getName())} RecordBuilder. */
+  static public ${this.mangle($schema.getName())}.Builder newBuilder() {
+    return new ${this.mangle($schema.getName())}.Builder();
+  }
+
+  /** Creates a new ${this.mangle($schema.getName())} RecordBuilder by copying an existing ${this.mangle($schema.getName())}.Builder instance. */
+  static public ${this.mangle($schema.getName())}.Builder newBuilder(${this.mangle($schema.getName())}.Builder other) {
+    return new ${this.mangle($schema.getName())}.Builder(other);
+  }
+
+  /** Creates a new ${this.mangle($schema.getName())} RecordBuilder by copying an existing ${this.mangle($schema.getName())} instance. */
+  static public ${this.mangle($schema.getName())}.Builder newBuilder(${this.mangle($schema.getName())} other) {
+    return new ${this.mangle($schema.getName())}.Builder(other);
+  }
+
+  /** Returns Avro enum schema. */
+  static public org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+
+  static public final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("${this.javaEscape($schema.toString())}");
+
+  static public final long serialVersionUID = ${this.version($schema)};
 }

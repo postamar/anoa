@@ -3,6 +3,7 @@ package com.adgear.anoa.test;
 import com.google.protobuf.ExtensionRegistry;
 
 import com.adgear.anoa.test.ad_exchange.AdExchangeProtobuf;
+import com.adgear.anoa.test.ad_exchange.LogEvent;
 import com.adgear.anoa.test.ad_exchange.LogEventAvro;
 import com.adgear.anoa.test.ad_exchange.LogEventThrift;
 import com.googlecode.protobuf.format.JsonFormat;

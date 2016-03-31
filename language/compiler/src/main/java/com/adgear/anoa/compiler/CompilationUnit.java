@@ -74,7 +74,7 @@ final public class CompilationUnit {
     return result;
   }
 
-  static private Schema addSuffix(Schema schema, String suffix) {
+  private static Schema addSuffix(Schema schema, String suffix) {
     final Schema result;
     switch (schema.getType()) {
       case ENUM:

@@ -25,14 +25,14 @@ final class AvroGenerator extends GeneratorBase {
   @Override
   public void generateJava(File schemaRootDir, File javaRootDir)
       throws JavaCodeGenerationException {
-    SpecificCompiler compiler = new AnoaAvroSpecificCompiler(protocol);
+    SpecificCompiler compiler = new AvroJavaGenerator(protocol);
     File source = new File(schemaRootDir, getSchemaFile().toString());
-    log("Generating java code for Avro schema in '" + getSchemaFile() + "'...");
+    log("Generating java code for Anoa schema in '" + getSchemaFile() + "'...");
     try {
       compiler.compileToDestination(source, javaRootDir);
     } catch (IOException e) {
-      throw new JavaCodeGenerationException("Avro code generation failed for '" + source + "'.", e);
+      throw new JavaCodeGenerationException("Anoa code generation failed for '" + source + "'.", e);
     }
-    log("Successfully generated java code for Avro schema in '" + getSchemaFile() + "'.");
+    log("Successfully generated java code for Anoa schema in '" + getSchemaFile() + "'.");
   }
 }

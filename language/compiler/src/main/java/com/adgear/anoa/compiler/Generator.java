@@ -9,6 +9,5 @@ public interface Generator {
   void generateSchema(File schemaRootDir) throws SchemaGenerationException;
 
   void generateJava(File schemaRootDir, File javaRootDir) throws JavaCodeGenerationException;
-
 }
 

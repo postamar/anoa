@@ -41,12 +41,11 @@ class InterfaceGenerator extends GeneratorBase {
   @Override
   public void generateJava(File schemaRootDir, File javaRootDir)
       throws JavaCodeGenerationException {
-    SpecificCompiler compiler =
-        new AnoaInterfaceSpecificCompiler(protocol, withAvro, withProtobuf, withThrift);
+    SpecificCompiler javaGenerator = new InterfaceJavaGenerator(protocol, withAvro, withProtobuf, withThrift);
     File source = new File(schemaRootDir, getSchemaFile().toString());
     log("Generating java code for Anoa schema in '" + getSchemaFile() + "'...");
     try {
-      compiler.compileToDestination(source, javaRootDir);
+      javaGenerator.compileToDestination(source, javaRootDir);
     } catch (IOException e) {
       throw new JavaCodeGenerationException("Anoa code generation failed for '" + source + "'.", e);
     }

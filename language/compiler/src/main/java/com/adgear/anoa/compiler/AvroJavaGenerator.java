@@ -1,113 +1,46 @@
 package com.adgear.anoa.compiler;
 
-import org.apache.avro.JsonProperties;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
-import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.avro.generic.GenericData;
-import org.codehaus.jackson.JsonNode;
 
-import java.util.Optional;
+public class AvroJavaGenerator extends JavaGeneratorBase {
 
-public class AnoaAvroSpecificCompiler extends SpecificCompiler {
-
-  final private String protocolFullName;
-
-  public AnoaAvroSpecificCompiler(Protocol protocol) {
+  public AvroJavaGenerator(Protocol protocol) {
     super(protocol);
-    protocolFullName = Optional.ofNullable(protocol.getNamespace()).map(ns -> ns + ".").orElse("")
-                   + protocol.getName();
-    anoaDefaults();
-  }
-
-  private void anoaDefaults() {
     setTemplateDir("/com/adgear/anoa/avro/");
-    setStringType(GenericData.StringType.Utf8);
-    setFieldVisibility(FieldVisibility.PRIVATE);
-    setCreateSetters(false);
-    setOutputCharacterEncoding("UTF-8");
-  }
-
-  public String getProtocolFullName() {
-    return protocolFullName;
-  }
-
-  public String getVersion(Schema schema) {
-    if (schema.getType() == Schema.Type.ENUM) {
-      return Long.toString(schema.getEnumSymbols().size());
-    }
-    long largest = 0L;
-    for (Schema.Field field : schema.getFields()) {
-      largest = Math.max(largest, field.getJsonProp(AnoaParserBase.ORDINAL_PROP_KEY).asLong());
-    }
-    return Long.toString(largest);
-  }
-
-  public Schema.Field getAliasField(Schema.Field field, String alias) {
-    return new Schema.Field(
-        alias,
-        field.schema(),
-        field.doc(),
-        field.defaultValue(),
-        field.order());
-  }
-
-  public boolean isDeprecated(JsonProperties schema) {
-    return Optional.ofNullable(schema.getJsonProp("deprecated"))
-        .map(JsonNode::asBoolean)
-        .orElse(false);
-  }
-
-  public String anoaInterfaceName(Schema schema) {
-    String avroName = mangle(schema.getFullName());
-    return avroName.substring(0, avroName.length() - 4);
-  }
-
-  public String anoaInterfaceFullName(Schema schema) {
-    String avroName = mangle(schema.getFullName());
-    return avroName.substring(0, avroName.length() - 4);
-  }
-
-
-  public String viewType(Schema schema) {
-    return javaType(schema, true, false, false);
-  }
-
-  public String avroType(Schema schema) {
-    return javaType(schema, false, false, false);
-  }
-
-  public String entryType(Schema schema) {
-    return javaType(schema, false, false, true);
   }
 
   @Override
-  public String javaType(Schema schema) {
-    return viewType(schema);
+  public String anoaInterfaceName(Schema schema) {
+    return super.anoaInterfaceName(schema)
+        .substring(0, super.anoaInterfaceName(schema).length() - 4);
   }
 
-  private String javaType(Schema s, boolean view, boolean boxed, boolean entry) {
-    switch (s.getType()) {
-      case RECORD:
-      case ENUM:
-        return view ? anoaInterfaceFullName(s) : mangle(s.getFullName());
+  @Override
+  public String anoaInterfaceFullName(Schema schema) {
+    return super.anoaInterfaceFullName(schema)
+        .substring(0, super.anoaInterfaceFullName(schema).length() - 4);
+  }
+
+
+  public boolean hasView(Schema.Field field) {
+    switch (field.schema().getType()) {
       case ARRAY:
-        return (entry ? "" : "java.util.List<") +
-               javaType(s.getElementType(), view, true, entry) +
-               (entry ? "" : ">");
+      case BYTES:
       case MAP:
-        return "java.util.Map" + (entry ? ".Entry" : "") +
-               " <" + (view ? "java.lang.String" : "java.lang.CharSequence") +
-               "," + javaType(s.getValueType(), view, true, entry) + ">";
-      case STRING:  return view ? "java.lang.String" : "java.lang.CharSequence";
-      case BYTES:   return "java.nio.ByteBuffer";
-      case INT:     return boxed ? "java.lang.Integer" : "int";
-      case LONG:    return boxed ? "java.lang.Long" : "long";
-      case FLOAT:   return boxed ? "java.lang.Float" : "float";
-      case DOUBLE:  return boxed ? "java.lang.Double" : "double";
-      case BOOLEAN: return boxed ? "java.lang.Boolean" : "boolean";
-      default: throw new RuntimeException("Unsupported type: " + s);
+      case STRING:
+        return true;
+      default:
+        return false;
     }
+  }
+
+  public String avroType(Schema schema) {
+    return getType(schema, false, false, false);
+  }
+
+  private String entryType(Schema schema) {
+    return getType(schema, false, false, true);
   }
 
   public String getView(Schema.Field field) {
@@ -243,7 +176,7 @@ public class AnoaAvroSpecificCompiler extends SpecificCompiler {
       case DOUBLE:
         return DECODER + ".readDouble()";
       case ENUM:
-        return entryType(schema) + ".fromInteger(" + DECODER + ".readEnum())";
+        return entryType(schema) + ".values()[" + DECODER + ".readEnum()]";
       case FLOAT:
         return DECODER + ".readFloat()";
       case INT:
@@ -258,4 +191,5 @@ public class AnoaAvroSpecificCompiler extends SpecificCompiler {
         throw new RuntimeException("Unsupported type: " + schema);
     }
   }
+
 }

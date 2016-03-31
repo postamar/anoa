@@ -3,16 +3,16 @@ package com.adgear.anoa.compiler;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 
-public class AnoaInterfaceSpecificCompiler extends AnoaAvroSpecificCompiler {
+public class InterfaceJavaGenerator extends JavaGeneratorBase {
 
   final public boolean withAvro;
   final public boolean withProtobuf;
   final public boolean withThrift;
 
-  public AnoaInterfaceSpecificCompiler(Protocol protocol,
-                                       boolean withAvro,
-                                       boolean withProtobuf,
-                                       boolean withThrift) {
+  public InterfaceJavaGenerator(Protocol protocol,
+                                boolean withAvro,
+                                boolean withProtobuf,
+                                boolean withThrift) {
     super(protocol);
     setTemplateDir("/com/adgear/anoa/interface/");
     this.withAvro = withAvro;
@@ -24,26 +24,12 @@ public class AnoaInterfaceSpecificCompiler extends AnoaAvroSpecificCompiler {
     return withAvro;
   }
 
-  public boolean isWithProtobuf() {
-    return withProtobuf;
-  }
-
-  public boolean isWithThrift() {
-    return withThrift;
-  }
-
-  @Override
-  public String anoaInterfaceName(Schema schema) {
-    return mangle(schema.getName());
-  }
-
-  @Override
-  public String anoaInterfaceFullName(Schema schema) {
-    return mangle(schema.getFullName());
-  }
-
   public String avroClassName(Schema schema) {
     return anoaInterfaceFullName(schema) + "Avro";
+  }
+
+  public boolean isWithProtobuf() {
+    return withProtobuf;
   }
 
   public String protobufClassName(Schema schema) {
@@ -53,21 +39,27 @@ public class AnoaInterfaceSpecificCompiler extends AnoaAvroSpecificCompiler {
     return mangle(AnoaParserBase.capitalizeQualified(protobufClassName + "." + schema.getName()));
   }
 
-  public String thriftClassName(Schema schema) {
-    return mangle(schema.getFullName()) + "Thrift";
+  public String protobufProtocolClassName() {
+    return protocolFullName + "Protobuf";
   }
 
-  static String ARG = "o";
+  public boolean isWithThrift() {
+    return withThrift;
+  }
+
+  public String thriftClassName(Schema schema) {
+    return anoaInterfaceFullName(schema) + "Thrift";
+  }
 
   public String protobufValue(Schema schema, Schema.Field field) {
-    String s = ARG + "." + generateGetMethod(schema, field).replace("$", "");
+    String s = "get()." + generateGetMethod(schema, field).replace("$", "");
     switch (field.schema().getType()) {
       case ARRAY:
         switch (field.schema().getElementType().getType()) {
           case ENUM:
           case RECORD:
             return "java.util.Collections.unmodifiableList(" + s + "List().stream().map(" +
-                   mangle(field.schema().getElementType().getFullName()) + "::fromProtobuf)" +
+                   mangle(field.schema().getElementType().getFullName()) + ".Protobuf::get)" +
                    ".collect(java.util.stream.Collectors.toList()))";
           case BYTES:
             return "java.util.Collections.unmodifiableList(" + s + "List().stream()" +
@@ -83,7 +75,7 @@ public class AnoaInterfaceSpecificCompiler extends AnoaAvroSpecificCompiler {
             return "java.util.Collections.unmodifiableMap(" + s + "().entrySet().stream()" +
                    ".collect(java.util.stream.Collectors.toMap(e -> e.getKey(), e -> " +
                    mangle(field.schema().getValueType().getFullName()) +
-                   ".fromProtobuf(e.getValue())))";
+                   ".Protobuf.get(e.getValue())))";
           case BYTES:
             return "java.util.Collections.unmodifiableMap(" + s + "().entrySet().stream()" +
                    ".collect(java.util.stream.Collectors.toMap(" +
@@ -94,7 +86,7 @@ public class AnoaInterfaceSpecificCompiler extends AnoaAvroSpecificCompiler {
         }
       case ENUM:
       case RECORD:
-        return mangle(field.schema().getFullName()) + ".fromProtobuf(" + s + "())";
+        return mangle(field.schema().getFullName()) + ".Protobuf.get(" + s + "())";
       case BYTES:
         return s + "().asReadOnlyByteBuffer()";
       default:
@@ -103,7 +95,7 @@ public class AnoaInterfaceSpecificCompiler extends AnoaAvroSpecificCompiler {
   }
 
   public String thriftValue(Schema schema, Schema.Field field) {
-    String s = ARG + ".get"
+    String s = "wrapped.get"
                + Character.toUpperCase(field.name().charAt(0)) + field.name().substring(1) + "()";
     switch (field.schema().getType()) {
       case ARRAY:
@@ -112,7 +104,7 @@ public class AnoaInterfaceSpecificCompiler extends AnoaAvroSpecificCompiler {
         switch (e.getType()) {
           case ENUM:
           case RECORD:
-            s += ".map(" + mangle(e.getFullName()) + "::fromThrift)";
+            s += ".map(" + mangle(e.getFullName()) + ".Thrift::get)";
             break;
           case BYTES:
             s += ".map(java.nio.ByteBuffer::asReadOnlyBuffer)";
@@ -127,7 +119,7 @@ public class AnoaInterfaceSpecificCompiler extends AnoaAvroSpecificCompiler {
         switch (v.getType()) {
           case ENUM:
           case RECORD:
-            s += "e -> " + mangle(v.getFullName()) + ".fromThrift(e.getValue())";
+            s += "e -> " + mangle(v.getFullName()) + ".Thrift.get(e.getValue())";
             break;
           case BYTES:
             s += "e -> e.getValue().asReadOnlyBuffer()";
@@ -145,7 +137,7 @@ public class AnoaInterfaceSpecificCompiler extends AnoaAvroSpecificCompiler {
         return "(float) " + s;
       case ENUM:
       case RECORD:
-        return mangle(field.schema().getFullName()) + ".fromThrift(" + s + ")";
+        return mangle(field.schema().getFullName()) + ".Thrift.get(" + s + ")";
       default:
         return s;
     }

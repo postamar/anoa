@@ -8,6 +8,7 @@ import com.adgear.anoa.read.JacksonDecoders;
 import com.adgear.anoa.read.JsonStreams;
 import com.adgear.anoa.read.SmileStreams;
 import com.adgear.anoa.test.AnoaTestSample;
+import com.adgear.anoa.test.simple.Simple;
 import com.adgear.anoa.test.simple.SimpleAvro;
 import com.adgear.anoa.write.AvroConsumers;
 import com.adgear.anoa.write.AvroEncoders;
