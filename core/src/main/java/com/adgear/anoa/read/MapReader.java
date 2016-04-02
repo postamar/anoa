@@ -6,9 +6,10 @@ import com.fasterxml.jackson.core.JsonToken;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
-class MapReader extends AbstractReader<HashMap<CharSequence, Object>> {
+class MapReader extends AbstractReader<Map<CharSequence, Object>> {
 
   final AbstractReader<?> valueElementReader;
   final Function<String, CharSequence> fn;
@@ -23,9 +24,9 @@ class MapReader extends AbstractReader<HashMap<CharSequence, Object>> {
   }
 
   @Override
-  protected HashMap<CharSequence, Object> read(JsonParser jacksonParser) throws IOException {
+  protected Map<CharSequence, Object> read(JsonParser jacksonParser) throws IOException {
     if (jacksonParser.getCurrentToken() == JsonToken.START_OBJECT) {
-      HashMap<CharSequence, Object> result = new HashMap<>();
+      Map<CharSequence, Object> result = new HashMap<>();
       doMap(jacksonParser, (k, p) -> result.put(fn.apply(k), valueElementReader.read(p)));
       return result;
     } else {
@@ -35,13 +36,13 @@ class MapReader extends AbstractReader<HashMap<CharSequence, Object>> {
   }
 
   @Override
-  protected HashMap<CharSequence, Object> readStrict(JsonParser jacksonParser)
+  protected Map<CharSequence, Object> readStrict(JsonParser jacksonParser)
       throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;
       case START_OBJECT:
-        HashMap<CharSequence, Object> result = new HashMap<>();
+        Map<CharSequence, Object> result = new HashMap<>();
         doMap(jacksonParser, (k, p) -> result.put(fn.apply(k), valueElementReader.readStrict(p)));
         return result;
       default:

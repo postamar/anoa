@@ -5,7 +5,6 @@ import com.adgear.anoa.read.AvroStreams;
 import com.adgear.anoa.read.CsvStreams;
 import com.adgear.anoa.read.JdbcStreams;
 import com.adgear.anoa.read.ThriftDecoders;
-import com.adgear.anoa.test.simple.Simple;
 import com.adgear.anoa.test.simple.SimpleAvro;
 import com.adgear.anoa.test.simple.SimpleThrift;
 import com.adgear.anoa.tools.runnable.DataTool;

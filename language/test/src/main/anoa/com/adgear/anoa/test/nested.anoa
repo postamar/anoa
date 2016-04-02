@@ -1,0 +1,19 @@
+bytes {
+  1: bytes bytes_field;
+  2: list<bytes> bytes_list;
+  3: map<string,bytes> bytes_map;
+}
+
+enum bit [ OFF, ON ]
+
+nested {
+  1: bit enum_field;
+  2: `bytes` struct_field;
+  3: list<bit> enum_list_field;
+  4: list<`bytes`> struct_list_field;
+  5: map<string,bit> enum_map_field;
+  6: map<string,`bytes`> struct_map_field;
+
+  10: list<float> float_list_field;
+  11: map<string,float> float_map_field;
+}

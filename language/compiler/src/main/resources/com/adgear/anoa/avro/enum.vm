@@ -26,27 +26,25 @@ public enum ${this.mangle($schema.getName())} implements ${this.anoaInterfaceFul
   @Override
   public int getOrdinal() { return this.ordinal(); }
 
+  /** Returns enum instance for the given ${this.anoaInterfaceName($schema)}. */
+  static public ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> from(${this.anoaInterfaceFullName($schema)}<?> instance) {
+    return from(instance.getOrdinal());
+  }
+
   /** Returns enum instance for the given ordinal, defaults to first enum value. */
-  static public ${this.mangle($schema.getName())} get(java.lang.Integer ordinal) {
-    if (ordinal != null) {
-      switch (ordinal) {
+  static public ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> from(int ordinal) {
+    switch (ordinal) {
 #set( $i = 0 )
 #foreach ($symbol in ${schema.getEnumSymbols()})
-        case $i: return ${this.mangle($symbol)};
+      case $i: return ${this.mangle($symbol)};
 #set( $i = $i + 1 )
 #end
-      }
     }
     return ${this.mangle($schema.getEnumSymbols().get(0))};
   }
 
-  /** Tests if the ordinal is valid. */
-  static public boolean isValid(java.lang.Integer ordinal) {
-    return ordinal != null && ordinal >= 0 && ordinal < ${schema.getEnumSymbols().size()};
-  }
-
   /** Returns enum instance for the given label, defaults to first enum value. */
-  static public ${this.mangle($schema.getName())} get(java.lang.CharSequence str) {
+  static public ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> from(java.lang.CharSequence str) {
     if (str != null) {
       switch (str.toString().toUpperCase()) {
 #set( $i = 0 )
@@ -57,21 +55,6 @@ public enum ${this.mangle($schema.getName())} implements ${this.anoaInterfaceFul
       }
     }
     return ${this.mangle($schema.getEnumSymbols().get(0))};
-  }
-
-  /** Tests if the label is valid. */
-  static public boolean isValid(java.lang.CharSequence str) {
-    if (str == null) {
-      return false;
-    }
-    final java.lang.String s = str.toString().toUpperCase();
-#set( $i = 0 )
-#foreach ($symbol in ${schema.getEnumSymbols()})
-#if ($i == 0)
-    return s.equals("${this.mangle($symbol)}")
-#set($i = 1)
-#else
-      || s.equals("${this.mangle($symbol)}")#end#end;
   }
 
   /** Returns Avro enum schema. */

@@ -1,5 +1,0 @@
-bytes {
-  1: bytes bytes_field;
-  2: list<bytes> bytes_list;
-  3: map<string,bytes> bytes_map;
-}

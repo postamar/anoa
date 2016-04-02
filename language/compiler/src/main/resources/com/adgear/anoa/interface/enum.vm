@@ -60,18 +60,35 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     @Override
     public String toString() { return wrapped.toString(); }
 
+    /** Returns enum instance for the given ${this.anoaInterfaceName($schema)}. */
+    static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> from(${this.anoaInterfaceName($schema)}<?> instance) {
+      return from(instance.getOrdinal());
+    }
+
     /** Returns enum instance for the given Protobuf enum. */
-    static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> get(${this.protobufClassName($schema)} instance) {
-      return get((instance == null) ? 0 : instance.getNumber());
+    static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> from(${this.protobufClassName($schema)} instance) {
+      return from(instance.getNumber());
     }
 
     /** Returns enum instance for the given ordinal, defaults to first enum value. */
-    static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> get(java.lang.Integer ordinal) {
-      if (ordinal != null) {
-        switch (ordinal) {
+    static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> from(int ordinal) {
+      switch (ordinal) {
 #set( $i = 0 )
 #foreach ($symbol in ${schema.getEnumSymbols()})
-          case $i: return ${this.mangle($symbol)};
+        case $i: return ${this.mangle($symbol)};
+#set( $i = $i + 1 )
+#end
+      }
+      return ${this.mangle($schema.getEnumSymbols().get(0))};
+    }
+
+    /** Returns enum instance for the given label, defaults to first enum value. */
+    static public ${this.anoaInterfaceFullName($schema)}<${this.protobufClassName($schema)}> from(java.lang.CharSequence str) {
+      if (str != null) {
+        switch (str.toString().toUpperCase()) {
+#set( $i = 0 )
+#foreach ($symbol in ${schema.getEnumSymbols()})
+          case "${this.mangle($symbol)}": return ${this.mangle($symbol)};
 #set( $i = $i + 1 )
 #end
         }
@@ -140,18 +157,35 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     @Override
     public String toString() { return wrapped.toString(); }
 
+    /** Returns enum instance for the given ${this.anoaInterfaceName($schema)}. */
+    static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> from(${this.anoaInterfaceName($schema)}<?> instance) {
+      return from(instance.getOrdinal());
+    }
+
     /** Returns enum instance for the given Thrift enum. */
-    static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> get(${this.thriftClassName($schema)} instance) {
-      return get((instance == null) ? 0 : instance.ordinal());
+    static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> from(${this.thriftClassName($schema)} instance) {
+      return from(instance.ordinal());
     }
 
     /** Returns enum instance for the given ordinal, defaults to first enum value. */
-    static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> get(java.lang.Integer ordinal) {
-      if (ordinal != null) {
-        switch (ordinal) {
+    static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> from(int ordinal) {
+      switch (ordinal) {
 #set( $i = 0 )
 #foreach ($symbol in ${schema.getEnumSymbols()})
-          case $i: return ${this.mangle($symbol)};
+        case $i: return ${this.mangle($symbol)};
+#set( $i = $i + 1 )
+#end
+      }
+      return ${this.mangle($schema.getEnumSymbols().get(0))};
+    }
+
+    /** Returns enum instance for the given label, defaults to first enum value. */
+    static public ${this.anoaInterfaceFullName($schema)}<${this.thriftClassName($schema)}> from(java.lang.CharSequence str) {
+      if (str != null) {
+        switch (str.toString().toUpperCase()) {
+#set( $i = 0 )
+#foreach ($symbol in ${schema.getEnumSymbols()})
+          case "${this.mangle($symbol)}": return ${this.mangle($symbol)};
 #set( $i = $i + 1 )
 #end
         }

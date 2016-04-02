@@ -26,11 +26,11 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #end
 #if ($this.isDeprecated($field))  @Deprecated
 #end
-  ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}();
+  ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}();
 #foreach ($alias in $field.aliases())
 
   @Deprecated
-  default public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, ${this.aliasField($field, $alias)})}() { return ${this.generateGetMethod($schema, $field)}(); }
+  default public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, ${this.aliasField($field, $alias)})}() { return ${this.generateGetMethod($schema, $field)}(); }
 #end
 #end
 #if ($this.isWithProtobuf())
@@ -39,6 +39,11 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 
     private byte[] binaryEncoding;
     transient private ${this.protobufClassName($schema)} wrapped;
+#foreach ($field in ${this.fields($schema)})
+#if ($this.hasProtobufExportField($field))
+    transient private ${this.exportType($field.schema())} export_${this.mangle($field.name())};
+#end
+#end
 
     private Protobuf(${this.protobufClassName($schema)} wrapped, byte[] binaryEncoding) {
       this.wrapped = wrapped;
@@ -63,12 +68,20 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
       return wrapped;
     }
 #foreach ($field in ${this.fields($schema)})
+
     @Override
 #if ($this.isDeprecated($field))
     @Deprecated
 #end
-    public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
-      return ${this.protobufValue($schema, $field)};
+    public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+#if ($this.hasProtobufExportField($field))
+      if (export_${this.mangle($field.name())} == null) {
+        export_${this.mangle($field.name())} = ${this.cast($field)}${this.protobufExportValue($schema, $field)};
+      }
+      return export_${this.mangle($field.name())};
+#else
+      return ${this.protobufExportValue($schema, $field)};
+#end
     }
 #end
 
@@ -76,7 +89,6 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     public boolean equals(Object other) {
       if (other == this) return true;
       if (other == null && !(other instanceof Protobuf)) return false;
-      Protobuf o = (Protobuf) other;
       return get().equals(((${this.anoaInterfaceName($schema)}) other).get());
     }
 
@@ -91,19 +103,27 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
       out.defaultWriteObject();
     }
 
-    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
-      in.defaultReadObject();
-      wrapped = null;
+    /** Creates a new wrapped Protobuf message based on an instance of ${this.anoaInterfaceName($schema)}. */
+    static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> from(${this.anoaInterfaceName($schema)}<?> instance) {
+      return new Protobuf(
+          ${this.protobufClassName($schema)}.newBuilder()
+#set ($i = 0)
+#foreach ($field in ${this.fields($schema)})
+            ${this.protobufImportField($schema, $field)}
+#set ($i = $i + 1)
+#end
+            .build(),
+          null);
     }
 
-    /** Wraps a Protobuf message. */
-    static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> get(${this.protobufClassName($schema)} wrapped) {
+    /** Wraps an existing Protobuf message. */
+    static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> from(${this.protobufClassName($schema)} wrapped) {
       assert wrapped != null;
       return new Protobuf(wrapped, null);
     }
 
     /** Decodes a Protobuf message. */
-    static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> get(byte[] binaryEncoding) throws java.io.IOException {
+    static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> from(byte[] binaryEncoding) throws java.io.IOException {
       return new Protobuf(${this.protobufClassName($schema)}.parseFrom(binaryEncoding), binaryEncoding);
     }
 
@@ -145,8 +165,14 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
   static final public class Thrift implements ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> {
 
     private ${this.thriftClassName($schema)} wrapped;
+#foreach ($field in ${this.fields($schema)})
+#if ($this.hasThriftExportField($field))
+    transient private ${this.exportType($field.schema())} export_${this.mangle($field.name())};
+#end
+#end
 
-    private Thrift(${this.thriftClassName($schema)} wrapped) { this.wrapped = wrapped; }
+    /** Wraps an existing instance. Only use this if you know what you are doing. */
+    public Thrift(${this.thriftClassName($schema)} wrapped) { this.wrapped = wrapped; }
 
     /** Create a new wrapper. */
     public Thrift() { this(new ${this.thriftClassName($schema)}()); }
@@ -162,8 +188,15 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #if ($this.isDeprecated($field))
     @Deprecated
 #end
-    public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
-      return ${this.thriftValue($schema, $field)};
+    public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+#if ($this.hasThriftExportField($field))
+      if (export_${this.mangle($field.name())} == null) {
+        export_${this.mangle($field.name())} = ${this.cast($field)}${this.thriftExportValue($field)};
+      }
+      return export_${this.mangle($field.name())};
+#else
+      return ${this.thriftExportValue($field)};
+#end
     }
 #end
 
@@ -180,15 +213,21 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     @Override
     public String toString() { return wrapped.toString(); }
 
-    /** Wraps an existing instance. Only use this if you know what you are doing. */
-    static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> get(${this.thriftClassName($schema)} wrapped) {
-      return new Thrift(wrapped);
+    /** Creates a new wrapped Thrift struct based on an instance of ${this.anoaInterfaceName($schema)}. */
+    static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> from(${this.anoaInterfaceName($schema)}<?> instance) {
+      ${this.thriftClassName($schema)} copy = new ${this.thriftClassName($schema)}();
+#set ($i = 0)
+#foreach ($field in ${this.fields($schema)})
+      copy.setFieldValue(${this.thriftClassName($schema)}._Fields.values()[$i], ${this.thriftImportValue($schema, $field)});
+#set ($i = $i + 1)
+#end
+      return new Thrift(copy);
     }
 
-    /** Wraps a copy of an existing Thrift struct. */
+    /** Creates a new wrapped Thrift struct copied from an existing instance. */
     @SuppressWarnings("all")
-    static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> wrapCopy(${this.thriftClassName($schema)} wrapped) {
-      return new Thrift((${this.thriftClassName($schema)}) wrapped.deepCopy());
+    static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> from(${this.thriftClassName($schema)} instance) {
+      return new Thrift((${this.thriftClassName($schema)}) instance.deepCopy());
     }
 
     /** Returns Thrift class for this struct. */

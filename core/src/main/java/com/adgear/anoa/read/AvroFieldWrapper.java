@@ -2,6 +2,7 @@ package com.adgear.anoa.read;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
@@ -58,7 +59,8 @@ class AvroFieldWrapper implements FieldWrapper {
   static private AbstractReader<?> createReader(Schema schema) {
     switch (schema.getType()) {
       case ARRAY:
-        return new ListReader(createReader(schema.getElementType()));
+        return new ListReader(createReader(schema.getElementType()),
+                              () -> new GenericData.Array(0, schema));
       case BOOLEAN:
         return new BooleanReader();
       case BYTES:

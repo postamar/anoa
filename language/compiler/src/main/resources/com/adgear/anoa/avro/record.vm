@@ -27,8 +27,8 @@ final public class ${this.mangle($schema.getName())} extends org.apache.avro.spe
   @$annotation
 #end
   transient private ${this.avroType($field.schema())} ${this.mangle($field.name())};
-#if ($this.hasView($field))
-  transient private ${this.javaType($field.schema())} _view_${this.mangle($field.name())};
+#if ($this.hasExportField($field))
+  transient private ${this.exportType($field.schema())} _export_${this.mangle($field.name())};
 #end
 #end
 
@@ -98,8 +98,8 @@ final public class ${this.mangle($schema.getName())} extends org.apache.avro.spe
     _binaryEncoding = null;
     _binaryEncodingBuffer = null;
 #foreach ($field in ${this.fields($schema)})
-#if ($this.hasView($field))
-    _view_${this.mangle($field.name())} = null;
+#if ($this.hasExportField($field))
+    _export_${this.mangle($field.name())} = null;
 #end
 #end
   }
@@ -140,11 +140,11 @@ final public class ${this.mangle($schema.getName())} extends org.apache.avro.spe
 #if ($this.isDeprecated($field))
   @Deprecated
 #end
-  public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+  public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
     decoded(true);
-#if ($this.hasView($field))
-    if (_view_${this.mangle($field.name())} == null) { _view_${this.mangle($field.name())} = ${this.getView($field)}; }
-    return _view_${this.mangle($field.name())};
+#if ($this.hasExportField($field))
+    if (_export_${this.mangle($field.name())} == null) { _export_${this.mangle($field.name())} = ${this.exportValue($field)}; }
+    return _export_${this.mangle($field.name())};
 #else
     return ${this.mangle($field.name())};
 #end
@@ -319,6 +319,15 @@ final public class ${this.mangle($schema.getName())} extends org.apache.avro.spe
   static private java.lang.ThreadLocal<org.apache.avro.io.BinaryEncoder> _ENCODER = new java.lang.ThreadLocal<org.apache.avro.io.BinaryEncoder>() {
     @Override protected org.apache.avro.io.BinaryEncoder initialValue() { return org.apache.avro.io.EncoderFactory.get().binaryEncoder(_ENCODER_STREAM.get(), null); }
   };
+
+  /** Creates a new ${this.mangle($schema.getName())} by copying an existing ${this.anoaInterfaceName($schema)}. */
+  static public ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> from(${this.anoaInterfaceFullName($schema)}<?> instance) {
+    ${this.mangle($schema.getName())} copy = new ${this.mangle($schema.getName())}();
+#foreach ($field in ${this.fields($schema)})
+    copy.${this.mangle($field.name())} = ${this.avroValue($schema, $field)};
+#end
+    return copy;
+  }
 
   /** Creates a new ${this.mangle($schema.getName())} RecordBuilder. */
   static public ${this.mangle($schema.getName())}.Builder newBuilder() {

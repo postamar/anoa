@@ -75,32 +75,33 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
         field.order());
   }
 
-  @Override
-  public String javaType(Schema schema) {
-    return getType(schema, true, false, false);
-  }
-
-  protected String getType(Schema s, boolean view, boolean boxed, boolean entry) {
+  public String exportValueType(Schema s) {
     switch (s.getType()) {
-      case RECORD:
-      case ENUM:
-        return anoaInterfaceFullName(s) + (view ? "" : "Avro");
-      case ARRAY:
-        return (entry ? "" : "java.util.List<") +
-               getType(s.getElementType(), view, true, entry) +
-               (entry ? "" : ">");
-      case MAP:
-        return "java.util.Map" + (entry ? ".Entry" : "") +
-               " <" + (view ? "java.lang.String" : "java.lang.CharSequence") +
-               "," + getType(s.getValueType(), view, true, entry) + ">";
-      case STRING:  return view ? "java.lang.String" : "java.lang.CharSequence";
-      case BYTES:   return "java.nio.ByteBuffer";
-      case INT:     return boxed ? "java.lang.Integer" : "int";
-      case LONG:    return boxed ? "java.lang.Long" : "long";
-      case FLOAT:   return boxed ? "java.lang.Float" : "float";
-      case DOUBLE:  return boxed ? "java.lang.Double" : "double";
-      case BOOLEAN: return boxed ? "java.lang.Boolean" : "boolean";
-      default: throw new RuntimeException("Unsupported type: " + s);
+      case STRING:  return "java.lang.CharSequence";
+      case BYTES:   return "java.util.function.Supplier<byte[]>";
+      case INT:     return "java.lang.Integer";
+      case LONG:    return "java.lang.Long";
+      case FLOAT:   return "java.lang.Float";
+      case DOUBLE:  return "java.lang.Double";
+      case BOOLEAN: return "java.lang.Boolean";
+      default: return anoaInterfaceFullName(s) + "<?>";
     }
   }
+
+  public String exportType(Schema s) {
+    switch (s.getType()) {
+      case INT:     return "int";
+      case LONG:    return "long";
+      case FLOAT:   return "float";
+      case DOUBLE:  return "double";
+      case BOOLEAN: return "boolean";
+      case ARRAY:   return "java.util.List<"
+                           + exportValueType(s.getElementType()) + ">";
+      case MAP:     return "java.util.Map<java.lang.CharSequence,"
+                           + exportValueType(s.getValueType()) + ">";
+      default: return exportValueType(s);
+    }
+  }
+
+  static final public String IMPORTED = "instance";
 }
