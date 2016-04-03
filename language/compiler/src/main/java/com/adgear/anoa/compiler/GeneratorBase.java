@@ -19,11 +19,10 @@ abstract class GeneratorBase implements Generator {
   final private Consumer<String> logger;
 
   protected GeneratorBase(CompilationUnit cu, String suffix, Consumer<String> logger) {
-    this.protocol = cu.generate(suffix);
+    this.protocol = cu.generate(suffix, true);
     this.importedNamespaces = cu.getImportedNamespaces().collect(Collectors.toList());
     this.logger = logger;
   }
-
 
   protected Stream<Path> getImports() {
     return importedNamespaces.stream().sequential()

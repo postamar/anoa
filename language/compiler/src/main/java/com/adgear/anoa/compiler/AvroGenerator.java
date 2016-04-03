@@ -8,13 +8,16 @@ import java.util.function.Consumer;
 
 final class AvroGenerator extends GeneratorBase {
 
+  final public String schema;
+
   AvroGenerator(CompilationUnit cu, Consumer<String> logger) {
     super(cu, "Avro", logger);
+    schema = cu.generate("Avro", false).toString(true);
   }
 
   @Override
   public String generateSchema() {
-    return protocol.toString(true);
+    return schema;
   }
 
   @Override

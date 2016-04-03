@@ -10,6 +10,10 @@ public class AvroJavaGenerator extends JavaGeneratorBase {
     setTemplateDir("/com/adgear/anoa/avro/");
   }
 
+  public String escapedSchema(Schema schema) {
+    return javaEscape(CompilationUnit.modifySchema(schema, "", false).toString());
+  }
+
   @Override
   public String anoaInterfaceName(Schema schema) {
     return super.anoaInterfaceName(schema)

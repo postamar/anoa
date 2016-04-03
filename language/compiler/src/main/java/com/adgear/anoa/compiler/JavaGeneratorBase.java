@@ -10,7 +10,6 @@ import org.codehaus.jackson.JsonNode;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 abstract class JavaGeneratorBase extends SpecificCompiler {
 
@@ -44,9 +43,7 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
   }
 
   public List<Schema.Field> fields(Schema schema) {
-    return schema.getFields().stream()
-        .filter(f -> !"true".equals(f.getProp("removed")))
-        .collect(Collectors.toList());
+    return CompilationUnit.modifySchema(schema, "", false).getFields();
   }
 
   public String version(Schema schema) {

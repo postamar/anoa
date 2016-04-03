@@ -62,19 +62,18 @@ final public class CompilationUnit {
     return anoaParser.getImportedNamespaces();
   }
 
-
-  Protocol generate(String suffix) {
+  Protocol generate(String suffix, boolean includeRemoved) {
     if (protocol == null) {
       throw new IllegalStateException("Cannot generate protocol before parsing.");
     }
     Protocol result = new Protocol(protocol.getName() + suffix, protocol.getNamespace());
     result.setTypes(protocol.getTypes().stream()
-                        .map(s -> addSuffix(s, suffix))
+                        .map(s -> modifySchema(s, suffix, includeRemoved))
                         .collect(Collectors.toList()));
     return result;
   }
 
-  private static Schema addSuffix(Schema schema, String suffix) {
+  static Schema modifySchema(Schema schema, String suffix, boolean includeRemoved) {
     final Schema result;
     switch (schema.getType()) {
       case ENUM:
@@ -89,17 +88,15 @@ final public class CompilationUnit {
                                      schema.getNamespace(),
                                      false);
         result.setFields(schema.getFields().stream()
-                             .map(f -> addSuffix(f, suffix))
+                             .filter(f -> includeRemoved || f.getJsonProp("removed") == null
+                                          || !(f.getJsonProp("removed").asBoolean()))
+                             .map(f -> modifySchema(f, suffix, includeRemoved))
                              .collect(Collectors.toList()));
         break;
-      case UNION:
-        return Schema.createUnion(schema.getTypes().stream()
-                                      .map(s -> addSuffix(s, suffix))
-                                      .collect(Collectors.toList()));
       case ARRAY:
-        return Schema.createArray(addSuffix(schema.getElementType(), suffix));
+        return Schema.createArray(modifySchema(schema.getElementType(), suffix, includeRemoved));
       case MAP:
-        return Schema.createMap(addSuffix(schema.getValueType(), suffix));
+        return Schema.createMap(modifySchema(schema.getValueType(), suffix, includeRemoved));
       default:
         return schema;
     }
@@ -108,9 +105,10 @@ final public class CompilationUnit {
     return result;
   }
 
-  static private Schema.Field addSuffix(Schema.Field field, String suffix) {
+  static private Schema.Field modifySchema(Schema.Field field, String suffix,
+                                           boolean includeRemoved) {
     Schema.Field result = new Schema.Field(field.name(),
-                                           addSuffix(field.schema(), suffix),
+                                           modifySchema(field.schema(), suffix, includeRemoved),
                                            field.doc(),
                                            field.defaultValue());
     field.aliases().forEach(result::addAlias);
