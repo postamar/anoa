@@ -21,7 +21,8 @@ Anoa glues these tools together and exposes them with a consistent API:
   * Event schemata are defined using the Anoa language.
   * The Anoa compiler transpiles these definitions to semantically equivalent Avro, Protobuf and
     Thrift schemata; i.e. `.avpr`, `.proto` and `.thrift` files.
-  * The Anoa Maven plugin compiles these schemata into correct Java source code.
+  * The Anoa Maven plugin compiles these schemata into correct Java source code, and generates
+    Java interfaces for working with these Avro records, Protobuf messages and Thrift structs.
   * The Anoa library provides facilities for working with these Java objects, namely factories for
     generating de/serializers with one method call. No more writing error-prone badly-understood
     boilerplate. Exception-handling facilities are provided for dealing with broken data in batch
@@ -189,7 +190,7 @@ pretty much what you'd expect. A few things to note:
   * Integer types `int` and `long` are mapped to `sint32` and `sint64` in Protobuf.
   * Floating point type `float` is mapped to `double` in Thrift.
 
-### Java generation
+### Avro, Protobuf and Thrift Java source generation
 
 Subsequent Java code generation is also pretty straightforward and is handled by the Anoa maven
 plugin:
@@ -213,6 +214,47 @@ Plugin configuration settings which are of note:
     along with the schemas or not. These are set to `true` by default.
   * `protocCommand` and `thriftCommand` set the command for invoking the Protobuf and Thrift
     compilers, and are respectively set to `protoc` and `thrift` by default.
+
+### Interface generation
+
+In general, the above objects would typically find their way into your Java applications' business
+logic, for example in bolts within a Storm topology or in mappers and reducers in a Hadoop job. We
+find it desirable to decouple the business logic from the underlying object representation, which is
+why the Anoa compiler also generates a Java interface for each enum and struct for building and
+accessing those in an representationally-agnostic manner.
+
+Consider for example the `simple` struct defined in `com.adgear.anoa.test`:
+
+    simple {
+      1: int foo;
+      2: bytes bar;
+      3: double baz;
+    }
+
+The compiler will generate an interface `com.adgear.anoa.test.Simple` that looks somewhat like this:
+
+    public interface Simple<T> extends Supplier<T>, Serializable {
+
+      int getFoo();
+      boolean isDefaultFoo();
+
+      Supplier<byte[]> getBar();
+      boolean isDefaultBar();
+
+      double getBaz();
+      boolean isDefaultBaz();
+    }
+
+The underlying implementations are serializable and the accessors are guaranteed to return immutable
+objects. Protobuf does this already, unfortunately Avro and Thrift don't and we've found this to be
+the source of countless subtle bugs. We try to make the underlying code as fast as possible while
+remaining correct.
+
+The Avro implementation for this example will be `com.adgear.anoa.test.SimpleAvro`. This class will
+also implement `org.apache.avro.specific.SpecificRecord` and thus `get()` will return `this`. The
+Protobuf and Thrift implementations will be `com.adgear.anoa.test.Simple.Protobuf` and
+`com.adgear.anoa.test.Simple.Thrift` respectively. All implementtions define static builder methods
+`from`.
 
 ## Library
 

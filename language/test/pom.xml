@@ -31,7 +31,7 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>2.10.2</version>
         <configuration>
-          <excludePackageNames>com.adgear.anoa.test.ad_exchange:open_rtb</excludePackageNames>
+          <excludePackageNames>com.adgear.anoa.test.ad_exchange:com.adgear.anoa.test.nested:com.adgear.anoa.test.simple:open_rtb</excludePackageNames>
         </configuration>
       </plugin>
     </plugins>

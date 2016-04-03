@@ -29,7 +29,6 @@ public class TestDefaults {
     Assert.assertTrue(nested.getVariant().isDefaultStringVariant());
   }
 
-
   void testNonDefault(Nested<?> nested) {
     Assert.assertFalse(nested.isDefaultEnumField());
     Assert.assertFalse(nested.isDefaultEnumListField());
