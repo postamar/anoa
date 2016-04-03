@@ -27,10 +27,115 @@ final public class ${this.mangle($schema.getName())} extends org.apache.avro.spe
   @$annotation
 #end
   transient private ${this.avroType($field.schema())} ${this.mangle($field.name())};
+  transient private java.lang.Boolean ${this.isDefaultFieldName($field)};
 #if ($this.hasExportField($field))
-  transient private ${this.exportType($field.schema())} _export_${this.mangle($field.name())};
+  transient private ${this.exportType($field.schema())} ${this.exportFieldName($field)};
 #end
 #end
+
+  /** Default constructor, does not initialize fields to their default values from the schema. Only use this if you know what you are doing. */
+  public ${this.mangle($schema.getName())}() {}
+
+  /** Constructs a new instance based on its canonical binary encoding. Only use this if you know what you are doing. */
+  public ${this.mangle($schema.getName())}(byte[] binaryEncoding) { setBinaryEncoding(binaryEncoding); }
+
+  @Override
+  public boolean isAvro() { return true; }
+
+  @Override
+  public ${this.mangle($schema.getName())} get() { return this; }
+
+  @Override
+  public org.apache.avro.Schema getSchema() { return SCHEMA$; }
+
+  /** Returns an Avro binary encoding of this record. */
+  public byte[] copyBinaryEncoding() {
+    if (_binaryEncoding == null) {
+      encode();
+    }
+    return (byte[]) _binaryEncoding.clone();
+  }
+
+  /** Returns the Avro binary encoding of this record wrapped in a read-only buffer. */
+  public java.nio.ByteBuffer getBinaryEncoding() {
+    if (_binaryEncoding == null) {
+      encode();
+    }
+    return _binaryEncodingBuffer;
+  }
+#foreach ($field in ${this.fields($schema)})
+
+  @Override
+#if ($this.isDeprecated($field))
+  @Deprecated
+#end
+  public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+    decoded(true);
+#if ($this.hasExportField($field))
+    if (${this.exportFieldName($field)} == null) { ${this.exportFieldName($field)} = ${this.exportValue($field)}; }
+    return ${this.exportFieldName($field)};
+#else
+    return ${this.mangle($field.name())};
+#end
+  }
+
+  @Override
+#if ($this.isDeprecated($field))
+  @Deprecated
+#end
+  public boolean ${this.generateIsDefaultMethod($schema, $field)}() {
+    decoded(true);
+    if (${this.isDefaultFieldName($field)} == null) { ${this.isDefaultFieldName($field)} = ${this.isDefaultValue($schema, $field)}; }
+    return ${this.isDefaultFieldName($field)};
+  }
+#end
+
+  // Used by DatumWriter. Applications should not call.
+  @Override
+  public java.lang.Object get(int field$) {
+    decoded(false);
+    switch (field$) {
+#set ($i = 0)
+#foreach ($field in ${this.fields($schema)})
+      case $i: return ${this.mangle($field.name())};
+#set ($i = $i + 1)
+#end
+      default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    }
+  }
+
+  /** Writes record to Avro Encoder. */
+  public void encode(org.apache.avro.io.Encoder _encoder) throws java.io.IOException {
+    decoded(true);
+#foreach ($field in ${this.fields($schema)})
+    ${this.fieldEncoder($field)}
+#end
+  }
+
+  // Used by DatumReader.  Applications should not call.
+  @Override
+  @SuppressWarnings(value="unchecked")
+  public void put(int field$, java.lang.Object value$) {
+    _put = true;
+    switch (field$) {
+#set ($i = 0)
+#foreach ($field in ${this.fields($schema)})
+      case $i: ${this.mangle($field.name())} = (${this.avroType($field.schema())}) value$; break;
+#set ($i = $i + 1)
+#end
+    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    }
+  }
+
+  /** Reads record from Avro Decoder. */
+  public ${this.mangle($schema.getName())} decode(org.apache.avro.io.Decoder _decoder) throws java.io.IOException {
+    reset();
+#foreach ($field in ${this.fields($schema)})
+    ${this.fieldDecoder($field)}
+#end
+    _decoded = true;
+    return this;
+  }
 
   private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
     if (_binaryEncoding == null) {
@@ -99,102 +204,10 @@ final public class ${this.mangle($schema.getName())} extends org.apache.avro.spe
     _binaryEncodingBuffer = null;
 #foreach ($field in ${this.fields($schema)})
 #if ($this.hasExportField($field))
-    _export_${this.mangle($field.name())} = null;
+    ${this.isDefaultFieldName($field)} = null;
+    ${this.exportFieldName($field)} = null;
 #end
 #end
-  }
-
-  /** Default constructor, does not initialize fields to their default values from the schema. Only use this if you know what you are doing. */
-  public ${this.mangle($schema.getName())}() {}
-
-  /** Constructs a new instance based on its canonical binary encoding. Only use this if you know what you are doing. */
-  public ${this.mangle($schema.getName())}(byte[] binaryEncoding) { setBinaryEncoding(binaryEncoding); }
-
-  @Override
-  public boolean isAvro() { return true; }
-
-  @Override
-  public ${this.mangle($schema.getName())} get() { return this; }
-
-  @Override
-  public org.apache.avro.Schema getSchema() { return SCHEMA$; }
-
-  /** Returns an Avro binary encoding of this record. */
-  public byte[] copyBinaryEncoding() {
-    if (_binaryEncoding == null) {
-      encode();
-    }
-    return (byte[]) _binaryEncoding.clone();
-  }
-
-  /** Returns the Avro binary encoding of this record wrapped in a read-only buffer. */
-  public java.nio.ByteBuffer getBinaryEncoding() {
-    if (_binaryEncoding == null) {
-      encode();
-    }
-    return _binaryEncodingBuffer;
-  }
-#foreach ($field in ${this.fields($schema)})
-
-  @Override
-#if ($this.isDeprecated($field))
-  @Deprecated
-#end
-  public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
-    decoded(true);
-#if ($this.hasExportField($field))
-    if (_export_${this.mangle($field.name())} == null) { _export_${this.mangle($field.name())} = ${this.exportValue($field)}; }
-    return _export_${this.mangle($field.name())};
-#else
-    return ${this.mangle($field.name())};
-#end
-  }
-#end
-
-  // Used by DatumWriter. Applications should not call.
-  @Override
-  public java.lang.Object get(int field$) {
-    decoded(false);
-    switch (field$) {
-#set ($i = 0)
-#foreach ($field in ${this.fields($schema)})
-      case $i: return ${this.mangle($field.name())};
-#set ($i = $i + 1)
-#end
-      default: throw new org.apache.avro.AvroRuntimeException("Bad index");
-    }
-  }
-
-  /** Writes record to Avro Encoder. */
-  public void encode(org.apache.avro.io.Encoder _encoder) throws java.io.IOException {
-    decoded(true);
-#foreach ($field in ${this.fields($schema)})
-    ${this.fieldEncoder($field)}
-#end
-  }
-
-  // Used by DatumReader.  Applications should not call.
-  @Override
-  @SuppressWarnings(value="unchecked")
-  public void put(int field$, java.lang.Object value$) {
-    _put = true;
-    switch (field$) {
-#set ($i = 0)
-#foreach ($field in ${this.fields($schema)})
-      case $i: ${this.mangle($field.name())} = (${this.avroType($field.schema())}) value$; break;
-#set ($i = $i + 1)
-#end
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
-    }
-  }
-
-  /** Reads record from Avro Decoder. */
-  public ${this.mangle($schema.getName())} decode(org.apache.avro.io.Decoder _decoder) throws java.io.IOException {
-    reset();
-#foreach ($field in ${this.fields($schema)})
-    ${this.fieldDecoder($field)}
-#end
-    return this;
   }
 
   /**
@@ -304,6 +317,7 @@ final public class ${this.mangle($schema.getName())} extends org.apache.avro.spe
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
       }
+      record._decoded = true;
       return record;
     }
   }
@@ -320,12 +334,17 @@ final public class ${this.mangle($schema.getName())} extends org.apache.avro.spe
     @Override protected org.apache.avro.io.BinaryEncoder initialValue() { return org.apache.avro.io.EncoderFactory.get().binaryEncoder(_ENCODER_STREAM.get(), null); }
   };
 
+  static private java.lang.ThreadLocal<${this.mangle($schema.getName())}> _DEFAULT = new java.lang.ThreadLocal<${this.mangle($schema.getName())}>() {
+    @Override protected ${this.mangle($schema.getName())} initialValue() { return ${this.mangle($schema.getName())}.newBuilder().build(); }
+  };
+
   /** Creates a new ${this.mangle($schema.getName())} by copying an existing ${this.anoaInterfaceName($schema)}. */
   static public ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> from(${this.anoaInterfaceFullName($schema)}<?> instance) {
     ${this.mangle($schema.getName())} copy = new ${this.mangle($schema.getName())}();
 #foreach ($field in ${this.fields($schema)})
     copy.${this.mangle($field.name())} = ${this.avroValue($schema, $field)};
 #end
+    copy._decoded = true;
     return copy;
   }
 
@@ -347,7 +366,7 @@ final public class ${this.mangle($schema.getName())} extends org.apache.avro.spe
   /** Returns Avro enum schema. */
   static public org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
-  static public final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("${this.escapedSchema($schema)}");
+  static public final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(${this.escapedSchema($schema)});
 
   static public final long serialVersionUID = ${this.version($schema)};
 }

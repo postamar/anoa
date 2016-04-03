@@ -27,10 +27,15 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #if ($this.isDeprecated($field))  @Deprecated
 #end
   ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}();
+
+  boolean ${this.generateIsDefaultMethod($schema, $field)}();
 #foreach ($alias in $field.aliases())
 
   @Deprecated
   default public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, ${this.aliasField($field, $alias)})}() { return ${this.generateGetMethod($schema, $field)}(); }
+
+  @Deprecated
+  default public boolean ${this.generateIsDefaultMethod($schema, ${this.aliasField($field, $alias)})}() { return ${this.generateIsDefaultMethod($schema, $field)}(); }
 #end
 #end
 #if ($this.isWithProtobuf())
@@ -40,6 +45,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     private byte[] binaryEncoding;
     transient private ${this.protobufClassName($schema)} wrapped;
 #foreach ($field in ${this.fields($schema)})
+    transient private java.lang.Boolean ${this.isDefaultFieldName($field)};
 #if ($this.hasProtobufExportField($field))
     transient private ${this.exportType($field.schema())} export_${this.mangle($field.name())};
 #end
@@ -83,6 +89,15 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
       return ${this.protobufExportValue($schema, $field)};
 #end
     }
+
+    @Override
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    public boolean ${this.generateIsDefaultMethod($schema, $field)}() {
+      if (${this.isDefaultFieldName($field)} == null) { ${this.isDefaultFieldName($field)} = ${this.isDefaultValue($schema, $field)}; }
+      return ${this.isDefaultFieldName($field)};
+    }
 #end
 
     @Override
@@ -105,15 +120,15 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 
     /** Creates a new wrapped Protobuf message based on an instance of ${this.anoaInterfaceName($schema)}. */
     static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> from(${this.anoaInterfaceName($schema)}<?> instance) {
-      return new Protobuf(
-          ${this.protobufClassName($schema)}.newBuilder()
+      ${this.protobufClassName($schema)}.Builder builder = ${this.protobufClassName($schema)}.newBuilder();
 #set ($i = 0)
 #foreach ($field in ${this.fields($schema)})
-            ${this.protobufImportField($schema, $field)}
+      if (!instance.${this.generateIsDefaultMethod($schema, $field)}()) {
+        builder.${this.protobufImportField($schema, $field)};
+      }
 #set ($i = $i + 1)
 #end
-            .build(),
-          null);
+      return new Protobuf(builder.build(), null);
     }
 
     /** Wraps an existing Protobuf message. */
@@ -157,6 +172,10 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
       return ${this.protobufProtocolClassName()}.getDescriptor();
     }
 
+    static private java.lang.ThreadLocal<Protobuf> _DEFAULT = new java.lang.ThreadLocal<Protobuf>() {
+      @Override protected Protobuf initialValue() { return new Protobuf(${this.protobufClassName($schema)}.getDefaultInstance() , null); }
+    };
+
     static public final long serialVersionUID = ${this.version($schema)};
   }
 #end
@@ -166,6 +185,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 
     private ${this.thriftClassName($schema)} wrapped;
 #foreach ($field in ${this.fields($schema)})
+    transient private java.lang.Boolean ${this.isDefaultFieldName($field)};
 #if ($this.hasThriftExportField($field))
     transient private ${this.exportType($field.schema())} export_${this.mangle($field.name())};
 #end
@@ -198,6 +218,15 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
       return ${this.thriftExportValue($field)};
 #end
     }
+
+    @Override
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    public boolean ${this.generateIsDefaultMethod($schema, $field)}() {
+      if (${this.isDefaultFieldName($field)} == null) { ${this.isDefaultFieldName($field)} = ${this.isDefaultValue($schema, $field)}; }
+      return ${this.isDefaultFieldName($field)};
+    }
 #end
 
     @Override
@@ -218,7 +247,11 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
       ${this.thriftClassName($schema)} copy = new ${this.thriftClassName($schema)}();
 #set ($i = 0)
 #foreach ($field in ${this.fields($schema)})
-      copy.setFieldValue(${this.thriftClassName($schema)}._Fields.values()[$i], ${this.thriftImportValue($schema, $field)});
+      if (!instance.${this.generateIsDefaultMethod($schema, $field)}()) {
+        copy.setFieldValue(
+            ${this.thriftClassName($schema)}._Fields.values()[$i],
+            ${this.thriftImportValue($schema, $field)});
+      }
 #set ($i = $i + 1)
 #end
       return new Thrift(copy);
@@ -239,6 +272,10 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     static public java.util.Map<${this.thriftClassName($schema)}._Fields, org.apache.thrift.meta_data.FieldMetaData> getThriftMetadataMap() {
       return ${this.thriftClassName($schema)}.metaDataMap;
     }
+
+    static private java.lang.ThreadLocal<Thrift> _DEFAULT = new java.lang.ThreadLocal<Thrift>() {
+      @Override protected Thrift initialValue() { return new Thrift(); }
+    };
 
     static public final long serialVersionUID = ${this.version($schema)};
   }

@@ -186,7 +186,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
                  + "() -> new java.util.HashMap<>(" + value + ".size())))";
         break;
     }
-    return "." + setter + "(" + value + ")";
+    return setter + "(" + value + ")";
   }
 
   public boolean hasThriftExportField(Schema.Field field) {
@@ -203,7 +203,8 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
   }
 
   public String thriftExportValue(Schema.Field field) {
-    String value = "wrapped.get" + Character.toUpperCase(field.name().charAt(0))
+    String value = "wrapped." + (field.schema().getType() == Schema.Type.BOOLEAN ? "is" : "get")
+                   + Character.toUpperCase(field.name().charAt(0))
                    + field.name().substring(1) + "()";
     if (!hasThriftExportField(field)) {
       return ((field.schema().getType() == Schema.Type.FLOAT) ? "(float) " : "") + value;

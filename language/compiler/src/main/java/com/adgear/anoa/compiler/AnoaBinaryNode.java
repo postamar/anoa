@@ -73,7 +73,7 @@ final public class AnoaBinaryNode extends ValueNode {
     String bbWrapped = (wrapped.getBinaryValue().length == 0)
                        ? "new byte[0]"
                        : toOctalString() + ".getBytes()";
-    return "ByteBuffer.wrap(" + bbWrapped + ");";
+    return "java.nio.ByteBuffer.wrap(" + bbWrapped + ");";
   }
 
   @Override

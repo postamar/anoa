@@ -100,5 +100,54 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
     }
   }
 
+  public String exportFieldName(Schema.Field field) {
+    return "_export_" + mangle(field.name());
+  }
+
+  public String isDefaultFieldName(Schema.Field field) {
+    return "_is_default_" + mangle(field.name());
+  }
+
+  public String isDefaultValue(Schema schema, Schema.Field field) {
+    String getValue = generateGetMethod(schema, field) + "()";
+    JsonNode node = field.defaultValue();
+    switch (field.schema().getType()) {
+      case ARRAY:
+      case MAP:
+        return getValue + ".isEmpty()";
+      case ENUM:
+        return getValue + ".getOrdinal() == 0";
+      case RECORD:
+        return getValue + ".get().equals(_DEFAULT.get()." + getValue + ".get())";
+      case BOOLEAN:
+        return (node.getBooleanValue() ? "" : "!") + getValue;
+      case INT:
+        return Integer.toString(node.getIntValue(), 16) + " == " + getValue;
+      case LONG:
+        return Long.toString(node.getLongValue(), 16) + " == " + getValue;
+      case FLOAT:
+        return Float.toHexString((float) node.getDoubleValue()) + " == " + getValue;
+      case DOUBLE:
+        return Double.toHexString(node.getDoubleValue()) + " == " + getValue;
+      case STRING:
+        if (node.getTextValue().isEmpty()) {
+          return getValue + ".length() == 0";
+        }
+        return node.toString() + ".equals(" + getValue + ".toString())";
+      case BYTES:
+        AnoaBinaryNode binaryNode = (AnoaBinaryNode) field.defaultValue();
+        if (binaryNode.getBinaryValue().length == 0) {
+          return getValue + ".get().length == 0";
+        }
+        return "java.util.Arrays.equals(" + getValue + ".get(), "
+               + binaryNode.toOctalString() + ".getBytes())";
+    }
+    throw new IllegalStateException();
+  }
+
+  public String generateIsDefaultMethod(Schema schema, Schema.Field field) {
+    return "isDefault" + generateHasMethod(schema, field).substring(3);
+  }
+
   static final public String IMPORTED = "instance";
 }

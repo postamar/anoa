@@ -6,6 +6,16 @@ bytes {
 
 enum bit [ OFF, ON ]
 
+variant {
+  1: int(-1) int_variant;
+  2: long(-1) long_variant;
+  3: float(-1.0) float_variant;
+  4: double(-1.0) double_variant;
+  5: boolean(true) boolean_variant;
+  6: string("foo") string_variant;
+  7: bytes(0x01 0x02 0x03) bytes_variant;
+}
+
 nested {
   1: bit enum_field;
   2: `bytes` struct_field;
@@ -18,4 +28,6 @@ nested {
 
   10: list<float> @deprecated float_list_field;
   11: map<string,float> @deprecated float_map_field;
+
+  12: variant variant;
 }

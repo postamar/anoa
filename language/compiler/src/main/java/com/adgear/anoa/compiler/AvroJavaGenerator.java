@@ -3,6 +3,8 @@ package com.adgear.anoa.compiler;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 
+import java.io.IOException;
+
 public class AvroJavaGenerator extends JavaGeneratorBase {
 
   public AvroJavaGenerator(Protocol protocol) {
@@ -10,8 +12,8 @@ public class AvroJavaGenerator extends JavaGeneratorBase {
     setTemplateDir("/com/adgear/anoa/avro/");
   }
 
-  public String escapedSchema(Schema schema) {
-    return javaEscape(CompilationUnit.modifySchema(schema, "", false).toString());
+  public String escapedSchema(Schema schema) throws IOException {
+    return javaSplit(CompilationUnit.modifySchema(schema, "", false).toString());
   }
 
   @Override

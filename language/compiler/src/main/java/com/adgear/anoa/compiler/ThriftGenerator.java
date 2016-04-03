@@ -23,7 +23,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-
 final class ThriftGenerator extends GeneratorBase {
 
   final String thriftCommand;
@@ -202,7 +201,4 @@ final class ThriftGenerator extends GeneratorBase {
     }
     log("Successfully repaired broken thrift compiler output in '" + javaSource + "'.");
   }
-
-
-
 }
