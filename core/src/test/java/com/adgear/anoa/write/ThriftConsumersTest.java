@@ -1,56 +1,59 @@
 package com.adgear.anoa.write;
 
-import com.adgear.anoa.BidReqs;
 import com.adgear.anoa.read.ThriftStreams;
+import com.adgear.anoa.test.AnoaTestSample;
+import com.adgear.anoa.test.ad_exchange.LogEventThrift;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 import org.junit.Test;
 
 import java.io.IOException;
 
-import thrift.com.adgear.avro.openrtb.BidRequest;
-
 public class ThriftConsumersTest {
+
+  final static AnoaTestSample ATS = new AnoaTestSample();
 
   @Test
   public void testBinary() {
-    BidReqs.assertThriftObjects(ThriftStreams.binary(
-        BidRequest::new,
-        BidReqs.allAsStream(os -> {
-          try (WriteConsumer<BidRequest> writeConsumer = ThriftConsumers.binary(os)) {
-            BidReqs.thrift().forEach(writeConsumer);
+    ATS.assertThriftObjects(ThriftStreams.binary(
+        ATS.thriftSupplier,
+        ATS.allAsInputStream(os -> {
+          try (WriteConsumer<LogEventThrift> writeConsumer = ThriftConsumers
+              .binary(os)) {
+            ATS.thrift().forEach(writeConsumer);
           }
         })));
   }
 
   @Test
   public void testCompact() {
-    BidReqs.assertThriftObjects(ThriftStreams.compact(
-        BidRequest::new,
-        BidReqs.allAsStream(os -> {
-          try (WriteConsumer<BidRequest> writeConsumer = ThriftConsumers.compact(os)) {
-            BidReqs.thrift().forEach(writeConsumer);
+    ATS.assertThriftObjects(ThriftStreams.compact(
+        ATS.thriftSupplier,
+        ATS.allAsInputStream(os -> {
+          try (WriteConsumer<LogEventThrift> writeConsumer = ThriftConsumers
+              .compact(os)) {
+            ATS.thrift().forEach(writeConsumer);
           }
         })));
   }
 
   @Test
   public void testJson() {
-    BidReqs.assertThriftObjects(ThriftStreams.json(
-        BidRequest::new,
-        BidReqs.allAsStream(os -> {
-          try (WriteConsumer<BidRequest> writeConsumer = ThriftConsumers.json(os)) {
-            BidReqs.thrift().forEach(writeConsumer);
+    ATS.assertThriftObjects(ThriftStreams.json(
+        ATS.thriftSupplier,
+        ATS.allAsInputStream(os -> {
+          try (WriteConsumer<LogEventThrift> writeConsumer = ThriftConsumers.json(os)) {
+            ATS.thrift().forEach(writeConsumer);
           }
         })));
   }
 
   @Test
   public void testJackson() throws IOException {
-    TokenBuffer tb = new TokenBuffer(BidReqs.objectMapper, false);
-    try (WriteConsumer<BidRequest> wc = ThriftConsumers.jackson(BidReqs.thriftClass, tb)) {
-      BidReqs.thrift().forEach(wc);
+    TokenBuffer tb = new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false);
+    try (WriteConsumer<LogEventThrift> wc = ThriftConsumers.jackson(ATS.thriftClass, tb, true)) {
+      ATS.thrift().forEach(wc);
     }
-    BidReqs.assertThriftObjects(ThriftStreams.jackson(BidReqs.thriftClass, true, tb.asParser()));
+    ATS.assertThriftObjects(ThriftStreams.jackson(ATS.thriftClass, true, tb.asParser()));
   }
 }

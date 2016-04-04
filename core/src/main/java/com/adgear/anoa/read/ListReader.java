@@ -6,19 +6,27 @@ import com.fasterxml.jackson.core.JsonToken;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
 
-class ListReader extends AbstractReader<ArrayList<Object>> {
+class ListReader extends AbstractReader<List<Object>> {
 
   final AbstractReader<?> elementReader;
+  final Supplier<List<Object>> listSupplier;
 
   ListReader(AbstractReader<?> elementReader) {
+    this(elementReader, ArrayList::new);
+  }
+
+  ListReader(AbstractReader<?> elementReader, Supplier<List<Object>> listSupplier) {
     this.elementReader = elementReader;
+    this.listSupplier = listSupplier;
   }
 
   @Override
-  protected ArrayList<Object> read(JsonParser jacksonParser) throws IOException {
+  protected List<Object> read(JsonParser jacksonParser) throws IOException {
     if (jacksonParser.getCurrentToken() == JsonToken.START_ARRAY) {
-      ArrayList<Object> result = new ArrayList<>();
+      List<Object> result = listSupplier.get();
       doArray(jacksonParser, p -> result.add(elementReader.read(p)));
       return result;
     } else {
@@ -28,13 +36,13 @@ class ListReader extends AbstractReader<ArrayList<Object>> {
   }
 
   @Override
-  protected ArrayList<Object> readStrict(JsonParser jacksonParser)
+  protected List<Object> readStrict(JsonParser jacksonParser)
       throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;
       case START_ARRAY:
-        ArrayList<Object> result = new ArrayList<>();
+        List<Object> result = listSupplier.get();
         doArray(jacksonParser, p -> result.add(elementReader.readStrict(p)));
         return result;
       default:

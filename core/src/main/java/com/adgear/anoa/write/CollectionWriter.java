@@ -14,14 +14,27 @@ class CollectionWriter<E> extends AbstractWriter<Collection<E>> {
   }
 
   @Override
-  protected void writeChecked(Collection<E> array, JsonGenerator jacksonGenerator)
+  protected void write(Collection<E> array, JsonGenerator jacksonGenerator)
       throws IOException {
     jacksonGenerator.writeStartArray(array.size());
     for (E element : array) {
       if (element == null) {
         jacksonGenerator.writeNull();
       } else {
-        elementWriter.writeChecked(element, jacksonGenerator);
+        elementWriter.write(element, jacksonGenerator);
+      }
+    }
+    jacksonGenerator.writeEndArray();
+  }
+
+  @Override
+  void writeStrict(Collection<E> array, JsonGenerator jacksonGenerator) throws IOException {
+    jacksonGenerator.writeStartArray(array.size());
+    for (E element : array) {
+      if (element == null) {
+        jacksonGenerator.writeNull();
+      } else {
+        elementWriter.writeStrict(element, jacksonGenerator);
       }
     }
     jacksonGenerator.writeEndArray();

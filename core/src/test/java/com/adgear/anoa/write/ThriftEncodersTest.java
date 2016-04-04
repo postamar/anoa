@@ -2,91 +2,112 @@ package com.adgear.anoa.write;
 
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
-import com.adgear.anoa.BidReqs;
 import com.adgear.anoa.read.ThriftDecoders;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.adgear.anoa.test.AnoaTestSample;
+import com.adgear.anoa.test.ad_exchange.LogEventThrift;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
-import org.jooq.lambda.Unchecked;
+import org.junit.Assert;
 import org.junit.Test;
 
-import thrift.com.adgear.avro.openrtb.BidRequest;
+import java.io.IOException;
 
 public class ThriftEncodersTest {
 
   final public AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
+  final static AnoaTestSample ATS = new AnoaTestSample();
 
   @Test
   public void testBinary() {
-    BidReqs.assertThriftObjects(BidReqs.thrift()
-                                    .map(ThriftEncoders.binary())
-                                    .map(ThriftDecoders.binary(BidRequest::new)));
+    ATS.assertThriftObjects(
+        ATS.thrift()
+            .map(ThriftEncoders.binary())
+            .map(ThriftDecoders.binary(ATS.thriftSupplier)));
   }
 
   @Test
   public void testCompact() {
-    BidReqs.assertThriftObjects(BidReqs.thrift()
-                                    .map(ThriftEncoders.compact())
-                                    .map(ThriftDecoders.compact(BidRequest::new)));
+    ATS.assertThriftObjects(
+        ATS.thrift()
+            .map(ThriftEncoders.compact())
+            .map(ThriftDecoders.compact(ATS.thriftSupplier)));
   }
 
   @Test
   public void testJson() {
-    BidReqs.assertThriftObjects(BidReqs.thrift()
-                                    .map(ThriftEncoders.json())
-                                    .map(ThriftDecoders.json(BidRequest::new)));
+    ATS.assertThriftObjects(
+        ATS.thrift()
+            .map(ThriftEncoders.json())
+            .map(ThriftDecoders.json(ATS.thriftSupplier)));
   }
 
   @Test
   public void testJackson() {
-    BidReqs.assertJsonObjects(BidReqs.thrift()
-                                  .map(ThriftEncoders.jackson(BidReqs.thriftClass, () ->
-                                      new TokenBuffer(BidReqs.objectMapper, false)))
-                                  .map(TokenBuffer::asParser)
-                                  .map(Unchecked.function(JsonParser::readValueAsTree)));
+    ATS.assertThriftObjects(
+        ATS.thrift()
+            .map(ThriftEncoders.jackson(ATS.thriftClass,
+                                        () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
+                                        true))
+            .map(TokenBuffer::asParser)
+            .map(ThriftDecoders.jackson(ATS.thriftClass, true)));
+  }
+
+
+  @Test
+  public void testJacksonStrictness() throws IOException {
+    LogEventThrift thrift = ThriftDecoders.jackson(ATS.thriftClass, false)
+        .apply(ATS.jsonNullsObjectParser());
+    JsonNode node = ThriftEncoders.jackson(ATS.thriftClass,
+                                           () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
+                                           false)
+        .apply(thrift).asParser().readValueAsTree();
+    Assert.assertTrue(node.isObject());
+    Assert.assertEquals(1, node.size());
+    Assert.assertTrue(node.has("uuid"));
   }
 
   @Test
   public void testAnoaBinary() {
-    BidReqs.assertThriftObjects(
-        BidReqs.thrift()
-            .map(anoaHandler::<BidRequest>of)
+    ATS.assertThriftObjects(
+        ATS.thrift()
+            .map(anoaHandler::<LogEventThrift>of)
             .map(ThriftEncoders.binary(anoaHandler))
-            .map(ThriftDecoders.binary(anoaHandler, BidRequest::new))
+            .map(ThriftDecoders.binary(anoaHandler, ATS.thriftSupplier))
             .flatMap(Anoa::asStream));
   }
 
   @Test
   public void testAnoaCompact() {
-    BidReqs.assertThriftObjects(
-        BidReqs.thrift()
-            .map(anoaHandler::<BidRequest>of)
+    ATS.assertThriftObjects(
+        ATS.thrift()
+            .map(anoaHandler::<LogEventThrift>of)
             .map(ThriftEncoders.compact(anoaHandler))
-            .map(ThriftDecoders.compact(anoaHandler, BidRequest::new))
+            .map(ThriftDecoders.compact(anoaHandler, ATS.thriftSupplier))
             .flatMap(Anoa::asStream));
   }
 
   @Test
   public void testAnoaJson() {
-    BidReqs.assertThriftObjects(
-        BidReqs.thrift()
-            .map(anoaHandler::<BidRequest>of)
+    ATS.assertThriftObjects(
+        ATS.thrift()
+            .map(anoaHandler::<LogEventThrift>of)
             .map(ThriftEncoders.json(anoaHandler))
-            .map(ThriftDecoders.json(anoaHandler, BidRequest::new))
+            .map(ThriftDecoders.json(anoaHandler, ATS.thriftSupplier))
             .flatMap(Anoa::asStream));
   }
 
   @Test
   public void testAnoaJackson() {
-    BidReqs.assertJsonObjects(
-        BidReqs.thrift()
-            .map(anoaHandler::<BidRequest>of)
+    ATS.assertThriftObjects(
+        ATS.thrift()
+            .map(anoaHandler::<LogEventThrift>of)
             .map(ThriftEncoders.jackson(anoaHandler,
-                                        BidReqs.thriftClass,
-                                        () -> new TokenBuffer(BidReqs.objectMapper, false)))
+                                        ATS.thriftClass,
+                                        () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
+                                        true))
             .map(anoaHandler.function(TokenBuffer::asParser))
-            .map(anoaHandler.functionChecked(JsonParser::<ObjectNode>readValueAsTree))
+            .map(ThriftDecoders.jackson(anoaHandler, ATS.thriftClass, true))
             .flatMap(Anoa::asStream));
   }
 }

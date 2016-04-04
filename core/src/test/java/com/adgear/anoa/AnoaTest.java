@@ -15,7 +15,6 @@ import junitx.framework.ListAssert;
 
 public class AnoaTest {
 
-
   static private final Anoa<Integer, String> ANOA = Anoa.of(1, Stream.of("foo", "bar"));
   static private final Anoa<Integer, String> EMPTY = Anoa.empty(Stream.of("empty!"));
 

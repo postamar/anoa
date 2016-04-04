@@ -112,6 +112,7 @@ public class ThriftEncoders {
   /**
    * @param recordClass Thrift record class object
    * @param supplier    called for each new record serialization
+   * @param strict      If set, chooses correctness over compactness
    * @param <T>         Thrift record type
    * @param <G>         JsonGenerator type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
@@ -119,19 +120,16 @@ public class ThriftEncoders {
    */
   static public <T extends TBase, G extends JsonGenerator> Function<T, G> jackson(
       Class<T> recordClass,
-      Supplier<G> supplier) {
-    AbstractWriter<T> thriftWriter = new ThriftWriter<>(recordClass);
-    return (T record) -> {
-      G jg = supplier.get();
-      thriftWriter.write(record, jg);
-      return jg;
-    };
+      Supplier<G> supplier,
+      boolean strict) {
+    return new ThriftWriter<>(recordClass).encoder(supplier, strict);
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Thrift record class object
    * @param supplier    called for each new record serialization
+   * @param strict      If set, chooses correctness over compactness
    * @param <T>         Thrift record type
    * @param <G>         JsonGenerator type
    * @param <M>         Metadata type
@@ -142,12 +140,8 @@ public class ThriftEncoders {
   Function<Anoa<T, M>, Anoa<G, M>> jackson(
       AnoaHandler<M> anoaHandler,
       Class<T> recordClass,
-      Supplier<G> supplier) {
-    AbstractWriter<T> thriftWriter = new ThriftWriter<>(recordClass);
-    return anoaHandler.functionChecked((T record) -> {
-      G jg = supplier.get();
-      thriftWriter.writeChecked(record, jg);
-      return jg;
-    });
+      Supplier<G> supplier,
+      boolean strict) {
+    return new ThriftWriter<>(recordClass).encoder(anoaHandler, supplier, strict);
   }
 }

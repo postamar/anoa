@@ -35,6 +35,11 @@ public enum Format {
   THRIFT_JSON(FormatCategory.THRIFT),
 
   /**
+   * Protobuf encoding
+   */
+  PROTOBUF(FormatCategory.PROTOBUF),
+
+  /**
    * JDBC result set (input only)
    */
   JDBC(FormatCategory.DB),
@@ -42,7 +47,7 @@ public enum Format {
   /**
    * JSON objects, newline separated
    */
-  JSON(FormatCategory.JACKSON),
+  JSON(FormatCategory.JACKSON, false),
 
   /**
    * CSV with column header row, separated by ',', escaping supported, no trimming.
@@ -67,18 +72,26 @@ public enum Format {
   /**
    * CBOR encoding
    */
-  CBOR(FormatCategory.JACKSON),
+  CBOR(FormatCategory.JACKSON, false),
 
   /**
    * SMILE encoding
    */
-  SMILE(FormatCategory.JACKSON);
+  SMILE(FormatCategory.JACKSON, false);
 
 
   final public FormatCategory category;
+  final public boolean writeStrict;
+
 
   Format(FormatCategory category) {
+    this(category, true);
+  }
+
+
+  Format(FormatCategory category, boolean writeStrict) {
     this.category = category;
+    this.writeStrict = writeStrict;
   }
 
   static public Format valueOfIgnoreCase(String fmt) {

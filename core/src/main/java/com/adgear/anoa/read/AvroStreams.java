@@ -3,7 +3,6 @@ package com.adgear.anoa.read;
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.TreeNode;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
@@ -12,6 +11,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.specific.SpecificDatumReader;
@@ -109,7 +109,7 @@ public class AvroStreams {
   }
 
   static <R extends IndexedRecord> Stream<R> binary(
-      GenericDatumReader<R> reader,
+      DatumReader<R> reader,
       InputStream inputStream) {
     final BinaryDecoder d = DecoderFactory.get().binaryDecoder(inputStream, null);
     return LookAheadIteratorFactory
@@ -118,7 +118,7 @@ public class AvroStreams {
 
   static <R extends IndexedRecord, M> Stream<Anoa<R, M>> binary(
       AnoaHandler<M> anoaHandler,
-      GenericDatumReader<R> reader,
+      DatumReader<R> reader,
       InputStream inputStream) {
     final BinaryDecoder d = DecoderFactory.get().binaryDecoder(inputStream, null);
     return LookAheadIteratorFactory
@@ -428,9 +428,7 @@ public class AvroStreams {
       Schema schema,
       boolean strict,
       JsonParser jacksonParser) {
-    return LookAheadIteratorFactory.jackson(jacksonParser).asStream()
-        .map(TreeNode::traverse)
-        .map(AvroDecoders.jackson(schema, strict));
+    return new AvroReader.GenericReader(schema).stream(strict, jacksonParser);
   }
 
   /**
@@ -445,9 +443,7 @@ public class AvroStreams {
       Schema schema,
       boolean strict,
       JsonParser jacksonParser) {
-    return LookAheadIteratorFactory.jackson(anoaHandler, jacksonParser).asStream()
-        .map(anoaHandler.function(TreeNode::traverse))
-        .map(AvroDecoders.jackson(anoaHandler, schema, strict));
+    return new AvroReader.GenericReader(schema).stream(anoaHandler, strict, jacksonParser);
   }
 
   /**
@@ -460,9 +456,7 @@ public class AvroStreams {
       Class<R> recordClass,
       boolean strict,
       JsonParser jacksonParser) {
-    return LookAheadIteratorFactory.jackson(jacksonParser).asStream()
-        .map(TreeNode::traverse)
-        .map(AvroDecoders.jackson(recordClass, strict));
+    return new AvroReader.SpecificReader<>(recordClass).stream(strict, jacksonParser);
   }
 
   /**
@@ -478,8 +472,6 @@ public class AvroStreams {
       Class<R> recordClass,
       boolean strict,
       JsonParser jacksonParser) {
-    return LookAheadIteratorFactory.jackson(anoaHandler, jacksonParser).asStream()
-        .map(anoaHandler.function(TreeNode::traverse))
-        .map(AvroDecoders.jackson(anoaHandler, recordClass, strict));
+    return new AvroReader.SpecificReader<>(recordClass).stream(anoaHandler, strict, jacksonParser);
   }
 }

@@ -7,7 +7,8 @@ import org.apache.thrift.TFieldIdEnum;
 
 import java.util.List;
 
-class ThriftRecordWrapper<F extends TFieldIdEnum, T extends TBase<?, F>> {
+class ThriftRecordWrapper<F extends TFieldIdEnum, T extends TBase<?, F>>
+    implements RecordWrapper<T, ThriftFieldWrapper<F>> {
 
   final protected T record;
   final protected List<ThriftFieldWrapper<F>> fieldWrappers;
@@ -20,14 +21,17 @@ class ThriftRecordWrapper<F extends TFieldIdEnum, T extends TBase<?, F>> {
     this.nRequired = nRequired;
   }
 
-  void put(ThriftFieldWrapper<F> fieldWrapper, Object value) {
+  @Override
+  public void put(ThriftFieldWrapper<F> fieldWrapper, Object value) {
+    F field = fieldWrapper.tFieldIdEnum;
     if (fieldWrapper.isRequired) {
       ++n;
     }
-    record.setFieldValue(fieldWrapper.tFieldIdEnum, value);
+    record.setFieldValue(field, (value == null) ? fieldWrapper.defaultValueSupplier.get() : value);
   }
 
-  T get() {
+  @Override
+  public T get() {
     if (n < nRequired) {
       for (ThriftFieldWrapper<F> fieldWrapper : fieldWrappers) {
         if (fieldWrapper.isRequired && !record.isSet(fieldWrapper.tFieldIdEnum)) {

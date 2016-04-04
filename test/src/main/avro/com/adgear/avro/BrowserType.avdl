@@ -1,5 +1,0 @@
-enum BrowserType {
-  CHROME,
-  FIREFOX,
-  IE
-}

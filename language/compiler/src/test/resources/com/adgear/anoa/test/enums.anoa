@@ -1,0 +1,5 @@
+/** An enumeration of web browsers. */
+browsers [ UNKNOWN_BROWSER, IE, FIREFOX, SAFARI ]
+
+/** An enumeration of operating systems. */
+systems [ UNKNOWN_OS; UNIX, WINDOWS, MAC_OS_X ]

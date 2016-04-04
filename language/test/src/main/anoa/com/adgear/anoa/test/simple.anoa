@@ -1,0 +1,11 @@
+simple {
+
+  /** field #1 */
+  1: int foo;
+
+  /** field #2 */
+  2: bytes bar;
+
+  /** field #3 */
+  3: double baz blab;
+}

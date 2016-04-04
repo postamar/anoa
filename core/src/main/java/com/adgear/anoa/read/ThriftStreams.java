@@ -3,7 +3,6 @@ package com.adgear.anoa.read;
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.TreeNode;
 
 import org.apache.thrift.TBase;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -345,9 +344,7 @@ public class ThriftStreams {
       Class<T> recordClass,
       boolean strict,
       JsonParser jacksonParser) {
-    return LookAheadIteratorFactory.jackson(jacksonParser).asStream()
-        .map(TreeNode::traverse)
-        .map(ThriftDecoders.jackson(recordClass, strict));
+    return new ThriftReader<>(recordClass).stream(strict, jacksonParser);
   }
 
   /**
@@ -365,8 +362,6 @@ public class ThriftStreams {
       Class<T> recordClass,
       boolean strict,
       JsonParser jacksonParser) {
-    return LookAheadIteratorFactory.jackson(anoaHandler, jacksonParser).asStream()
-        .map(anoaHandler.function(TreeNode::traverse))
-        .map(ThriftDecoders.jackson(anoaHandler, recordClass, strict));
+    return new ThriftReader<>(recordClass).stream(anoaHandler, strict, jacksonParser);
   }
 }

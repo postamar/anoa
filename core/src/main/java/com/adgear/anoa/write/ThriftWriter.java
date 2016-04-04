@@ -11,25 +11,57 @@ import org.apache.thrift.meta_data.MapMetaData;
 import org.apache.thrift.meta_data.SetMetaData;
 import org.apache.thrift.meta_data.StructMetaData;
 import org.apache.thrift.protocol.TType;
+import org.jooq.lambda.Unchecked;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-class ThriftWriter<F extends TFieldIdEnum, T extends TBase<?, F>> extends AbstractWriter<T> {
+class ThriftWriter<F extends TFieldIdEnum, T extends TBase<?, F>> extends AbstractRecordWriter<T> {
 
-  final private LinkedHashMap<F, AbstractWriter<Object>> fieldMap;
+  final Map<F, AbstractWriter<Object>> fieldWriters;
+  final Map<F, Object> fieldDefaults;
 
   @SuppressWarnings("unchecked")
   ThriftWriter(Class<T> thriftClass) {
-    fieldMap = new LinkedHashMap<>();
-    AnoaReflectionUtils.getThriftMetaDataMap(thriftClass).entrySet().stream()
-        .forEach(e -> fieldMap.put(
-            (F) e.getKey(),
-            (AbstractWriter<Object>) createWriter(e.getValue().valueMetaData)));
+    fieldWriters = new LinkedHashMap<>();
+    fieldDefaults = new HashMap<>();
+    T defaultInstance = createDefaultValue(thriftClass);
+    AnoaReflectionUtils.getThriftMetaDataMap(thriftClass).forEach((f, md) -> {
+      fieldWriters.put(f, (AbstractWriter<Object>) createWriter(md.valueMetaData));
+      fieldDefaults.put(f, defaultInstance.getFieldValue(f));
+    });
   }
 
-  static protected AbstractWriter<?> createWriter(FieldValueMetaData metaData) {
+  static private <F extends TFieldIdEnum, T extends TBase<?, F>>
+  T createDefaultValue(Class<T> thriftClass) {
+    final T instance = Unchecked.supplier(thriftClass::newInstance).get();
+    AnoaReflectionUtils.getThriftMetaDataMap(thriftClass).forEach((f, md) -> {
+      if (instance.getFieldValue(f) == null) {
+        switch (md.valueMetaData.type) {
+          case TType.LIST:
+            instance.setFieldValue(f, new ArrayList<>());
+            break;
+          case TType.MAP:
+            instance.setFieldValue(f, new HashMap<>());
+            break;
+          case TType.SET:
+            instance.setFieldValue(f, new HashSet<>());
+            break;
+          case TType.STRUCT:
+            Object subStruct = createDefaultValue(((StructMetaData) md.valueMetaData).structClass);
+            instance.setFieldValue(f, subStruct);
+            break;
+        }
+      }
+    });
+    return instance;
+  }
+
+  static private AbstractWriter<?> createWriter(FieldValueMetaData metaData) {
     switch (metaData.type) {
       case TType.BOOL:
         return new BooleanWriter();
@@ -64,13 +96,34 @@ class ThriftWriter<F extends TFieldIdEnum, T extends TBase<?, F>> extends Abstra
   }
 
   @Override
-  protected void writeChecked(T t, JsonGenerator jacksonGenerator) throws IOException {
+  protected void write(T t, JsonGenerator jacksonGenerator) throws IOException {
     jacksonGenerator.writeStartObject();
-    for (Map.Entry<F, AbstractWriter<Object>> entry : fieldMap.entrySet()) {
+    for (Map.Entry<F, AbstractWriter<Object>> entry : fieldWriters.entrySet()) {
+      F f = entry.getKey();
+      if (t.isSet(f)) {
+        Object value = t.getFieldValue(f);
+        if (value != null && !value.equals(fieldDefaults.get(f))) {
+          jacksonGenerator.writeFieldName(f.getFieldName());
+          entry.getValue().write(value, jacksonGenerator);
+        }
+      }
+    }
+    jacksonGenerator.writeEndObject();
+  }
+
+  @Override
+  void writeStrict(T t, JsonGenerator jacksonGenerator) throws IOException {
+    jacksonGenerator.writeStartObject();
+    for (Map.Entry<F, AbstractWriter<Object>> entry : fieldWriters.entrySet()) {
       F f = entry.getKey();
       if (t.isSet(f)) {
         jacksonGenerator.writeFieldName(f.getFieldName());
-        entry.getValue().writeChecked(t.getFieldValue(f), jacksonGenerator);
+        Object value = t.getFieldValue(f);
+        if (value == null) {
+          jacksonGenerator.writeNull();
+        } else {
+          entry.getValue().writeStrict(value, jacksonGenerator);
+        }
       }
     }
     jacksonGenerator.writeEndObject();

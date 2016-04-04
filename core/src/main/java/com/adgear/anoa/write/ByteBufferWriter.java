@@ -8,8 +8,13 @@ import java.nio.ByteBuffer;
 class ByteBufferWriter extends AbstractWriter<ByteBuffer> {
 
   @Override
-  protected void writeChecked(ByteBuffer byteBuffer, JsonGenerator jacksonGenerator)
-      throws IOException {
-    jacksonGenerator.writeBinary(byteBuffer.array());
+  protected void write(ByteBuffer bb, JsonGenerator jacksonGenerator) throws IOException {
+    if (bb.hasArray() && !bb.isReadOnly()) {
+      jacksonGenerator.writeBinary(bb.array(), bb.arrayOffset(), bb.remaining());
+    } else {
+      byte[] bytes = new byte[bb.remaining()];
+      bb.get(bytes);
+      jacksonGenerator.writeBinary(bytes);
+    }
   }
 }

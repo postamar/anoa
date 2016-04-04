@@ -184,11 +184,13 @@ public class AvroConsumers {
    *
    * @param schema           Avro schema to accept
    * @param jacksonGenerator JsonGenerator instance to write into
+   * @param strict           If set, chooses correctness over compactness
    */
   static public WriteConsumer<GenericRecord> jackson(
       Schema schema,
-      JsonGenerator jacksonGenerator) {
-    return new JacksonWriteConsumer<>(jacksonGenerator, new AvroWriter<GenericRecord>(schema));
+      JsonGenerator jacksonGenerator,
+      boolean strict) {
+    return new AvroWriter<GenericRecord>(schema).writeConsumer(jacksonGenerator, strict);
   }
 
   /**
@@ -196,12 +198,14 @@ public class AvroConsumers {
    *
    * @param recordClass      Avro SpecificRecord class to accept
    * @param jacksonGenerator JsonGenerator instance to write into
+   * @param strict           If set, chooses correctness over compactness
    * @param <R>              Avro record type
    */
   static public <R extends SpecificRecord>
   WriteConsumer<R> jackson(
       Class<R> recordClass,
-      JsonGenerator jacksonGenerator) {
-    return new JacksonWriteConsumer<>(jacksonGenerator, new AvroWriter<>(recordClass));
+      JsonGenerator jacksonGenerator,
+      boolean strict) {
+    return new AvroWriter<>(recordClass).writeConsumer(jacksonGenerator, strict);
   }
 }

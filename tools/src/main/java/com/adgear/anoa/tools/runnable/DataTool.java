@@ -1,5 +1,8 @@
 package com.adgear.anoa.tools.runnable;
 
+import com.google.protobuf.Descriptors;
+import com.google.protobuf.Message;
+
 import com.adgear.anoa.AnoaReflectionUtils;
 import com.adgear.anoa.read.AvroDecoders;
 import com.adgear.anoa.read.AvroStreams;
@@ -7,6 +10,8 @@ import com.adgear.anoa.read.CborStreams;
 import com.adgear.anoa.read.CsvStreams;
 import com.adgear.anoa.read.JdbcStreams;
 import com.adgear.anoa.read.JsonStreams;
+import com.adgear.anoa.read.ProtobufDecoders;
+import com.adgear.anoa.read.ProtobufStreams;
 import com.adgear.anoa.read.SmileStreams;
 import com.adgear.anoa.read.ThriftDecoders;
 import com.adgear.anoa.read.ThriftStreams;
@@ -14,6 +19,7 @@ import com.adgear.anoa.write.AvroConsumers;
 import com.adgear.anoa.write.CborConsumers;
 import com.adgear.anoa.write.CsvConsumers;
 import com.adgear.anoa.write.JacksonConsumers;
+import com.adgear.anoa.write.ProtobufConsumers;
 import com.adgear.anoa.write.SmileConsumers;
 import com.adgear.anoa.write.ThriftConsumers;
 import com.adgear.anoa.write.WriteConsumer;
@@ -51,10 +57,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
+public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> implements Runnable {
 
   final private Schema declaredAvroSchema;
   final private Class<T> thriftClass;
+  final private Class<M> protobufClass;
   final private Format inFormat;
   final private Format outFormat;
   final private InputStream in;
@@ -80,6 +87,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
    */
   public DataTool(Schema avroSchema,
                   Class<T> thriftClass,
+                  Class<M> protobufClass,
                   Format outFormat,
                   OutputStream out,
                   Connection jdbcConnection,
@@ -88,6 +96,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
                   int jdbcFetchSize) {
     this.avroSchema = this.declaredAvroSchema = avroSchema;
     this.thriftClass = thriftClass;
+    this.protobufClass = protobufClass;
     this.inFormat = Format.JDBC;
     this.outFormat = outFormat;
     this.in = null;
@@ -110,12 +119,14 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
    */
   public DataTool(Schema avroSchema,
                   Class<T> thriftClass,
+                  Class<M> protobufClass,
                   Format inFormat,
                   Format outFormat,
                   InputStream in,
                   OutputStream out) {
     this.avroSchema = this.declaredAvroSchema = avroSchema;
     this.thriftClass = thriftClass;
+    this.protobufClass = protobufClass;
     this.inFormat = inFormat;
     this.outFormat = outFormat;
     this.in = in;
@@ -131,6 +142,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
     final Format outFormat = Format.valueOfIgnoreCase(System.getProperty("outFormat", ""));
     final String avroClassName = System.getProperty("recordClass", "");
     final String thriftClassName = System.getProperty("thriftClass", "");
+    final String protobufClassName = System.getProperty("protobufClass", "");
     final String outFilePath = System.getProperty("out", "");
     final String schemaFilePath = System.getProperty("schemaFilePath", "");
     final String inFilePath = System.getProperty("in", "");
@@ -147,6 +159,10 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
     if (!thriftClassName.isEmpty()) {
       thriftRecordClass = AnoaReflectionUtils.getThriftClass(thriftClassName);
     }
+    Class<? extends Message> protobufRecordClass = null;
+    if (!protobufClassName.isEmpty()) {
+      protobufRecordClass = AnoaReflectionUtils.getProtobufClass(protobufClassName);
+    }
     final DataTool instance;
     try (OutputStream out = outFilePath.isEmpty()
                             ? System.out
@@ -160,6 +176,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
                                     : new BufferedReader(new FileReader(initPath)).lines();
         instance = new DataTool<>(avroSchema,
                                   thriftRecordClass,
+                                  protobufRecordClass,
                                   outFormat,
                                   out,
                                   DriverManager.getConnection(jdbcUrl),
@@ -170,6 +187,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
         InputStream in = inFilePath.isEmpty() ? System.in : new FileInputStream(inFilePath);
         instance = new DataTool<>(avroSchema,
                                   thriftRecordClass,
+                                  protobufRecordClass,
                                   inFormat,
                                   outFormat,
                                   in,
@@ -242,6 +260,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
         return;
       case JACKSON:
         final JacksonConsumers<? extends TreeNode, ?, ?, ?, ?> jacksonConsumers;
+        final boolean strict;
         switch (outFormat) {
           case CBOR:
             jacksonConsumers = new CborConsumers();
@@ -271,7 +290,59 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
         }
         try (JsonGenerator generator = jacksonConsumers.generator(out)) {
           try (WriteConsumer<GenericRecord> consumer =
-                   AvroConsumers.jackson(avroSchema, generator)) {
+                   AvroConsumers.jackson(avroSchema, generator, outFormat.writeStrict)) {
+            stream.sequential().forEach(consumer);
+          }
+        } catch (IOException e) {
+          throw new UncheckedIOException(e);
+        }
+        return;
+      default:
+        throw new IllegalArgumentException("Unsupported output format " + outFormat);
+    }
+  }
+
+  public void runProtobuf(Stream<M> stream) {
+    switch (outFormat.category) {
+      case PROTOBUF:
+        try (WriteConsumer<M> writeConsumer = ProtobufConsumers.binary(out)) {
+          stream.sequential().forEach(writeConsumer);
+        } catch (IOException e) {
+          throw new UncheckedIOException(e);
+        }
+        return;
+      case JACKSON:
+        final JacksonConsumers<? extends TreeNode, ?, ?, ?, ?> jacksonConsumers;
+        switch (outFormat) {
+          case CBOR:
+            jacksonConsumers = new CborConsumers();
+            break;
+          case CSV:
+          case CSV_NO_HEADER:
+          case TSV:
+          case TSV_NO_HEADER:
+            CsvSchema.Builder builder = CsvSchema.builder();
+            builder.setUseHeader(outFormat == Format.CSV || outFormat == Format.TSV);
+            if (outFormat == Format.TSV || outFormat == Format.TSV_NO_HEADER) {
+              builder.setColumnSeparator('\t');
+            }
+            AnoaReflectionUtils.getProtobufDescriptor(protobufClass).getFields().stream()
+                .map(Descriptors.FieldDescriptor::getName)
+                .forEach(builder::addColumn);
+            jacksonConsumers = new CsvConsumers(builder.build());
+            break;
+          case JSON:
+            jacksonConsumers = new com.adgear.anoa.write.JsonConsumers();
+            break;
+          case SMILE:
+            jacksonConsumers = new SmileConsumers();
+            break;
+          default:
+            throw new IllegalArgumentException("Unsupported output format " + outFormat);
+        }
+        try (JsonGenerator generator = jacksonConsumers.generator(out)) {
+          try (WriteConsumer<M> consumer =
+                   ProtobufConsumers.jackson(protobufClass, generator, outFormat.writeStrict)) {
             stream.sequential().forEach(consumer);
           }
         } catch (IOException e) {
@@ -333,7 +404,8 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
             throw new IllegalArgumentException("Unsupported output format " + outFormat);
         }
         try (JsonGenerator generator = jacksonConsumers.generator(out)) {
-          try (WriteConsumer<T> consumer = ThriftConsumers.jackson(thriftClass, generator)) {
+          try (WriteConsumer<T> consumer =
+                   ThriftConsumers.jackson(thriftClass, generator, outFormat.writeStrict)) {
             stream.sequential().forEach(consumer);
           }
         } catch (IOException e) {
@@ -347,11 +419,16 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
 
   public void runJackson(Stream<ObjectNode> stream) {
     if (avroSchema != null) {
-      runAvro(stream.map(TreeNode::traverse).map(AvroDecoders.jackson(avroSchema, false)));
+      runAvro(stream.map(TreeNode::traverse)
+                  .map(AvroDecoders.jackson(avroSchema, false)));
       return;
     } else if (thriftClass != null) {
-      runThrift(stream.map(TreeNode::traverse).map(ThriftDecoders.jackson(thriftClass, false)));
+      runThrift(stream.map(TreeNode::traverse)
+                    .map(ThriftDecoders.jackson(thriftClass, false)));
       return;
+    } else if (protobufClass != null) {
+      runProtobuf(stream.map(TreeNode::traverse)
+                      .map(ProtobufDecoders.jackson(protobufClass, false)));
     }
     final Supplier<JacksonConsumers<ObjectNode, ?, ?, ?, ?>> supplier;
     switch (outFormat) {
@@ -409,6 +486,9 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>> implements Runnable {
         return;
       case THRIFT_JSON:
         runThrift(ThriftStreams.json(Unchecked.supplier(thriftClass::newInstance), in));
+        return;
+      case PROTOBUF:
+        runProtobuf(ProtobufStreams.binary(protobufClass, false, in));
         return;
       case JDBC:
         try (Statement statement = jdbcConnection.createStatement()) {

@@ -2,6 +2,7 @@ package com.adgear.anoa.read;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
@@ -10,18 +11,20 @@ import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificFixed;
 import org.apache.avro.specific.SpecificRecord;
+import org.apache.avro.util.Utf8;
 import org.codehaus.jackson.node.NullNode;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.stream.Stream;
 
 
-class AvroFieldWrapper {
+class AvroFieldWrapper implements FieldWrapper {
 
   final int index;
   final Schema.Field field;
   final boolean unboxed;
-  final Object defaultValue;
+  final private Object defaultValue;
   final AbstractReader<?> reader;
 
   AvroFieldWrapper(int index, Schema.Field field) {
@@ -42,11 +45,22 @@ class AvroFieldWrapper {
     }
   }
 
+  @Override
+  public Stream<String> getNames() {
+    return Stream.concat(Stream.of(field.name()), field.aliases().stream());
+  }
+
+  @Override
+  public AbstractReader<?> getReader() {
+    return reader;
+  }
+
   @SuppressWarnings("unchecked")
   static private AbstractReader<?> createReader(Schema schema) {
     switch (schema.getType()) {
       case ARRAY:
-        return new ListReader(createReader(schema.getElementType()));
+        return new ListReader(createReader(schema.getElementType()),
+                              () -> new GenericData.Array(0, schema));
       case BOOLEAN:
         return new BooleanReader();
       case BYTES:
@@ -67,14 +81,14 @@ class AvroFieldWrapper {
       case LONG:
         return new LongReader();
       case MAP:
-        return new MapReader(createReader(schema.getValueType()));
+        return new MapReader(createReader(schema.getValueType()), Utf8::new);
       case RECORD:
         final Class<? extends SpecificRecord> recordClass = SpecificData.get().getClass(schema);
         return (recordClass == null)
                ? new AvroReader.GenericReader(schema)
                : new AvroReader.SpecificReader<>(recordClass);
       case STRING:
-        return new StringReader();
+        return new StringReader(Utf8::new);
       case UNION:
         if (schema.getTypes().size() == 2) {
           return createReader(schema.getTypes().get(
@@ -103,5 +117,14 @@ class AvroFieldWrapper {
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }
+  }
+
+  boolean hasDefaultValue() {
+    return defaultValue != null;
+  }
+
+  @Override
+  public boolean equalsDefaultValue(Object value) {
+    return value == null || value.equals(defaultValue);
   }
 }

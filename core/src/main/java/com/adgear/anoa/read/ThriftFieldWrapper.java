@@ -11,16 +11,35 @@ import org.apache.thrift.meta_data.SetMetaData;
 import org.apache.thrift.meta_data.StructMetaData;
 import org.apache.thrift.protocol.TType;
 
-class ThriftFieldWrapper<F extends TFieldIdEnum> {
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+class ThriftFieldWrapper<F extends TFieldIdEnum> implements FieldWrapper {
 
   final F tFieldIdEnum;
   final boolean isRequired;
-  final AbstractReader<?> reader;
+  final private Object defaultValue;
+  final Supplier<Object> defaultValueSupplier;
+  final private AbstractReader<?> reader;
 
-  ThriftFieldWrapper(F tFieldIdEnum, FieldMetaData fieldMetaData) {
+  ThriftFieldWrapper(F tFieldIdEnum,
+                     FieldMetaData fieldMetaData,
+                     Supplier<Object> defaultValueSupplier) {
     this.tFieldIdEnum = tFieldIdEnum;
     this.isRequired = (fieldMetaData.requirementType == TFieldRequirementType.REQUIRED);
     this.reader = createReader(fieldMetaData.valueMetaData);
+    this.defaultValue = defaultValueSupplier.get();
+    this.defaultValueSupplier = defaultValueSupplier;
+  }
+
+  @Override
+  public Stream<String> getNames() {
+    return Stream.of(tFieldIdEnum.getFieldName());
+  }
+
+  @Override
+  public AbstractReader<?> getReader() {
+    return reader;
   }
 
   @SuppressWarnings("unchecked")
@@ -56,5 +75,10 @@ class ThriftFieldWrapper<F extends TFieldIdEnum> {
         return metaData.isBinary() ? new ByteBufferReader() : new StringReader();
     }
     throw new RuntimeException("Unknown type in metadata " + metaData);
+  }
+
+  @Override
+  public boolean equalsDefaultValue(Object value) {
+    return value == null || value.equals(defaultValue);
   }
 }

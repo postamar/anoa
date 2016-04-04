@@ -4,5 +4,6 @@ public enum FormatCategory {
   AVRO,
   DB,
   JACKSON,
-  THRIFT
+  THRIFT,
+  PROTOBUF
 }

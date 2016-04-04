@@ -58,7 +58,7 @@ public class JdbcStreams {
   static public Schema induceSchema(ResultSetMetaData rsmd) throws SQLException {
     List<Schema.Field> fields = IntStream.range(1, rsmd.getColumnCount() + 1)
         .mapToObj(Unchecked.intFunction(c -> {
-          String label = rsmd.getColumnLabel(c);
+          String label = fieldName(rsmd.getColumnLabel(c));
           Schema.Field f = new Schema.Field(
               label.toLowerCase(),
               Schema.createUnion(Stream.of(Schema.Type.NULL, getAvroType(rsmd.getColumnType(c)))
@@ -78,6 +78,23 @@ public class JdbcStreams {
                                             false);
     avroSchema.setFields(fields);
     return avroSchema;
+  }
+
+  static private String fieldName(String columnName) {
+    StringBuilder sb = new StringBuilder();
+    boolean first = true;
+    for (char character : columnName.toCharArray()) {
+      if (first) {
+        first = false;
+        if (!Character.isLetter(character)) {
+          character = '_';
+        }
+      } else if (!Character.isLetterOrDigit(character)) {
+        character = '_';
+      }
+      sb.append(character);
+    }
+    return sb.toString();
   }
 
   static protected Schema.Type getAvroType(int sqlType) {
