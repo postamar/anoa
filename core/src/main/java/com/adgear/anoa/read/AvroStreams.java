@@ -11,6 +11,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.specific.SpecificDatumReader;
@@ -108,7 +109,7 @@ public class AvroStreams {
   }
 
   static <R extends IndexedRecord> Stream<R> binary(
-      GenericDatumReader<R> reader,
+      DatumReader<R> reader,
       InputStream inputStream) {
     final BinaryDecoder d = DecoderFactory.get().binaryDecoder(inputStream, null);
     return LookAheadIteratorFactory
@@ -117,7 +118,7 @@ public class AvroStreams {
 
   static <R extends IndexedRecord, M> Stream<Anoa<R, M>> binary(
       AnoaHandler<M> anoaHandler,
-      GenericDatumReader<R> reader,
+      DatumReader<R> reader,
       InputStream inputStream) {
     final BinaryDecoder d = DecoderFactory.get().binaryDecoder(inputStream, null);
     return LookAheadIteratorFactory

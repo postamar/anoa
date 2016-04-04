@@ -232,7 +232,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     @Override
     public boolean equals(Object other) {
       if (other == this) return true;
-      if (other == null && !(other instanceof Thrift)) return false;
+      if (other == null || !(other instanceof Thrift)) return false;
       return wrapped.equals(((Thrift) other).wrapped);
     }
 

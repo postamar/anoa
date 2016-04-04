@@ -21,9 +21,9 @@ import java.util.stream.StreamSupport;
  */
 final public class LookAheadIterator<T> implements Iterator<T> {
 
-  final protected Supplier<Boolean> noNext;
-  final protected UnaryOperator<T> next;
-  protected long counter = 0;
+  final private Supplier<Boolean> noNext;
+  final private UnaryOperator<T> next;
+  private long counter = 0;
   private Closeable closeable;
   private boolean isStale;
   private boolean hasNext;

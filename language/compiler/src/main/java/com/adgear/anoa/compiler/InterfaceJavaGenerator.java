@@ -237,7 +237,6 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
           case RECORD:
             map = ".map(" + mangle(field.schema().getElementType().getFullName())
                    + ".Thrift::from)";
-            break;
         }
         return value + ".map(l -> l.stream()" + map + ".collect("
                + "java.util.stream.Collectors.toCollection("
@@ -299,7 +298,6 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
           case RECORD:
             map = ".map(" + mangle(field.schema().getElementType().getFullName()) + ".Thrift::from)"
                   + ".map(java.util.function.Supplier::get)";
-            break;
         }
         return value + ".stream()" + map + ".collect(java.util.stream.Collectors.toCollection(() ->"
                + " new java.util.ArrayList<>(" + value + ".size())))";

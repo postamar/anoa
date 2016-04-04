@@ -84,7 +84,7 @@ final public class AnoaBinaryNode extends ValueNode {
     if (o.getClass() != getClass()) { // final class, can do this
       return false;
     }
-    return wrapped.equals(o);
+    return wrapped.equals(((AnoaBinaryNode) o).wrapped);
   }
 
   @Override

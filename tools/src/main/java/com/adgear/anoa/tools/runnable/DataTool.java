@@ -489,6 +489,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> imple
         return;
       case PROTOBUF:
         runProtobuf(ProtobufStreams.binary(protobufClass, false, in));
+        return;
       case JDBC:
         try (Statement statement = jdbcConnection.createStatement()) {
           statement.setFetchSize(jdbcFetchSize);

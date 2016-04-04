@@ -200,10 +200,10 @@ abstract class AnoaParserBase implements Closeable {
       throw error("Unqualified referenced type not yet declared in current namespace", id);
     }
     List<Schema> types = findByFullName(fullName);
-    if (types.size() == 0) {
+    if (types.isEmpty()) {
       importProtocol(namespace, id);
       types = findByFullName(fullName);
-      if (types.size() == 0) {
+      if (types.isEmpty()) {
         throw error("Referenced type not found in imported namespace", id);
       }
     }
