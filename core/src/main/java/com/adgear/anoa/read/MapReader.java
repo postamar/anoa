@@ -6,20 +6,28 @@ import com.fasterxml.jackson.core.JsonToken;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
-class MapReader extends AbstractReader<HashMap<String, Object>> {
+class MapReader extends AbstractReader<Map<CharSequence, Object>> {
 
   final AbstractReader<?> valueElementReader;
+  final Function<String, CharSequence> fn;
 
   MapReader(AbstractReader<?> valueElementReader) {
+    this(valueElementReader, s -> s);
+  }
+
+  MapReader(AbstractReader<?> valueElementReader, Function<String, CharSequence> fnKey) {
     this.valueElementReader = valueElementReader;
+    this.fn = fnKey;
   }
 
   @Override
-  protected HashMap<String, Object> read(JsonParser jacksonParser) throws IOException {
+  protected Map<CharSequence, Object> read(JsonParser jacksonParser) throws IOException {
     if (jacksonParser.getCurrentToken() == JsonToken.START_OBJECT) {
-      HashMap<String, Object> result = new HashMap<>();
-      doMap(jacksonParser, (k, p) -> result.put(k, valueElementReader.read(p)));
+      Map<CharSequence, Object> result = new HashMap<>();
+      doMap(jacksonParser, (k, p) -> result.put(fn.apply(k), valueElementReader.read(p)));
       return result;
     } else {
       gobbleValue(jacksonParser);
@@ -28,15 +36,14 @@ class MapReader extends AbstractReader<HashMap<String, Object>> {
   }
 
   @Override
-  protected HashMap<String, Object> readStrict(JsonParser jacksonParser) throws
-                                                                         AnoaJacksonTypeException,
-                                                                         IOException {
+  protected Map<CharSequence, Object> readStrict(JsonParser jacksonParser)
+      throws AnoaJacksonTypeException, IOException {
     switch (jacksonParser.getCurrentToken()) {
       case VALUE_NULL:
         return null;
       case START_OBJECT:
-        HashMap<String, Object> result = new HashMap<>();
-        doMap(jacksonParser, (k, p) -> result.put(k, valueElementReader.readStrict(p)));
+        Map<CharSequence, Object> result = new HashMap<>();
+        doMap(jacksonParser, (k, p) -> result.put(fn.apply(k), valueElementReader.readStrict(p)));
         return result;
       default:
         throw new AnoaJacksonTypeException("Token is not '{': " + jacksonParser.getCurrentToken());

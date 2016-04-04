@@ -1,0 +1,4 @@
+test_struct struct_alias com.adgear.anoa.deprecated.old_struct_alias {
+  20: com.adgear.anoa.test.nested.test_struct @deprecated nested_field alias1 alias2;
+  30: com.adgear.anoa.test.enums.browsers @deprecated browser_field alias3 alias4;
+}

@@ -11,8 +11,8 @@ class ProtobufByteStringWriter extends AbstractWriter<ByteString> {
   static private ByteBufferWriter byteBufferWriter = new ByteBufferWriter();
 
   @Override
-  void writeChecked(ByteString byteString, JsonGenerator jacksonGenerator)
+  void write(ByteString byteString, JsonGenerator jacksonGenerator)
       throws IOException {
-    byteBufferWriter.writeChecked(byteString.asReadOnlyByteBuffer(), jacksonGenerator);
+    byteBufferWriter.write(byteString.asReadOnlyByteBuffer(), jacksonGenerator);
   }
 }

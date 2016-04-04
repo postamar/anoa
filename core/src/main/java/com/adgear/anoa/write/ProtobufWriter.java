@@ -8,25 +8,33 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-class ProtobufWriter<R extends Message> extends AbstractWriter<R> {
+class ProtobufWriter<R extends Message> extends AbstractRecordWriter<R> {
 
-  final private HashMap<Descriptors.FieldDescriptor, AbstractWriter<Object>> fieldMap;
+  final Map<Descriptors.FieldDescriptor, AbstractWriter<Object>> fieldWriters;
+  final Map<Descriptors.FieldDescriptor, Object> fieldDefaults;
 
-  protected ProtobufWriter(Descriptors.Descriptor descriptor) {
-    fieldMap = new HashMap<>();
-    descriptor.getFields().forEach(this::updateFieldMap);
-    descriptor.getExtensions().forEach(this::updateFieldMap);
+  final boolean isMapEntry;
+  final Message.Builder builder;
+
+  @SuppressWarnings("unchecked")
+  protected ProtobufWriter(Message.Builder builder) {
+    this.builder = builder;
+    fieldWriters = new LinkedHashMap<>();
+    fieldDefaults = new HashMap<>();
+    Descriptors.Descriptor descriptor = builder.getDescriptorForType();
+    isMapEntry = descriptor.getOptions().getMapEntry();
+    descriptor.getFields().forEach(this::updateMapsWithField);
   }
 
   ProtobufWriter(Class<R> recordClass) {
-    this(AnoaReflectionUtils.getProtobufDescriptor(recordClass));
+    this((Message.Builder) AnoaReflectionUtils.getProtobufBuilder(recordClass).clone().clear());
   }
 
-  static private AbstractWriter<?> createWriter(
-      Descriptors.FieldDescriptor fieldDescriptor) {
-    switch (fieldDescriptor.getType()) {
+  private AbstractWriter<?> createWriter(Descriptors.FieldDescriptor field) {
+    switch (field.getType()) {
       case BOOL:
         return new BooleanWriter();
       case BYTES:
@@ -51,30 +59,110 @@ class ProtobufWriter<R extends Message> extends AbstractWriter<R> {
         return new FloatWriter();
       case GROUP:
       case MESSAGE:
-        return new ProtobufWriter<>(fieldDescriptor.getMessageType());
+        return field.getMessageType().getOptions().getMapEntry()
+               ? new ProtobufMapEntryWriter<>(builder.newBuilderForField(field))
+               : new ProtobufWriter<>(builder.newBuilderForField(field));
       case STRING:
         return new StringWriter();
     }
-    throw new RuntimeException("Unknown type for " + fieldDescriptor);
+    throw new RuntimeException("Unknown type for " + field);
   }
 
   @SuppressWarnings("unchecked")
-  private void updateFieldMap(Descriptors.FieldDescriptor fieldDescriptor) {
-    final AbstractWriter<?> fieldWriter = createWriter(fieldDescriptor);
-    final AbstractWriter<?> writer = fieldDescriptor.isRepeated()
-                                     ? new CollectionWriter<>(fieldWriter)
-                                     : fieldWriter;
-    fieldMap.put(fieldDescriptor, (AbstractWriter<Object>) writer);
+  private void updateMapsWithField(Descriptors.FieldDescriptor field) {
+    fieldWriters.put(field, (AbstractWriter<Object>) createWriter(field));
+    if (!field.isRepeated()) {
+      if (field.getType() == Descriptors.FieldDescriptor.Type.MESSAGE) {
+        fieldDefaults.put(field, builder.newBuilderForField(field).getDefaultInstanceForType());
+      } else {
+        fieldDefaults.put(field, builder.getField(field));
+      }
+    }
   }
 
   @Override
-  void writeChecked(R msg, JsonGenerator jacksonGenerator) throws IOException {
+  void write(R msg, JsonGenerator jacksonGenerator) throws IOException {
     jacksonGenerator.writeStartObject();
-    for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : msg.getAllFields().entrySet()) {
-      final Descriptors.FieldDescriptor field = entry.getKey();
-      jacksonGenerator.writeFieldName(field.getName());
-      fieldMap.get(field).writeChecked(entry.getValue(), jacksonGenerator);
+    for (Map.Entry<Descriptors.FieldDescriptor, AbstractWriter<Object>> e : fieldWriters.entrySet()) {
+      Descriptors.FieldDescriptor field = e.getKey();
+      AbstractWriter<Object> writer = e.getValue();
+      if (field.isRepeated()) {
+        int n = msg.getRepeatedFieldCount(field);
+        if (n > 0) {
+          jacksonGenerator.writeFieldName(field.getName());
+          boolean isFieldMap = (writer instanceof ProtobufWriter)
+                               && ((ProtobufWriter) writer).isMapEntry;
+          if (isFieldMap) {
+            jacksonGenerator.writeStartObject();
+          } else {
+            jacksonGenerator.writeStartArray(n);
+          }
+          for (int i = 0; i < n; i++) {
+            Object value = msg.getRepeatedField(field, i);
+            if (value == null) {
+              jacksonGenerator.writeNull();
+            } else {
+              writer.write(value, jacksonGenerator);
+            }            }
+          if (isFieldMap) {
+            jacksonGenerator.writeEndObject();
+          } else {
+            jacksonGenerator.writeEndArray();
+          }
+        }
+      } else if (msg.hasField(field)) {
+        Object value = msg.getField(field);
+        if (value != null && !value.equals(fieldDefaults.get(field))) {
+          jacksonGenerator.writeFieldName(field.getName());
+          writer.write(value, jacksonGenerator);
+        }
+      }
     }
     jacksonGenerator.writeEndObject();
   }
+
+  @Override
+  void writeStrict(R msg, JsonGenerator jacksonGenerator) throws IOException {
+    jacksonGenerator.writeStartObject();
+    for (Map.Entry<Descriptors.FieldDescriptor, AbstractWriter<Object>> e : fieldWriters.entrySet()) {
+      Descriptors.FieldDescriptor field = e.getKey();
+      AbstractWriter<Object> writer = e.getValue();
+      if (field.isRepeated()) {
+        int n = msg.getRepeatedFieldCount(field);
+        if (n > 0) {
+          jacksonGenerator.writeFieldName(field.getName());
+          boolean isFieldMap = (writer instanceof ProtobufWriter)
+                               && ((ProtobufWriter) writer).isMapEntry;
+          if (isFieldMap) {
+            jacksonGenerator.writeStartObject();
+          } else {
+            jacksonGenerator.writeStartArray(n);
+          }
+          for (int i = 0; i < n; i++) {
+            Object value = msg.getRepeatedField(field, i);
+            if (value == null) {
+              jacksonGenerator.writeNull();
+            } else {
+              writer.writeStrict(value, jacksonGenerator);
+            }
+          }
+          if (isFieldMap) {
+            jacksonGenerator.writeEndObject();
+          } else {
+            jacksonGenerator.writeEndArray();
+          }
+        }
+      } else if (msg.hasField(field)) {
+        Object value = msg.getField(field);
+        jacksonGenerator.writeFieldName(field.getName());
+        if (value == null
+            || (field.getType() == Descriptors.FieldDescriptor.Type.MESSAGE
+                && value.equals(fieldDefaults.get(field)))) {
+          jacksonGenerator.writeNull();
+        } else {
+          writer.writeStrict(value, jacksonGenerator);
+        }
+      }
+    }
+    jacksonGenerator.writeEndObject();  }
 }

@@ -344,7 +344,7 @@ public class ThriftStreams {
       Class<T> recordClass,
       boolean strict,
       JsonParser jacksonParser) {
-    return JacksonUtils.stream(new ThriftReader<>(recordClass), strict, jacksonParser);
+    return new ThriftReader<>(recordClass).stream(strict, jacksonParser);
   }
 
   /**
@@ -362,6 +362,6 @@ public class ThriftStreams {
       Class<T> recordClass,
       boolean strict,
       JsonParser jacksonParser) {
-    return JacksonUtils.stream(anoaHandler, new ThriftReader<>(recordClass), strict, jacksonParser);
+    return new ThriftReader<>(recordClass).stream(anoaHandler, strict, jacksonParser);
   }
 }

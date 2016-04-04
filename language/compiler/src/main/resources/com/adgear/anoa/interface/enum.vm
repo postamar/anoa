@@ -1,0 +1,204 @@
+#if ($schema.getNamespace())
+package $schema.getNamespace();
+#end
+
+#if ($schema.getDoc())
+/** $schema.getDoc() */
+#end
+#if ($this.isDeprecated($schema))
+@Deprecated
+#end
+#foreach ($annotation in $this.javaAnnotations($schema))
+@$annotation
+#end
+public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.function.Supplier<T>, java.io.Serializable {
+
+  default boolean isAvro() { return false; }
+  default boolean isProtobuf() { return false; }
+  default boolean isThrift() { return false; }
+
+  /** Returns underlying object. */
+  T get();
+
+  /** Returns enumeration ordinal. */
+  int getOrdinal();
+#if ($this.isWithProtobuf())
+
+#if ($this.isDeprecated($schema))
+  @Deprecated
+#end
+#foreach ($annotation in $this.javaAnnotations($schema))
+  @$annotation
+#end
+  static final public class Protobuf implements ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> {
+
+#foreach ($symbol in ${schema.getEnumSymbols()})
+    static private Protobuf ${this.mangle($symbol)} = new Protobuf(${this.protobufClassName($schema)}.${this.mangle($symbol)});
+#end
+
+    final private ${this.protobufClassName($schema)} wrapped;
+
+    private Protobuf(${this.protobufClassName($schema)} wrapped) {
+      this.wrapped = wrapped;
+    }
+
+    @Override
+    public boolean isProtobuf() { return true; }
+
+    @Override
+    public ${this.protobufClassName($schema)} get() { return wrapped; }
+
+    @Override
+    public int getOrdinal() { return wrapped.getNumber(); }
+
+    @Override
+    public boolean equals(Object other) { return other == this; }
+
+    @Override
+    public int hashCode() { return getOrdinal(); }
+
+    @Override
+    public String toString() { return wrapped.toString(); }
+
+    /** Returns enum instance for the given ${this.anoaInterfaceName($schema)}. */
+    static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> from(${this.anoaInterfaceName($schema)}<?> instance) {
+      return from(instance.getOrdinal());
+    }
+
+    /** Returns enum instance for the given Protobuf enum. */
+    static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> from(${this.protobufClassName($schema)} instance) {
+      return from(instance.getNumber());
+    }
+
+    /** Returns enum instance for the given ordinal, defaults to first enum value. */
+    static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> from(int ordinal) {
+      switch (ordinal) {
+#set( $i = 0 )
+#foreach ($symbol in ${schema.getEnumSymbols()})
+        case $i: return ${this.mangle($symbol)};
+#set( $i = $i + 1 )
+#end
+      }
+      return ${this.mangle($schema.getEnumSymbols().get(0))};
+    }
+
+    /** Returns enum instance for the given label, defaults to first enum value. */
+    static public ${this.anoaInterfaceFullName($schema)}<${this.protobufClassName($schema)}> from(java.lang.CharSequence str) {
+      if (str != null) {
+        switch (str.toString().toUpperCase()) {
+#set( $i = 0 )
+#foreach ($symbol in ${schema.getEnumSymbols()})
+          case "${this.mangle($symbol)}": return ${this.mangle($symbol)};
+#set( $i = $i + 1 )
+#end
+        }
+      }
+      return ${this.mangle($schema.getEnumSymbols().get(0))};
+    }
+
+    /** Returns Protobuf class for this enum. */
+    static public java.lang.Class<${this.protobufClassName($schema)}> getProtobufClass() {
+      return ${this.protobufClassName($schema)}.class;
+    }
+
+    /** Returns Protobuf protocol class for this enum. */
+    static public java.lang.Class<${this.protobufProtocolClassName()}> getProtobufProtocolClass() {
+      return ${this.protobufProtocolClassName()}.class;
+    }
+
+    /** Returns Protobuf descriptor for this enum. */
+    static public com.google.protobuf.Descriptors.EnumDescriptor getProtobufDescriptor() {
+      return ${this.protobufClassName($schema)}.getDescriptor();
+    }
+
+    /** Returns Protobuf protocol descriptor for this enum. */
+    static public com.google.protobuf.Descriptors.FileDescriptor getProtobufProtocolDescriptor() {
+      return ${this.protobufProtocolClassName()}.getDescriptor();
+    }
+
+    static public final long serialVersionUID = ${this.version($schema)};
+  }
+#end
+#if ($this.isWithThrift())
+
+#if ($this.isDeprecated($schema))
+  @Deprecated
+#end
+#foreach ($annotation in $this.javaAnnotations($schema))
+  @$annotation
+#end
+  static final public class Thrift implements ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> {
+
+#foreach ($symbol in ${schema.getEnumSymbols()})
+    static private Thrift ${this.mangle($symbol)} = new Thrift(${this.thriftClassName($schema)}.${this.mangle($symbol)});
+#end
+
+    private Thrift(${this.thriftClassName($schema)} wrapped) {
+      this.wrapped = wrapped;
+    }
+
+    final private ${this.thriftClassName($schema)} wrapped;
+
+    @Override
+    public boolean isThrift() { return true; }
+
+    @Override
+    public ${this.thriftClassName($schema)} get() { return wrapped; }
+
+    @Override
+    public int getOrdinal() { return wrapped.getValue(); }
+
+    @Override
+    public boolean equals(Object other) { return other == this; }
+
+    @Override
+    public int hashCode() { return getOrdinal(); }
+
+    @Override
+    public String toString() { return wrapped.toString(); }
+
+    /** Returns enum instance for the given ${this.anoaInterfaceName($schema)}. */
+    static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> from(${this.anoaInterfaceName($schema)}<?> instance) {
+      return from(instance.getOrdinal());
+    }
+
+    /** Returns enum instance for the given Thrift enum. */
+    static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> from(${this.thriftClassName($schema)} instance) {
+      return from(instance.ordinal());
+    }
+
+    /** Returns enum instance for the given ordinal, defaults to first enum value. */
+    static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> from(int ordinal) {
+      switch (ordinal) {
+#set( $i = 0 )
+#foreach ($symbol in ${schema.getEnumSymbols()})
+        case $i: return ${this.mangle($symbol)};
+#set( $i = $i + 1 )
+#end
+      }
+      return ${this.mangle($schema.getEnumSymbols().get(0))};
+    }
+
+    /** Returns enum instance for the given label, defaults to first enum value. */
+    static public ${this.anoaInterfaceFullName($schema)}<${this.thriftClassName($schema)}> from(java.lang.CharSequence str) {
+      if (str != null) {
+        switch (str.toString().toUpperCase()) {
+#set( $i = 0 )
+#foreach ($symbol in ${schema.getEnumSymbols()})
+          case "${this.mangle($symbol)}": return ${this.mangle($symbol)};
+#set( $i = $i + 1 )
+#end
+        }
+      }
+      return ${this.mangle($schema.getEnumSymbols().get(0))};
+    }
+
+    /** Returns Thrift class for this enum. */
+    static public java.lang.Class<${this.thriftClassName($schema)}> getThriftClass() {
+      return ${this.thriftClassName($schema)}.class;
+    }
+
+    static public final long serialVersionUID = ${this.version($schema)};
+  }
+#end
+}

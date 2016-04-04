@@ -136,11 +136,13 @@ public class ThriftConsumers {
    *
    * @param recordClass      Thrift record class object
    * @param jacksonGenerator JsonGenerator instance to write into
+   * @param strict           If set, chooses correctness over compactness
    * @param <T>              Thrift record type
    */
   static public <T extends TBase> WriteConsumer<T> jackson(
       Class<T> recordClass,
-      JsonGenerator jacksonGenerator) {
-    return new JacksonWriteConsumer<>(jacksonGenerator, new ThriftWriter<>(recordClass));
+      JsonGenerator jacksonGenerator,
+      boolean strict) {
+    return new ThriftWriter<>(recordClass).writeConsumer(jacksonGenerator, strict);
   }
 }

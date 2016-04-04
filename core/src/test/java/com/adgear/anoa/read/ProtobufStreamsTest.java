@@ -1,10 +1,9 @@
 package com.adgear.anoa.read;
 
-import com.google.openrtb.OpenRtb;
-
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
-import com.adgear.anoa.BidReqs;
+import com.adgear.anoa.test.AnoaTestSample;
+import com.adgear.anoa.test.ad_exchange.AdExchangeProtobuf;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -16,46 +15,48 @@ import java.util.stream.Collectors;
 public class ProtobufStreamsTest {
 
   final public AnoaHandler<String> anoaHandler = AnoaHandler.withFn(Object::toString);
+  final static AnoaTestSample ATS = new AnoaTestSample();
+
 
   @Test
   public void testProtobuf() {
     Assert.assertEquals(
-        BidReqs.n,
-        BidReqs.protobuf().peek(Assert::assertNotNull).count());
+        ATS.n,
+        ATS.protobuf().peek(Assert::assertNotNull).count());
   }
 
   @Test
   public void testBinary() {
-    BidReqs.assertProtobufObjects(
-        ProtobufStreams.binary(BidReqs.protobufClass, true, BidReqs.protobufBinary(-1)));
+    ATS.assertProtobufObjects(
+        ProtobufStreams.binary(ATS.protobufClass, true, ATS.protoBinaryInputStream(-1)));
   }
 
   @Test
   public void testJackson() {
-    BidReqs.assertProtobufObjects(
-        ProtobufStreams.jackson(BidReqs.protobufClass, true, BidReqs.jsonParser(-1)));
+    ATS.assertProtobufObjects(
+        ProtobufStreams.jackson(ATS.protobufClass, true, ATS.jsonParser(-1)));
   }
 
   @Test(expected = RuntimeException.class)
   public void testBinaryFail() throws Exception {
-    ProtobufStreams.binary(BidReqs.protobufClass, true, BidReqs.thriftBinary(3))
+    ProtobufStreams.binary(ATS.protobufClass, true, ATS.thriftBinaryInputStream(3))
         .peek(System.err::println)
         .forEach(Assert::assertNotNull);
   }
 
   @Test(expected = RuntimeException.class)
   public void testJacksonFail() throws Exception {
-    ProtobufStreams.jackson(BidReqs.protobufClass, true, BidReqs.jsonParser(1234))
+    ProtobufStreams.jackson(ATS.protobufClass, true, ATS.jsonParser(1234))
         .forEach(Assert::assertNotNull);
   }
 
   @Test
   public void testAnoaBinary() {
-    List<Anoa<OpenRtb.BidRequest, String>> anoas =
+    List<Anoa<AdExchangeProtobuf.LogEvent, String>> anoas =
         ProtobufStreams.binary(anoaHandler,
-                               BidReqs.protobufClass,
+                               ATS.protobufClass,
                                true,
-                               BidReqs.protobufBinary(12345))
+                               ATS.protoBinaryInputStream(12345))
             .collect(Collectors.toList());
     anoas.stream()
         .flatMap(Anoa::meta)
@@ -63,16 +64,16 @@ public class ProtobufStreamsTest {
         .entrySet()
         .stream()
         .forEach(e -> System.err.format("%d\t= %s\n", e.getValue().size(), e.getKey()));
-    Assert.assertEquals(34, anoas.stream().filter(Anoa::isPresent).count());
+    Assert.assertEquals(29, anoas.stream().filter(Anoa::isPresent).count());
   }
 
   @Test
   public void testAnoaJackson() {
-    List<Anoa<OpenRtb.BidRequest, String>> anoas =
+    List<Anoa<AdExchangeProtobuf.LogEvent, String>> anoas =
         ProtobufStreams.jackson(anoaHandler,
-                              BidReqs.protobufClass,
+                              ATS.protobufClass,
                               true,
-                              BidReqs.jsonParser(12345))
+                              ATS.jsonParser(12345))
             .collect(Collectors.toList());
     anoas.stream()
         .flatMap(Anoa::meta)
@@ -80,6 +81,6 @@ public class ProtobufStreamsTest {
         .entrySet()
         .stream()
         .forEach(e -> System.err.format("%d\t= %s\n", e.getValue().size(), e.getKey()));
-    Assert.assertEquals(20, anoas.stream().filter(Anoa::isPresent).count());
+    Assert.assertEquals(15, anoas.stream().filter(Anoa::isPresent).count());
   }
 }

@@ -260,6 +260,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> imple
         return;
       case JACKSON:
         final JacksonConsumers<? extends TreeNode, ?, ?, ?, ?> jacksonConsumers;
+        final boolean strict;
         switch (outFormat) {
           case CBOR:
             jacksonConsumers = new CborConsumers();
@@ -289,7 +290,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> imple
         }
         try (JsonGenerator generator = jacksonConsumers.generator(out)) {
           try (WriteConsumer<GenericRecord> consumer =
-                   AvroConsumers.jackson(avroSchema, generator)) {
+                   AvroConsumers.jackson(avroSchema, generator, outFormat.writeStrict)) {
             stream.sequential().forEach(consumer);
           }
         } catch (IOException e) {
@@ -340,7 +341,8 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> imple
             throw new IllegalArgumentException("Unsupported output format " + outFormat);
         }
         try (JsonGenerator generator = jacksonConsumers.generator(out)) {
-          try (WriteConsumer<M> consumer = ProtobufConsumers.jackson(protobufClass, generator)) {
+          try (WriteConsumer<M> consumer =
+                   ProtobufConsumers.jackson(protobufClass, generator, outFormat.writeStrict)) {
             stream.sequential().forEach(consumer);
           }
         } catch (IOException e) {
@@ -402,7 +404,8 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> imple
             throw new IllegalArgumentException("Unsupported output format " + outFormat);
         }
         try (JsonGenerator generator = jacksonConsumers.generator(out)) {
-          try (WriteConsumer<T> consumer = ThriftConsumers.jackson(thriftClass, generator)) {
+          try (WriteConsumer<T> consumer =
+                   ThriftConsumers.jackson(thriftClass, generator, outFormat.writeStrict)) {
             stream.sequential().forEach(consumer);
           }
         } catch (IOException e) {

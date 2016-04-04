@@ -39,6 +39,7 @@ public class ProtobufEncoders {
   /**
    * @param recordClass Protobuf record class object
    * @param supplier    called for each new record serialization
+   * @param strict      If set, chooses correctness over compactness
    * @param <R>         Protobuf record type
    * @param <G>         JsonGenerator type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
@@ -46,14 +47,16 @@ public class ProtobufEncoders {
    */
   static public <R extends Message, G extends JsonGenerator> Function<R, G> jackson(
       Class<R> recordClass,
-      Supplier<G> supplier) {
-    return JacksonUtils.encoder(new ProtobufWriter<>(recordClass), supplier);
+      Supplier<G> supplier,
+      boolean strict) {
+    return new ProtobufWriter<>(recordClass).encoder(supplier, strict);
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Protobuf record class object
    * @param supplier    called for each new record serialization
+   * @param strict      If set, chooses correctness over compactness
    * @param <R>         Protobuf record type
    * @param <G>         JsonGenerator type
    * @param <M>         Metadata type
@@ -64,7 +67,8 @@ public class ProtobufEncoders {
   Function<Anoa<R, M>, Anoa<G, M>> jackson(
       AnoaHandler<M> anoaHandler,
       Class<R> recordClass,
-      Supplier<G> supplier) {
-    return JacksonUtils.encoder(anoaHandler, new ProtobufWriter<>(recordClass), supplier);
+      Supplier<G> supplier,
+      boolean strict) {
+    return new ProtobufWriter<>(recordClass).encoder(anoaHandler, supplier, strict);
   }
 }

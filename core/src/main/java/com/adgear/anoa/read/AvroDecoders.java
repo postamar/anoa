@@ -414,7 +414,7 @@ public class AvroDecoders {
   static public <P extends JsonParser> Function<P, GenericRecord> jackson(
       Schema schema,
       boolean strict) {
-    return JacksonUtils.decoder(new AvroReader.GenericReader(schema), strict);
+    return new AvroReader.GenericReader(schema).decoder(strict);
   }
 
   /**
@@ -430,7 +430,7 @@ public class AvroDecoders {
       AnoaHandler<M> anoaHandler,
       Schema schema,
       boolean strict) {
-    return JacksonUtils.decoder(anoaHandler, new AvroReader.GenericReader(schema), strict);
+    return new AvroReader.GenericReader(schema).decoder(anoaHandler, strict);
   }
 
   /**
@@ -443,7 +443,7 @@ public class AvroDecoders {
   static public <P extends JsonParser, R extends SpecificRecord> Function<P, R> jackson(
       Class<R> recordClass,
       boolean strict) {
-    return JacksonUtils.decoder(new AvroReader.SpecificReader<>(recordClass), strict);
+    return new AvroReader.SpecificReader<>(recordClass).decoder(strict);
   }
 
   /**
@@ -460,7 +460,7 @@ public class AvroDecoders {
       AnoaHandler<M> anoaHandler,
       Class<R> recordClass,
       boolean strict) {
-    return JacksonUtils.decoder(anoaHandler, new AvroReader.SpecificReader<>(recordClass), strict);
+    return new AvroReader.SpecificReader<>(recordClass).decoder(anoaHandler, strict);
   }
 
   static protected class BinaryDecoderWrapper {

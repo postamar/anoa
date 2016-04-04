@@ -9,7 +9,7 @@ import java.io.IOException;
 class AvroFixedWriter extends AbstractWriter<GenericData.Fixed> {
 
   @Override
-  protected void writeChecked(GenericData.Fixed fixed, JsonGenerator jacksonGenerator)
+  protected void write(GenericData.Fixed fixed, JsonGenerator jacksonGenerator)
       throws IOException {
     jacksonGenerator.writeBinary(fixed.bytes());
   }

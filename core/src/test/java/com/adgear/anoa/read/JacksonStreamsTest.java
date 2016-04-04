@@ -2,7 +2,7 @@ package com.adgear.anoa.read;
 
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
-import com.adgear.anoa.BidReqs;
+import com.adgear.anoa.test.AnoaTestSample;
 import com.fasterxml.jackson.core.FormatSchema;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -20,26 +20,28 @@ import junitx.framework.Assert;
 
 public class JacksonStreamsTest {
 
+  final static AnoaTestSample ATS = new AnoaTestSample();
+
   static public JacksonStreams<ObjectNode, ObjectMapper, JsonFactory, ?, JsonParser> build() {
     return new JacksonStreams<>(new ObjectMapper(), Optional.<FormatSchema>empty());
   }
 
   @Test
   public void testParser() throws IOException {
-    build().parser(BidReqs.jsonBytes(-1)).readValueAsTree();
+    build().parser(ATS.jsonInputStream(-1)).readValueAsTree();
   }
 
   @Test
   public void testObjects() {
-    BidReqs.assertJsonObjects(build().from(BidReqs.jsonBytes(-1)));
+    ATS.assertJsonObjects(build().from(ATS.jsonInputStream(-1)));
   }
 
   @Test
   public void testAnoaObjects() {
     List<Anoa<ObjectNode, Throwable>> list = build()
-        .from(AnoaHandler.NO_OP_HANDLER, BidReqs.jsonBytes(-1))
+        .from(AnoaHandler.NO_OP_HANDLER, ATS.jsonInputStream(-1))
         .collect(Collectors.toList());
-    Assert.assertEquals(BidReqs.n + 1, list.size());
-    BidReqs.assertJsonObjects(list.stream().flatMap(Anoa::asStream));
+    Assert.assertEquals(ATS.n + 1, list.size());
+    ATS.assertJsonObjects(list.stream().flatMap(Anoa::asStream));
   }
 }

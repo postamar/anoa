@@ -3,22 +3,54 @@ package com.adgear.anoa.read;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 
-class ProtobufFieldWrapper {
+import java.util.stream.Stream;
+
+class ProtobufFieldWrapper implements FieldWrapper {
 
   final Descriptors.FieldDescriptor field;
-  final AbstractReader<?> reader;
-  final ListReader listReader;
+  final private Object defaultValue;
+  final private AbstractReader<?> reader;
 
-  ProtobufFieldWrapper(Descriptors.FieldDescriptor field,
-                       Message.Builder parentBuilder) {
+  ProtobufFieldWrapper(Descriptors.FieldDescriptor field, Message.Builder parentBuilder) {
     this.field = field;
     this.reader = createReader(field, parentBuilder);
-    this.listReader = new ListReader(reader);
+    this.defaultValue = field.isRepeated()
+                        ? null
+                        : parentBuilder.getDefaultInstanceForType().getField(field);
+  }
+
+  @Override
+  public Stream<String> getNames() {
+    return Stream.of(field.getName());
+  }
+
+  @Override
+  public AbstractReader<?> getReader() {
+    return reader;
+  }
+
+  static private AbstractReader<?> createReader(Descriptors.FieldDescriptor field,
+                                                Message.Builder parentBuilder) {
+    if (!field.isRepeated()) {
+      return createBaseReader(field, parentBuilder);
+    }
+    if (field.getType() != Descriptors.FieldDescriptor.Type.MESSAGE
+        || !field.getMessageType().getOptions().getMapEntry()) {
+      return new ListReader(createBaseReader(field, parentBuilder));
+    }
+    Message.Builder mapEntryBuilder = parentBuilder.newBuilderForField(field);
+    Descriptors.Descriptor mapEntryDescriptor = field.getMessageType();
+    Descriptors.FieldDescriptor keyDescriptor = mapEntryDescriptor.getFields().get(0);
+    Descriptors.FieldDescriptor valueDescriptor = mapEntryDescriptor.getFields().get(1);
+    return new ProtobufMapReader(keyDescriptor,
+                                 valueDescriptor,
+                                 mapEntryBuilder,
+                                 createReader(valueDescriptor, mapEntryBuilder));
   }
 
   @SuppressWarnings("unchecked")
-  static private AbstractReader<?> createReader(Descriptors.FieldDescriptor field,
-                                                Message.Builder parentBuilder) {
+  static private AbstractReader<?> createBaseReader(Descriptors.FieldDescriptor field,
+                                                    Message.Builder parentBuilder) {
     switch (field.getType()) {
       case BOOL:
         return new BooleanReader();
@@ -53,4 +85,8 @@ class ProtobufFieldWrapper {
     throw new RuntimeException("Unknown type for " + field);
   }
 
+  @Override
+  public boolean equalsDefaultValue(Object value) {
+    return value == null || value.equals(defaultValue);
+  }
 }

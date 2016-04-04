@@ -1,9 +1,8 @@
 package com.adgear.anoa.write;
 
-
-import com.adgear.anoa.BidReqs;
 import com.adgear.anoa.read.AvroStreams;
-import com.adgear.avro.openrtb.BidRequest;
+import com.adgear.anoa.test.AnoaTestSample;
+import com.adgear.anoa.test.ad_exchange.LogEventAvro;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 import org.apache.avro.generic.GenericRecord;
@@ -13,46 +12,49 @@ import java.io.IOException;
 
 public class AvroConsumersTest {
 
+  final static AnoaTestSample ATS = new AnoaTestSample();
+
   @Test
   public void testBatch() {
-    BidReqs.assertAvroGenerics(AvroStreams.batch(BidReqs.allAsStream(
+    ATS.assertAvroGenerics(AvroStreams.batch(ATS.allAsInputStream(
         os -> {
-          try (WriteConsumer<GenericRecord> wc = AvroConsumers.batch(BidReqs.avroSchema, os)) {
-            BidReqs.avroGeneric().forEach(wc);
+          try (WriteConsumer<GenericRecord> wc = AvroConsumers.batch(ATS.avroSchema, os)) {
+            ATS.avroGeneric().forEach(wc);
           }
         })));
   }
 
   @Test
   public void testBinary() {
-    BidReqs.assertAvroGenerics(AvroStreams.binary(BidReqs.avroSchema, BidReqs.allAsStream(
+    ATS.assertAvroGenerics(AvroStreams.binary(ATS.avroSchema, ATS.allAsInputStream(
         os -> {
-          try (WriteConsumer<GenericRecord> wc = AvroConsumers.binary(BidReqs.avroSchema, os)) {
-            BidReqs.avroGeneric().forEach(wc);
+          try (WriteConsumer<GenericRecord> wc = AvroConsumers.binary(ATS.avroSchema, os)) {
+            ATS.avroGeneric().forEach(wc);
           }
         })));
 
-    BidReqs.assertAvroSpecifics(AvroStreams.binary(BidReqs.avroClass, BidReqs.allAsStream(
+    ATS.assertAvroSpecifics(AvroStreams.binary(ATS.avroClass, ATS.allAsInputStream(
         os -> {
-          try (WriteConsumer<BidRequest> wc = AvroConsumers.binary(BidReqs.avroClass, os)) {
-            BidReqs.avroSpecific().forEach(wc);
+          try (WriteConsumer<LogEventAvro> wc = AvroConsumers
+              .binary(ATS.avroClass, os)) {
+            ATS.avroSpecific().forEach(wc);
           }
         })));
   }
 
   @Test
   public void testJson() {
-    BidReqs.assertAvroGenerics(AvroStreams.json(BidReqs.avroSchema, BidReqs.allAsStream(
+    ATS.assertAvroGenerics(AvroStreams.json(ATS.avroSchema, ATS.allAsInputStream(
         os -> {
-          try (WriteConsumer<GenericRecord> wc = AvroConsumers.json(BidReqs.avroSchema, os)) {
-            BidReqs.avroGeneric().forEach(wc);
+          try (WriteConsumer<GenericRecord> wc = AvroConsumers.json(ATS.avroSchema, os)) {
+            ATS.avroGeneric().forEach(wc);
           }
         })));
 
-    BidReqs.assertAvroSpecifics(AvroStreams.json(BidReqs.avroClass, BidReqs.allAsStream(
+    ATS.assertAvroSpecifics(AvroStreams.json(ATS.avroClass, ATS.allAsInputStream(
         os -> {
-          try (WriteConsumer<BidRequest> wc = AvroConsumers.json(BidReqs.avroClass, os)) {
-            BidReqs.avroSpecific().forEach(wc);
+          try (WriteConsumer<LogEventAvro> wc = AvroConsumers.json(ATS.avroClass, os)) {
+            ATS.avroSpecific().forEach(wc);
           }
         })));
   }
@@ -60,17 +62,17 @@ public class AvroConsumersTest {
 
   @Test
   public void testJackson() throws IOException {
-    TokenBuffer b = new TokenBuffer(BidReqs.objectMapper, false);
-    try (WriteConsumer<BidRequest> wc = AvroConsumers.jackson(BidReqs.avroClass, b)) {
-      BidReqs.avroSpecific().forEach(wc);
+    TokenBuffer b = new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false);
+    try (WriteConsumer<LogEventAvro> wc = AvroConsumers.jackson(ATS.avroClass, b, true)) {
+      ATS.avroSpecific().forEach(wc);
     }
-    BidReqs.assertAvroSpecifics(AvroStreams.jackson(BidReqs.avroClass, true, b.asParser()));
+    ATS.assertAvroSpecifics(AvroStreams.jackson(ATS.avroClass, true, b.asParser()));
 
-    b = new TokenBuffer(BidReqs.objectMapper, false);
-    try (WriteConsumer<GenericRecord> wc = AvroConsumers.jackson(BidReqs.avroSchema, b)) {
-      BidReqs.avroGeneric().forEach(wc);
+    b = new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false);
+    try (WriteConsumer<GenericRecord> wc = AvroConsumers.jackson(ATS.avroSchema, b, true)) {
+      ATS.avroGeneric().forEach(wc);
     }
-    BidReqs.assertAvroGenerics(AvroStreams.jackson(BidReqs.avroSchema, true, b.asParser()));
+    ATS.assertAvroGenerics(AvroStreams.jackson(ATS.avroSchema, true, b.asParser()));
 
   }
 }

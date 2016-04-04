@@ -7,7 +7,7 @@ import java.io.IOException;
 class DoubleWriter extends AbstractWriter<Double> {
 
   @Override
-  protected void writeChecked(Double aDouble, JsonGenerator jacksonGenerator) throws IOException {
+  protected void write(Double aDouble, JsonGenerator jacksonGenerator) throws IOException {
     jacksonGenerator.writeNumber(aDouble);
   }
 }

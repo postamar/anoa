@@ -14,13 +14,13 @@ class ProtobufByteStringReader extends AbstractReader<ByteString> {
   @Override
   protected ByteString read(JsonParser jacksonParser) throws IOException {
     final byte[] array = byteArrayReader.read(jacksonParser);
-    return (array == null) ? ByteString.EMPTY : ByteString.copyFrom(array);
+    return (array == null) ? null : ByteString.copyFrom(array);
   }
 
   @Override
   protected ByteString readStrict(JsonParser jacksonParser)
       throws AnoaJacksonTypeException, IOException {
     final byte[] array = byteArrayReader.readStrict(jacksonParser);
-    return (array == null) ? ByteString.EMPTY : ByteString.copyFrom(array);
+    return (array == null) ? null : ByteString.copyFrom(array);
   }
 }

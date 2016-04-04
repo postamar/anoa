@@ -1,9 +1,8 @@
 package com.adgear.anoa.write;
 
-import com.google.openrtb.OpenRtb;
-
-import com.adgear.anoa.BidReqs;
 import com.adgear.anoa.read.ProtobufStreams;
+import com.adgear.anoa.test.AnoaTestSample;
+import com.adgear.anoa.test.ad_exchange.AdExchangeProtobuf;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 import org.junit.Test;
@@ -12,26 +11,29 @@ import java.io.IOException;
 
 public class ProtobufConsumersTest {
 
+  final static AnoaTestSample ATS = new AnoaTestSample();
+
   @Test
   public void testBinary() {
-    BidReqs.assertProtobufObjects(ProtobufStreams.binary(
-        BidReqs.protobufClass,
+    ATS.assertProtobufObjects(ProtobufStreams.binary(
+        ATS.protobufClass,
         true,
-        BidReqs.allAsStream(os -> {
-          try (WriteConsumer<OpenRtb.BidRequest> writeConsumer = ProtobufConsumers.binary(os)) {
-            BidReqs.protobuf().forEach(writeConsumer);
+        ATS.allAsInputStream(os -> {
+          try (WriteConsumer<AdExchangeProtobuf.LogEvent> writeConsumer = ProtobufConsumers
+              .binary(os)) {
+            ATS.protobuf().forEach(writeConsumer);
           }
         })));
   }
 
   @Test
   public void testJackson() throws IOException {
-    TokenBuffer tb = new TokenBuffer(BidReqs.objectMapper, false);
-    try (WriteConsumer<OpenRtb.BidRequest> wc =
-             ProtobufConsumers.jackson(BidReqs.protobufClass, tb)) {
-      BidReqs.protobuf().forEach(wc);
+    TokenBuffer tb = new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false);
+    try (WriteConsumer<AdExchangeProtobuf.LogEvent> wc =
+             ProtobufConsumers.jackson(ATS.protobufClass, tb, true)) {
+      ATS.protobuf().forEach(wc);
     }
-    BidReqs.assertProtobufObjects(
-        ProtobufStreams.jackson(BidReqs.protobufClass, true, tb.asParser()));
+    ATS.assertProtobufObjects(
+        ProtobufStreams.jackson(ATS.protobufClass, true, tb.asParser()));
   }
 }
