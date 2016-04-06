@@ -3,6 +3,9 @@ package com.adgear.anoa.compiler;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 
+/**
+ * Custom Anoa interface java source code generator.
+ */
 public class InterfaceJavaGenerator extends JavaGeneratorBase {
 
   final public boolean withAvro;

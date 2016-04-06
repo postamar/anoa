@@ -11,6 +11,9 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Base class for custom java source code generator.
+ */
 abstract class JavaGeneratorBase extends SpecificCompiler {
 
   final protected String protocolFullName;

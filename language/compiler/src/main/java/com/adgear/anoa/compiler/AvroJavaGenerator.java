@@ -5,6 +5,9 @@ import org.apache.avro.Schema;
 
 import java.io.IOException;
 
+/**
+ * Custom java source code generator for Avro enums and SpecificRecords.
+ */
 public class AvroJavaGenerator extends JavaGeneratorBase {
 
   public AvroJavaGenerator(Protocol protocol) {

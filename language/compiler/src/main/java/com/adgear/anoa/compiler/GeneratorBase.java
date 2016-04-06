@@ -12,6 +12,9 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Base class for generating schema files and java source code.
+ */
 abstract class GeneratorBase implements Generator {
 
   final protected Protocol protocol;

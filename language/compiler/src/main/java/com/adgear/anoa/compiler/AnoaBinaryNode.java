@@ -11,6 +11,9 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.regex.Pattern;
 
+/**
+ * JsonNode for binary values with various text encodings and utility methods.
+ */
 final public class AnoaBinaryNode extends ValueNode {
 
   final private BinaryNode wrapped;

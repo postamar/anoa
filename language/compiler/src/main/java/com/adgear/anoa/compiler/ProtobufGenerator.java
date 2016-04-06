@@ -12,6 +12,9 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * .proto schema generator and Protobuf java source code generator.
+ */
 final class ProtobufGenerator extends GeneratorBase {
 
   final String protocCommand;
@@ -131,7 +134,9 @@ final class ProtobufGenerator extends GeneratorBase {
       case STRING:
         return "string";
       default:
-        return schema.getFullName();
+        return protocol.getNamespace().equals(schema.getNamespace())
+               ? schema.getName()
+               : schema.getFullName();
     }
   }
 

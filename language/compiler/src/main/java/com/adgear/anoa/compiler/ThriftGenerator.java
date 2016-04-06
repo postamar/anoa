@@ -23,6 +23,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * .thrift schema generator and TEnum / TBase java source code generator.
+ */
 final class ThriftGenerator extends GeneratorBase {
 
   final String thriftCommand;
