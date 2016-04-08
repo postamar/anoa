@@ -29,7 +29,7 @@ final public class ${this.mangle($schema.getName())} extends org.apache.avro.spe
   transient private ${this.avroType($field.schema())} ${this.mangle($field.name())};
   transient private java.lang.Boolean ${this.isDefaultFieldName($field)};
 #if ($this.hasExportField($field))
-  transient private ${this.exportType($field.schema())} ${this.exportFieldName($field)};
+  transient private ${this.exportFieldType($field.schema())} ${this.exportFieldName($field)};
 #end
 #end
 

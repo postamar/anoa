@@ -47,7 +47,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #foreach ($field in ${this.fields($schema)})
     transient private java.lang.Boolean ${this.isDefaultFieldName($field)};
 #if ($this.hasProtobufExportField($field))
-    transient private ${this.exportType($field.schema())} export_${this.mangle($field.name())};
+    transient private ${this.exportFieldType($field.schema())} export_${this.mangle($field.name())};
 #end
 #end
 
@@ -121,12 +121,10 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     /** Creates a new wrapped Protobuf message based on an instance of ${this.anoaInterfaceName($schema)}. */
     static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> from(${this.anoaInterfaceName($schema)}<?> instance) {
       ${this.protobufClassName($schema)}.Builder builder = ${this.protobufClassName($schema)}.newBuilder();
-#set ($i = 0)
 #foreach ($field in ${this.fields($schema)})
       if (!instance.${this.generateIsDefaultMethod($schema, $field)}()) {
         builder.${this.protobufImportField($schema, $field)};
       }
-#set ($i = $i + 1)
 #end
       return new Protobuf(builder.build(), null);
     }
@@ -187,7 +185,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #foreach ($field in ${this.fields($schema)})
     transient private java.lang.Boolean ${this.isDefaultFieldName($field)};
 #if ($this.hasThriftExportField($field))
-    transient private ${this.exportType($field.schema())} export_${this.mangle($field.name())};
+    transient private ${this.exportFieldType($field.schema())} export_${this.mangle($field.name())};
 #end
 #end
 
@@ -245,14 +243,10 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     /** Creates a new wrapped Thrift struct based on an instance of ${this.anoaInterfaceName($schema)}. */
     static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> from(${this.anoaInterfaceName($schema)}<?> instance) {
       ${this.thriftClassName($schema)} copy = new ${this.thriftClassName($schema)}();
-#set ($i = 0)
 #foreach ($field in ${this.fields($schema)})
       if (!instance.${this.generateIsDefaultMethod($schema, $field)}()) {
-        copy.setFieldValue(
-            ${this.thriftClassName($schema)}._Fields.values()[$i],
-            ${this.thriftImportValue($schema, $field)});
+        copy.${this.thriftImportField($schema, $field)};
       }
-#set ($i = $i + 1)
 #end
       return new Thrift(copy);
     }

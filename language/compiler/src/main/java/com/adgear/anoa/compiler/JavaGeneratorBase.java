@@ -103,6 +103,16 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
     }
   }
 
+  public String exportFieldType(Schema s) {
+    switch (s.getType()) {
+      case ARRAY:
+      case MAP:
+        return exportType(s);
+      default:
+        return exportValueType(s);
+    }
+  }
+
   public String exportFieldName(Schema.Field field) {
     return "_export_" + mangle(field.name());
   }

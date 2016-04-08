@@ -99,9 +99,17 @@ final class ThriftGenerator extends GeneratorBase {
       case FLOAT:
         return "double";
       case INT:
-        return "i32";
       case LONG:
-        return "i64";
+        switch (getPrecision(schema)) {
+          case 32:
+            return "i32";
+          case 16:
+            return "i16";
+          case 8:
+            return "byte";
+          default:
+            return "i64";
+        }
       case STRING:
         return "string";
       default:
@@ -131,7 +139,6 @@ final class ThriftGenerator extends GeneratorBase {
         return Optional.empty();
     }
   }
-
 
   @Override
   public void generateJava(File schemaRootDir, File javaRootDir)

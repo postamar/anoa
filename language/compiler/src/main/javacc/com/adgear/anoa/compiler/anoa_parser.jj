@@ -194,10 +194,12 @@ SKIP :
 TOKEN :
 {
   < BOOLEAN: "boolean" > | < FALSE: "false" > | < TRUE: "true" >
-| < BYTES: "bytes" > | < STRING: "string" >
-| < FLOAT: "float" > | < DOUBLE: "double" >
-| < INT: "int" > | < LONG: "long" >
-| < LIST: "list" > | < MAP: "map" >
+| < BYTES: "bytes" >  | < STRING: "string" >
+| < INTEGER: "integer" > | < RATIONAL: "rational" > | < F64: "float64" >
+| < I8: "sint8" > | < U8: "uint8" > | < I16: "sint16" >
+| < U16: "uint16" > | < I32: "sint32" > | < U32: "uint32" >
+| < LIST: "list" > | < SORTED_LIST: "sorted_list" > | < SET: "set" >
+| < MAP: "map" >
 }
 
 
@@ -316,10 +318,11 @@ Token Identifier() :
 { Token id; }
 {
   ( id = <BOOLEAN>
-  | id = <BYTES> | id = <STRING>
-  | id = <FLOAT> | id = <DOUBLE>
-  | id = <INT>   | id = <LONG>
-  | id = <LIST>  | id = <MAP>
+  | id = <BYTES>   | id = <STRING>
+  | id = <INTEGER> | id = <RATIONAL>
+  | id = <I8> | id = <U8> | id = <I16> | id = <U16> | id = <I32> | id = <U32>
+  | id = <LIST>    | id = <SORTED_LIST> | id = <SET>
+  | id = <MAP>
   | id = <IDENTIFIER>
   )
   { return id; }
@@ -372,33 +375,47 @@ void FieldDeclaration(List<Field> fields) :
 
 Field FieldType() :
 {
+  Token t;
   Schema type;
-  JsonNode defaultValue = null;
+  JsonNode defaultValue = JsonNodeFactory.instance.arrayNode();
 }
 {
-  ( <BOOLEAN> defaultValue = BooleanDefault()       { type = Schema.create(Type.BOOLEAN); }
-  | <BYTES>   defaultValue = BytesDefault()         { type = Schema.create(Type.BYTES);   }
-  | <DOUBLE>  defaultValue = FloatingPointDefault() { type = Schema.create(Type.DOUBLE);  }
-  | <FLOAT>   defaultValue = FloatingPointDefault() { type = Schema.create(Type.FLOAT);   }
-  | <INT>     defaultValue = IntegerDefault()       { type = Schema.create(Type.INT);     }
-  | <LONG>    defaultValue = IntegerDefault()       { type = Schema.create(Type.LONG);    }
-  | <STRING>  defaultValue = StringDefault()        { type = Schema.create(Type.STRING);  }
-  | <LIST> <LT> type = WrappedType() <GT>
-    {
-      type = Schema.createArray(type);
-      defaultValue = JsonNodeFactory.instance.arrayNode();
-    }
-  | <MAP> <LT> <STRING> <COMMA> type = WrappedType() <GT>
-    {
-      type = Schema.createMap(type);
-      defaultValue = JsonNodeFactory.instance.objectNode();
-    }
-  | type = ReferenceType()
+  (
+    <BOOLEAN>    { type = Schema.create(Type.BOOLEAN); }  defaultValue = BooleanDefault()
+  |
+    <BYTES>      { type = Schema.create(Type.BYTES);   }  defaultValue = BytesDefault()
+  |
+    <STRING>     { type = Schema.create(Type.STRING);  }  defaultValue = StringDefault()
+  |
+    ( t = <RATIONAL> | t = <F64> )
+    type = RationalType(t)
+    defaultValue = RationalDefault(type, t)
+  |
+    ( t = <INTEGER> | t = <I8> | t = <U8> | t = <I16> | t = <U16> | t = <I32> | t = <U32> )
+    type = IntegerType(t)
+    defaultValue = IntegerDefault(type, t)
+  |
+    type = ReferenceType()
     {
       defaultValue = (type.getType() == Type.ENUM)
                      ? TextNode.valueOf(type.getEnumSymbols().get(0))
                      : JsonNodeFactory.instance.objectNode();
     }
+  |
+    <MAP> <LT> <STRING> <COMMA> type = WrappedType() <GT>
+    {
+      type = Schema.createMap(type);
+      defaultValue = JsonNodeFactory.instance.objectNode();
+    }
+  |
+    <LIST> <LT> type = WrappedType() <GT>
+    { type = Schema.createArray(type); }
+  |
+    <SORTED_LIST> <LT> type = WrappedType() <GT>
+    { type = Schema.createArray(type); type.addProp(SORTED_LIST_PROP_KEY, BooleanNode.TRUE); }
+  |
+    <SET> <LT> type = WrappedType() <GT>
+    { type = Schema.createArray(type); type.addProp(SET_PROP_KEY, BooleanNode.TRUE); }
   )
   { return new Field("_UNNAMED", type, getDoc(), defaultValue); }
 }
@@ -428,38 +445,6 @@ JsonNode BytesDefault() :
   { return AnoaBinaryNode.valueOf(baos.toByteArray()); }
 }
 
-JsonNode FloatingPointDefault() :
-{ double d = 0.0; }
-{
-  ( <LPAREN>
-    d = FloatingPointLiteral()
-  <RPAREN> ) ?
-  { return DoubleNode.valueOf(d); }
-}
-
-double FloatingPointLiteral() :
-{ Token t; }
-{
-  t = <FLOATING_POINT_LITERAL>
-  { return this.getFloatLiteral(t); }
-}
-
-JsonNode IntegerDefault() :
-{ long l = 0L; }
-{
-  ( <LPAREN>
-    l = IntegerLiteral()
-  <RPAREN> ) ?
-  { return LongNode.valueOf(l); }
-}
-
-long IntegerLiteral() :
-{ Token t; }
-{
-  t = <INTEGER_LITERAL>
-  { return this.getIntegerLiteral(t); }
-}
-
 JsonNode StringDefault() :
 { String s = ""; }
 {
@@ -476,20 +461,98 @@ String StringLiteral() :
   { return this.getStringLiteral(t); }
 }
 
+Schema RationalType(Token token) :
+{
+  if ("float64".equals(token.image)) {
+    return this.buildRationalType(null, null, null, token);
+  }
+  Number min = null;
+  Number max = null;
+  Long mantissa = null;
+}
+{
+  <LBRACK>
+  ( min = FloatingPointLiteral() | min = IntegerLiteral()) ?
+  <COMMA>
+  ( max = FloatingPointLiteral() | max = IntegerLiteral() ) ?
+  <COMMA>
+  ( mantissa = IntegerLiteral() ) ?
+  <RBRACK>
+  { return this.buildRationalType(min, max, mantissa, token); }
+}
+
+double FloatingPointLiteral() :
+{ Token t; }
+{
+  t = <FLOATING_POINT_LITERAL>
+  { return this.getFloatLiteral(t); }
+}
+
+long IntegerLiteral() :
+{ Token t; }
+{
+  t = <INTEGER_LITERAL>
+  { return this.getIntegerLiteral(t); }
+}
+
+JsonNode RationalDefault(Schema type, Token token) :
+{
+  Double defval = null;
+  long ldefval = 0L;
+}
+{
+  ( <LPAREN> ( defval = FloatingPointLiteral() | ldefval = IntegerLiteral() ) <RPAREN> ) ?
+  {
+    if (defval == null) {
+      defval = (double) ldefval;
+    }
+    return this.getRationalDefault(defval, type, token);
+  }
+}
+
+Schema IntegerType(Token token) :
+{
+  switch(token.image) {
+    case "sint8" : return this.buildIntegerType(-128L, 0x7FL, token);
+    case "uint8" : return this.buildIntegerType(0L, 0xFFL, token);
+    case "sint16": return this.buildIntegerType(-32768L, 0x7FFFL, token);
+    case "uint16": return this.buildIntegerType(0L, 0xFFFFL, token);
+    case "sint32": return this.buildIntegerType((long) 0x80000000, 0x7FFFFFFFL, token);
+    case "uint32": return this.buildIntegerType(0L, 0xFFFFFFFFL, token);
+  }
+  Long min = null;
+  Long max = null;
+}
+{
+  <LBRACK>
+  ( min = IntegerLiteral() ) ?
+  <COMMA>
+  ( max = IntegerLiteral() ) ?
+  <RBRACK>
+  { return this.buildIntegerType(min, max, token); }
+}
+
+JsonNode IntegerDefault(Schema type, Token token) :
+{ long defval = 0L; }
+{
+  ( <LPAREN> defval = IntegerLiteral() <RPAREN> ) ?
+  { return this.getIntegerDefault(defval, type, token); }
+}
 
 Schema WrappedType() :
-{ Schema type; }
 {
-  ( <BOOLEAN> { type = Schema.create(Type.BOOLEAN); }
-  | <BYTES>   { type = Schema.create(Type.BYTES);   }
-  | <DOUBLE>  { type = Schema.create(Type.DOUBLE);  }
-  | <FLOAT>   { type = Schema.create(Type.FLOAT);   }
-  | <INT>     { type = Schema.create(Type.INT);     }
-  | <LONG>    { type = Schema.create(Type.LONG);    }
-  | <STRING>  { type = Schema.create(Type.STRING);  }
+  Token t;
+  Schema type; }
+{
+  ( <BOOLEAN>    { type = Schema.create(Type.BOOLEAN); }
+  | <BYTES>      { type = Schema.create(Type.BYTES);   }
+  | <STRING>     { type = Schema.create(Type.STRING);  }
+  | t = <RATIONAL> type = RationalType(t)
+  | ( t = <INTEGER> | t = <I8> | t = <U8> | t = <I16> | t = <U16> | t = <I32> | t = <U32> )
+    type = IntegerType(t)
   | type = ReferenceType()
   )
-  { return type;}
+  { return type; }
 }
 
 Schema ReferenceType() :

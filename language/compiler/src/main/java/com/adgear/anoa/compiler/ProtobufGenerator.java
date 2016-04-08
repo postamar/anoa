@@ -124,13 +124,12 @@ final class ProtobufGenerator extends GeneratorBase {
       case BYTES:
         return "bytes";
       case DOUBLE:
-        return "double";
       case FLOAT:
-        return "float";
+        return getPrecision(schema) > 32 ? "double" : "float";
       case INT:
-        return "sint32";
       case LONG:
-        return "sint64";
+        return (isUnsigned(schema) ? "uint" : "sint")
+               + (getPrecision(schema) > 32 ? "64" : "32");
       case STRING:
         return "string";
       default:

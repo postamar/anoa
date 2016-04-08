@@ -4,6 +4,8 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.BooleanNode;
+import org.codehaus.jackson.node.DoubleNode;
 import org.codehaus.jackson.node.LongNode;
 
 import java.io.Closeable;
@@ -31,6 +33,19 @@ abstract class AnoaParserBase implements Closeable {
    * Schema.Field property key for field ordinal value.
    */
   static final String ORDINAL_PROP_KEY = "ordinal_";
+
+
+  /**
+   * Schema property key for type modifiers.
+   */
+  static final String SORTED_LIST_PROP_KEY = "sorted";
+  static final String SET_PROP_KEY = "set";
+
+  static final String LOWER_BOUND_PROP_KEY = "min";
+  static final String UPPER_BOUND_PROP_KEY = "max";
+  static final String MANTISSA_BITS_PROP_KEY = "mantissa";
+  static final String UNSIGNED_PROP_KEY = "unsigned";
+
 
   /**
    * Stores last-seen docstring.
@@ -286,7 +301,81 @@ abstract class AnoaParserBase implements Closeable {
   protected String getStringLiteral(Token stringLiteral) {
     String quoted = stringLiteral.image;
     return StringEscapeUtils.unescapeJson(quoted.substring(1, quoted.length() - 1));
+  }
 
+  protected Schema buildIntegerType(Long min, Long max, Token token) throws ParseException {
+    if (min != null && max != null && min > max) {
+      throw error("Invalid range [ " + min + ", " + max + "]", token);
+    }
+    Schema schema = Schema.create(
+        (min == null || max == null
+         || min < ((long) Integer.MIN_VALUE)
+         || max > ((long) Integer.MAX_VALUE))
+        ? Schema.Type.LONG
+        : Schema.Type.INT);
+    if (max != null) {
+      schema.addProp(UPPER_BOUND_PROP_KEY, LongNode.valueOf(max));
+    }
+    if (min != null) {
+      schema.addProp(LOWER_BOUND_PROP_KEY, LongNode.valueOf(min));
+      if (min > 0L) {
+        schema.addProp(UNSIGNED_PROP_KEY, BooleanNode.TRUE);
+      }
+    }
+    return schema;
+  }
+
+  protected JsonNode getIntegerDefault(long value, Schema type, Token token)
+      throws ParseException {
+    JsonNode min = type.getJsonProp(LOWER_BOUND_PROP_KEY);
+    JsonNode max = type.getJsonProp(UPPER_BOUND_PROP_KEY);
+    if (min != null && value < min.getLongValue()) {
+      throw error("Default value " + value + " is lesser than stated lower bound " + min, token);
+    }
+    if (max != null && max.getLongValue() < value) {
+      throw error("Default value " + value + " is greater than stated upper bound " + max, token);
+    }
+    return LongNode.valueOf(value);
+  }
+
+  protected Schema buildRationalType(Number min, Number max, Long mantissa, Token token)
+      throws ParseException {
+    Schema schema = Schema.create((mantissa == null || mantissa > 23)
+                                  ? Schema.Type.DOUBLE
+                                  : Schema.Type.FLOAT);
+    if (max == null) {
+      max = Double.POSITIVE_INFINITY;
+    } else {
+      schema.addProp(UPPER_BOUND_PROP_KEY, DoubleNode.valueOf(max.doubleValue()));
+    }
+    if (min == null) {
+      min = Double.NEGATIVE_INFINITY;
+    } else {
+      schema.addProp(LOWER_BOUND_PROP_KEY, DoubleNode.valueOf(min.doubleValue()));
+    }
+    if (max.doubleValue() < min.doubleValue()) {
+      throw error("Invalid range [ " + min + ", " + max + "]", token);
+    }
+    if (mantissa != null) {
+      if (mantissa < 0 || mantissa > 54) {
+        throw error("Invalid mantissa size, must be in [0, 54]" + mantissa, token);
+      }
+      schema.addProp(MANTISSA_BITS_PROP_KEY, LongNode.valueOf(mantissa));
+    }
+    return schema;
+  }
+
+  protected JsonNode getRationalDefault(double value, Schema type, Token token)
+      throws ParseException {
+    JsonNode min = type.getJsonProp(LOWER_BOUND_PROP_KEY);
+    JsonNode max = type.getJsonProp(UPPER_BOUND_PROP_KEY);
+    if (min != null && value < min.getDoubleValue()) {
+      throw error("Default value " + value + " is lesser than stated lower bound " + min, token);
+    }
+    if (max != null && max.getDoubleValue() < value) {
+      throw error("Default value " + value + " is greater than stated upper bound " + max, token);
+    }
+    return DoubleNode.valueOf(value);
   }
 
   /* PRIVATE METHODS */

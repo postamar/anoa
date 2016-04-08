@@ -19,7 +19,11 @@ class DoubleReader extends AbstractReader<Double> {
       case VALUE_NUMBER_FLOAT:
         return jacksonParser.getDoubleValue();
       case VALUE_NUMBER_INT:
-        return jacksonParser.getValueAsDouble();
+        try {
+          return jacksonParser.getValueAsDouble();
+        } catch (NumberFormatException e) {
+          throw new AnoaJacksonTypeException(e);
+        }
       case VALUE_NULL:
         return null;
       default:

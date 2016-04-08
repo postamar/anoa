@@ -1,9 +1,9 @@
 test_struct {
   1: boolean(true) boolean_field;
-  2: int(-0x7FFFFFFF) int_field;
-  3: long(-0x7FFFFFFFFFFFFFFF) long_field;
-  4: float(0x0.3p10) float_field;
-  5: double(0x1.0P-1074) double_field;
+  2: integer[0,1000](0xFF) int_field;
+  3: integer[,](-0x7FFFFFFFFFFFFFFF) long_field;
+  4: rational[0.0, 256.0, 24](0x0.3p10) float_field;
+  5: float64(0x1.0P-1074) double_field;
   6: bytes(0x00 0x0f 0xf0 0xff) bytes_field;
   7: string("\tpoop\n") string_field char_sequence;
 }
