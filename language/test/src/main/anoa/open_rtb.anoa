@@ -32,7 +32,7 @@ banner {
   9: list<uint8> btype;
 
   /** Blocked creative attributes. See Table 6.3 Creative Attributes. If blank assume all types are allowed. */
-  10: list<uint8> battr;
+  10: list<uint16> battr;
 
   /** Whitelist of content MIME types supported. Popular MIME types include, but are not limited to “image/jpg”, “image/gif” and “application/x-shockwave-flash”.*/
   11: list<string> mimes;

@@ -4,6 +4,8 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.TreeSet;
 
 /**
  * Custom java source code generator for Avro enums and SpecificRecords.
@@ -56,7 +58,7 @@ public class AvroJavaGenerator extends JavaGeneratorBase {
         return "org.apache.avro.generic.GenericData.Array<"
                + avroInnerType(s.getElementType()) + ">";
       case MAP:
-        return "java.util.HashMap<org.apache.avro.util.Utf8,"
+        return "java.util.TreeMap<org.apache.avro.util.Utf8,"
                + avroInnerType(s.getValueType()) + ">";
       default:
         return avroInnerType(s);
@@ -83,40 +85,44 @@ public class AvroJavaGenerator extends JavaGeneratorBase {
   }
 
   public String exportValue(Schema.Field field) {
-    String bytesSupplier = "byte[] b = new byte[bb.remaining()]; "
-                           + "bb.asReadOnlyBuffer().get(b); "
-                           + "return (java.util.function.Supplier<byte[]>)(b::clone);";
     switch (field.schema().getType()) {
       case BYTES:
         return "java.util.Optional.of(" + mangle(field.name()) + ")"
-               + ".map(bb -> {" + bytesSupplier + "}).get()";
+               + ".map(bb -> {" + BYTES_SUPPLIER + "}).get()";
       case ARRAY:
+        String view = "java.util.Collections.unmodifiable"
+                      + (isSet(field.schema()) ? "SortedSet(" : "List(") + mangle(field.name());
+
         switch (field.schema().getElementType().getType()) {
           case BYTES:
-            return "java.util.Collections.unmodifiableList(" + mangle(field.name()) + ".stream()"
-                   + ".map(bb -> {" + bytesSupplier + "})"
+            return view + ".stream().map(bb -> {" + BYTES_SUPPLIER + "})"
                    + ".collect(java.util.stream.Collectors.toCollection("
-                   + "() -> new java.util.ArrayList<>(" + mangle(field.name()) + ".size()))))";
+                   + "() -> new java.util."
+                   + (isSet(field.schema())
+                      ? "TreeSet<>()"
+                      : "ArrayList<>(" + mangle(field.name()) + ".size())")
+                   + ")))";
           case STRING:
           case ENUM:
           case RECORD:
-            return "(" + exportType(field.schema()) + ")(java.util.List<?>) "
-                   + "java.util.Collections.unmodifiableList(" + mangle(field.name()) + ")";
+            return "(" + exportType(field.schema()) + ")(java.util."
+                   + (isSet(field.schema()) ? "SortedSet" : "List") + "<?>) " + view + ")";
           default:
-            return "java.util.Collections.unmodifiableList(" + mangle(field.name()) + ")";
+            return view + ")";
         }
       case MAP:
         if (field.schema().getValueType().getType() == Schema.Type.BYTES) {
-          return "java.util.Collections.unmodifiableMap(" + mangle(field.name()) + ".entrySet()"
-                 + ".stream().collect(java.util.stream.Collectors.toMap("
+          return "java.util.Collections.unmodifiableSortedMap("
+                 + mangle(field.name()) + ".entrySet().stream().collect("
+                 + "java.util.stream.Collectors.toMap("
                  + "e -> (java.lang.CharSequence) e.getKey(), "
-                 + "e -> { java.nio.ByteBuffer bb = e.getValue(); " + bytesSupplier + " }, "
+                 + "e -> { java.nio.ByteBuffer bb = e.getValue(); " + BYTES_SUPPLIER + " }, "
                  + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
-                 + "() -> new java.util.HashMap<java.lang.CharSequence,"
+                 + "() -> new java.util.TreeMap<java.lang.CharSequence,"
                  + "java.util.function.Supplier<byte[]>>(" + mangle(field.name()) + ".size()))))";
         }
-        return "(" + exportType(field.schema())+ ")(java.util.Map<?,?>) "
-               + "java.util.Collections.unmodifiableMap(" + mangle(field.name()) + ")";
+        return "(" + exportType(field.schema())+ ")(java.util.SortedMap<?,?>) "
+               + "java.util.Collections.unmodifiableSortedMap(" + mangle(field.name()) + ")";
     }
     throw new IllegalStateException();
   }
@@ -178,7 +184,7 @@ public class AvroJavaGenerator extends JavaGeneratorBase {
                + "); } }";
       case MAP:
         return "long " + oc + " = " + DECODER + ".readMapStart(); "
-               + name + " = new java.util.HashMap<>((int) " + oc + "); "
+               + name + " = new java.util.TreeMap<>((int) " + oc + "); "
                + "for(; " + oc + " != 0; " + oc + " = " + DECODER + ".mapNext()) { "
                + "for (long " + ic + "= 0; " + ic + " < " + oc + "; " + ic + "++) { "
                + name + ".put(" + DECODER + ".readString(null), "
@@ -208,7 +214,7 @@ public class AvroJavaGenerator extends JavaGeneratorBase {
   }
 
 
-  public String avroValue(Schema schema, Schema.Field field) {
+  public String importValue(Schema schema, Schema.Field field) {
     String get = IMPORTED + "." + generateGetMethod(schema, field) + "()";
     switch (field.schema().getType()) {
       case BYTES:
@@ -219,44 +225,44 @@ public class AvroJavaGenerator extends JavaGeneratorBase {
       case RECORD:
         return avroType(field.schema()) + ".from(" + get + ").get()";
       case ARRAY:
-        String map = "";
-        switch (field.schema().getElementType().getType()) {
-          case BYTES:
-            map = ".map(java.util.function.Supplier::get).map(java.nio.ByteBuffer::wrap)";
-            break;
-          case STRING:
-            map = ".map(Object::toString).map(org.apache.avro.util.Utf8::new)";
-            break;
-          case ENUM:
-          case RECORD:
-            map = ".map(" + avroType(field.schema().getElementType()) + "::from)"
-                  + ".map(java.util.function.Supplier::get)";
-            break;
-        }
-        return get + ".stream()" + map + ".collect(java.util.stream.Collectors.toCollection(() -> "
+        return get + ".stream()" + importArrayMapper(field.schema().getElementType())
+               + ".collect(java.util.stream.Collectors.toCollection(() -> "
                + "new " + avroType(field.schema()) + "(" + get + ".size(), SCHEMA$.getFields().get("
                + field.pos() + ").schema())))";
       case MAP:
-        String fn = "e -> e.getValue()";
-        switch (field.schema().getValueType().getType()) {
-          case BYTES:
-            fn = "e -> java.nio.ByteBuffer.wrap(e.getValue().get())";
-            break;
-          case STRING:
-            fn = "e -> new org.apache.avro.util.Utf8(e.getValue().toString())";
-            break;
-          case ENUM:
-          case RECORD:
-            fn = "e -> " + avroType(field.schema().getValueType()) + ".from(e.getValue()).get()";
-            break;
-        }
         return get + ".entrySet().stream().collect(java.util.stream.Collectors.toMap("
                + "e -> new org.apache.avro.util.Utf8(e.getKey().toString()), "
-               + fn + ", "
+               + importMapValueFunction(field.schema().getValueType()) + ", "
                + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
                + "() -> new " + avroType(field.schema()) + "(" + get + ".size())))";
       default:
         return get;
     }
+  }
+
+  private String importArrayMapper(Schema s) {
+    switch (s.getType()) {
+      case BYTES:
+        return ".map(java.util.function.Supplier::get).map(java.nio.ByteBuffer::wrap)";
+      case STRING:
+        return ".map(Object::toString).map(org.apache.avro.util.Utf8::new)";
+      case ENUM:
+      case RECORD:
+        return ".map(" + avroType(s) + "::from).map(java.util.function.Supplier::get)";
+    }
+    return "";
+  }
+
+  private String importMapValueFunction(Schema s) {
+    switch (s.getType()) {
+      case BYTES:
+        return "e -> java.nio.ByteBuffer.wrap(e.getValue().get())";
+      case STRING:
+        return "e -> new org.apache.avro.util.Utf8(e.getValue().toString())";
+      case ENUM:
+      case RECORD:
+        return "e -> " + avroType(s) + ".from(e.getValue()).get()";
+    }
+    return "e -> e.getValue()";
   }
 }

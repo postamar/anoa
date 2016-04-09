@@ -3,6 +3,8 @@ package com.adgear.anoa.compiler;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 
+import java.util.Collections;
+
 /**
  * Custom Anoa interface java source code generator.
  */
@@ -66,17 +68,17 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
 
   public boolean hasProtobufExportField(Schema.Field field) {
     switch (field.schema().getType()) {
+      case LONG:
+        return (GeneratorBase.getPrecision(field.schema()) == 32);
       case BYTES:
       case ENUM:
       case RECORD:
         return true;
       case ARRAY:
         switch (field.schema().getElementType().getType()) {
-          case BYTES:
-          case INT:
           case LONG:
-          case FLOAT:
-          case DOUBLE:
+            return (GeneratorBase.getPrecision(field.schema().getElementType()) == 32);
+          case BYTES:
           case ENUM:
           case RECORD:
             return true;
@@ -84,11 +86,9 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         return false;
       case MAP:
         switch (field.schema().getValueType().getType()) {
-          case BYTES:
-          case INT:
           case LONG:
-          case FLOAT:
-          case DOUBLE:
+            return (GeneratorBase.getPrecision(field.schema().getValueType()) == 32);
+          case BYTES:
           case ENUM:
           case RECORD:
             return true;
@@ -114,31 +114,18 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
     }
     switch (field.schema().getType()) {
       case ARRAY:
-        switch (field.schema().getElementType().getType()) {
-          case INT:
-          case LONG:
-          case FLOAT:
-          case DOUBLE:
-            value = "((java.util.List<? extends java.lang.Number>) " + value + ")";
-        }
         return "java.util.Collections.unmodifiableList(" + value + ".stream().map("
                + protobufExportArrayMapper(field.schema().getElementType())
                + ").collect(java.util.stream.Collectors.toCollection("
                + "() -> new java.util.ArrayList(" + base + "Count()))))";
       case MAP:
-        switch (field.schema().getValueType().getType()) {
-          case INT:
-          case LONG:
-          case FLOAT:
-          case DOUBLE:
-            value = "((java.util.Map<? extends java.lang.CharSequence,? extends java.lang.Number>) "
-                    + value + ")";
-        }
         return "java.util.Collections.unmodifiableMap(" + value + ".entrySet().stream().collect("
                + "java.util.stream.Collectors.toMap(e -> e.getKey().toString(), "
                + protobufExportMapValueFunction(field.schema().getValueType()) + ", "
                + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
                + "() -> new java.util.HashMap(" + value + ".size()))))";
+      case LONG:
+        return "((long) " + value + ") & 0xFFFFFFFFL";
       case BYTES:
         return "() -> " + value + ".toByteArray()";
       default:
@@ -148,14 +135,11 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
 
   private String protobufExportArrayMapper(Schema s) {
     switch (s.getType()) {
+      case LONG:
+        return "i -> i.longValue() & 0xFFFFFFFFL";
       case BYTES:
         return "bs -> new java.util.function.Supplier<byte[]>() { "
                   + "public byte[] get() { return bs.toByteArray();} }";
-      case INT:
-      case LONG:
-      case FLOAT:
-      case DOUBLE:
-        return "java.lang.Number::" + s.getType().toString().toLowerCase() + "Value";
       default:
         return mangle(s.getFullName()) + ".Protobuf::from";
     }
@@ -163,15 +147,12 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
 
   private String protobufExportMapValueFunction(Schema s) {
     switch (s.getType()) {
-      case BYTES:
-        return  "e -> { com.google.protobuf.ByteString bs = e.getValue(); "
-                + "return new java.util.function.Supplier<byte[]>() { "
-                + "public byte[] get() { return bs.toByteArray();} }; }";
-      case INT:
       case LONG:
-      case FLOAT:
-      case DOUBLE:
-        return "e -> e.getValue()." + s.getType().toString().toLowerCase() + "Value()";
+        return "e -> e.getValue().longValue() & 0xFFFFFFFFL";
+      case BYTES:
+        return "e -> { com.google.protobuf.ByteString bs = e.getValue(); "
+               + "return new java.util.function.Supplier<byte[]>() { "
+               + "public byte[] get() { return bs.toByteArray();} }; }";
       default:
         return "e -> " + mangle(s.getFullName()) + ".Protobuf.from(e.getValue())";
     }
@@ -198,25 +179,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         break;
       case ARRAY:
         setter = "addAll" + setter.substring(3);
-        String map = "";
-        switch (field.schema().getElementType().getType()) {
-          case LONG:
-            if (GeneratorBase.getPrecision(field.schema().getElementType()) == 32) {
-              map = ".map(java.lang.Long::intValue)";
-            }
-            break;
-          case BYTES:
-            map = ".map(java.util.function.Supplier::get)"
-                  + ".map(com.google.protobuf.ByteString::copyFrom)";
-            break;
-          case STRING:
-            map = ".map(java.lang.Object::toString)";
-            break;
-          case ENUM:
-          case RECORD:
-            map = ".map(" + mangle(field.schema().getElementType().getFullName())
-                  + ".Protobuf::from).map(java.util.function.Supplier::get)";
-        }
+        String map = protobufImportArrayMapper(field.schema().getElementType());
         if (!map.isEmpty()) {
           value += ".stream()" + map + ".collect(java.util.stream.Collectors.toCollection("
                    + "() -> new java.util.ArrayList(" + value + ".size())))";
@@ -224,24 +187,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         break;
       case MAP:
         setter = "putAll" + setter.substring(3);
-        String fn = "e -> e.getValue()";
-        switch (field.schema().getValueType().getType()) {
-          case LONG:
-            if (GeneratorBase.getPrecision(field.schema().getValueType()) == 32) {
-              fn = "e -> e.getValue().intValue()";
-            }
-            break;
-          case BYTES:
-            fn = "e -> com.google.protobuf.ByteString.copyFrom(e.getValue().get())";
-            break;
-          case STRING:
-            fn = "e -> e.getValue().toString()";
-            break;
-          case ENUM:
-          case RECORD:
-            fn = "e -> " + mangle(field.schema().getValueType().getFullName())
-                 + ".Protobuf.from(e.getValue()).get()";
-        }
+        String fn = protobufImportMapValueFunction(field.schema().getValueType());
         value += ".entrySet().stream().collect(java.util.stream.Collectors.toMap("
                  + "e -> e.getKey().toString(), " + fn + ", (u,v) -> { "
                  + "throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
@@ -249,6 +195,44 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         break;
     }
     return setter + "(" + value + ")";
+  }
+
+  private String protobufImportArrayMapper(Schema s) {
+    switch (s.getType()) {
+      case LONG:
+        if (GeneratorBase.getPrecision(s) == 32) {
+          return ".map(java.lang.Number::intValue)";
+        }
+        break;
+      case BYTES:
+        return ".map(java.util.function.Supplier::get)"
+               + ".map(com.google.protobuf.ByteString::copyFrom)";
+      case STRING:
+        return ".map(java.lang.Object::toString)";
+      case ENUM:
+      case RECORD:
+        return ".map(" + mangle(s.getFullName()) + ".Protobuf::from)"
+               + ".map(java.util.function.Supplier::get)";
+    }
+    return "";
+  }
+
+  private String protobufImportMapValueFunction(Schema s) {
+    switch (s.getType()) {
+      case LONG:
+        if (GeneratorBase.getPrecision(s.getValueType()) == 32) {
+          return "e -> e.getValue().intValue()";
+        }
+        break;
+      case BYTES:
+        return "e -> com.google.protobuf.ByteString.copyFrom(e.getValue().get())";
+      case STRING:
+        return "e -> e.getValue().toString()";
+      case ENUM:
+      case RECORD:
+        return "e -> " + mangle(s.getFullName()) + ".Protobuf.from(e.getValue()).get()";
+    }
+    return "e -> e.getValue()";
   }
 
   public boolean hasThriftExportField(Schema.Field field) {
@@ -290,7 +274,6 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
                + "() -> new java.util.ArrayList(l.size()))))"
                + ".orElseGet(() -> new java.util.ArrayList())";
       case MAP:
-
         return value + ".map(m -> m.entrySet().stream().collect("
                + "java.util.stream.Collectors.toMap("
                + "e -> e.getKey().toString(), "
@@ -302,11 +285,6 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         return value;
     }
   }
-
-  static private String BYTES_SUPPLIER =
-      "byte[] b = new byte[bb.remaining()]; "
-      + "bb.asReadOnlyBuffer().get(b); "
-      + "return (java.util.function.Supplier<byte[]>)(b::clone);";
 
   private String thriftExportArrayMapper(Schema s) {
     switch (s.getType()) {

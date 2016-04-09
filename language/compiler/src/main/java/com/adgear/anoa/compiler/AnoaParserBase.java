@@ -1,5 +1,7 @@
 package com.adgear.anoa.compiler;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -18,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,7 +41,7 @@ abstract class AnoaParserBase implements Closeable {
   /**
    * Schema property key for type modifiers.
    */
-  static final String SORTED_LIST_PROP_KEY = "sorted";
+  static final String SORTED_PROP_KEY = "sorted";
   static final String SET_PROP_KEY = "set";
 
   static final String LOWER_BOUND_PROP_KEY = "min";
@@ -376,6 +379,22 @@ abstract class AnoaParserBase implements Closeable {
       throw error("Default value " + value + " is greater than stated upper bound " + max, token);
     }
     return DoubleNode.valueOf(value);
+  }
+
+  protected Schema buildCollectionType(Schema elementType, Token token) {
+    Schema type = Schema.createArray(elementType);
+    switch (token.image.toUpperCase()) {
+      case "SET":
+        type.addProp(SET_PROP_KEY, BooleanNode.TRUE);
+        type.addProp(SORTED_PROP_KEY, BooleanNode.TRUE);
+    }
+    return type;
+  }
+
+  protected Schema buildMapType(Schema valueType) {
+    Schema type = Schema.createMap(valueType);
+    type.addProp(SORTED_PROP_KEY, BooleanNode.TRUE);
+    return type;
   }
 
   /* PRIVATE METHODS */

@@ -12,7 +12,7 @@ package $schema.getNamespace();
 @$annotation
 #end
 @org.apache.avro.specific.AvroGenerated
-final public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.SpecificRecordBase implements ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> {
+final public class ${this.mangle($schema.getName())} implements org.apache.avro.specific.SpecificRecord, org.apache.avro.generic.GenericRecord, ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> {
 
   private byte[] _binaryEncoding;
   transient private java.nio.ByteBuffer _binaryEncodingBuffer;
@@ -342,7 +342,7 @@ final public class ${this.mangle($schema.getName())} extends org.apache.avro.spe
   static public ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> from(${this.anoaInterfaceFullName($schema)}<?> instance) {
     ${this.mangle($schema.getName())} copy = new ${this.mangle($schema.getName())}();
 #foreach ($field in ${this.fields($schema)})
-    copy.${this.mangle($field.name())} = ${this.avroValue($schema, $field)};
+    copy.${this.mangle($field.name())} = ${this.importValue($schema, $field)};
 #end
     copy._decoded = true;
     return copy;

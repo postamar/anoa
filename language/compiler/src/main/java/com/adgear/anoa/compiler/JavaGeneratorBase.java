@@ -8,8 +8,12 @@ import org.apache.avro.generic.GenericData;
 import org.codehaus.jackson.JsonNode;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.List;
+import java.util.NavigableMap;
 import java.util.Optional;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  * Base class for custom java source code generator.
@@ -95,12 +99,18 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
       case FLOAT:   return "float";
       case DOUBLE:  return "double";
       case BOOLEAN: return "boolean";
-      case ARRAY:   return "java.util.List<"
+      case ARRAY:   return "java.util." + (isSet(s) ? "SortedSet<" : "List<")
                            + exportValueType(s.getElementType()) + ">";
-      case MAP:     return "java.util.Map<java.lang.CharSequence,"
+      case MAP:     return "java.util.SortedMap<java.lang.CharSequence,"
                            + exportValueType(s.getValueType()) + ">";
       default: return exportValueType(s);
     }
+  }
+
+  protected boolean isSet(Schema s) {
+    return Optional.ofNullable(s.getJsonProp(AnoaParserBase.SET_PROP_KEY))
+        .map(JsonNode::asBoolean)
+        .orElse(false);
   }
 
   public String exportFieldType(Schema s) {
@@ -163,4 +173,9 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
   }
 
   static final public String IMPORTED = "instance";
+
+  static protected String BYTES_SUPPLIER =
+      "byte[] b = new byte[bb.remaining()]; "
+      + "bb.asReadOnlyBuffer().get(b); "
+      + "return (java.util.function.Supplier<byte[]>)(b::clone);";
 }

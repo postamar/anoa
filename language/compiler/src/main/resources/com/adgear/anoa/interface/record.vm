@@ -11,7 +11,7 @@ package $schema.getNamespace();
 #foreach ($annotation in $this.javaAnnotations($schema))
 @$annotation
 #end
-public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.function.Supplier<T>, java.io.Serializable {
+public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.function.Supplier<T>, java.lang.Comparable<${this.anoaInterfaceName($schema)}<?>>, java.io.Serializable {
 
   default boolean isAvro() { return false; }
   default boolean isProtobuf() { return false; }
