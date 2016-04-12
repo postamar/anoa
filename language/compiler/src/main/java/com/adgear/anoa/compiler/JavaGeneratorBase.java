@@ -10,7 +10,12 @@ import org.codehaus.jackson.JsonNode;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
+/**
+ * Base class for custom java source code generator.
+ */
 abstract class JavaGeneratorBase extends SpecificCompiler {
 
   final protected String protocolFullName;
@@ -92,11 +97,27 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
       case FLOAT:   return "float";
       case DOUBLE:  return "double";
       case BOOLEAN: return "boolean";
-      case ARRAY:   return "java.util.List<"
+      case ARRAY:   return "java.util." + (isSet(s) ? "SortedSet<" : "List<")
                            + exportValueType(s.getElementType()) + ">";
-      case MAP:     return "java.util.Map<java.lang.CharSequence,"
+      case MAP:     return "java.util.SortedMap<java.lang.CharSequence,"
                            + exportValueType(s.getValueType()) + ">";
       default: return exportValueType(s);
+    }
+  }
+
+  protected boolean isSet(Schema s) {
+    return Optional.ofNullable(s.getJsonProp(AnoaParserBase.SET_PROP_KEY))
+        .map(JsonNode::asBoolean)
+        .orElse(false);
+  }
+
+  public String exportFieldType(Schema s) {
+    switch (s.getType()) {
+      case ARRAY:
+      case MAP:
+        return exportType(s);
+      default:
+        return exportValueType(s);
     }
   }
 
@@ -150,4 +171,51 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
   }
 
   static final public String IMPORTED = "instance";
+
+  static protected String BYTES_SUPPLIER =
+      "byte[] b = new byte[bb.remaining()]; "
+      + "bb.asReadOnlyBuffer().get(b); "
+      + "return (java.util.function.Supplier<byte[]>)(b::clone);";
+
+
+  protected String avroInnerType(Schema s) {
+    switch (s.getType()) {
+      case STRING:  return "org.apache.avro.util.Utf8";
+      case BYTES:   return "java.nio.ByteBuffer";
+      case INT:     return "java.lang.Integer";
+      case LONG:    return "java.lang.Long";
+      case FLOAT:   return "java.lang.Float";
+      case DOUBLE:  return "java.lang.Double";
+      case BOOLEAN: return "java.lang.Boolean";
+      default:      return anoaInterfaceFullName(s) + "Avro";
+    }
+  }
+
+  public String avroType(Schema s) {
+    switch (s.getType()) {
+      case BOOLEAN:
+      case INT:
+      case LONG:
+      case FLOAT:
+      case DOUBLE:
+        return s.getType().toString().toLowerCase();
+      case ARRAY:
+        return "org.apache.avro.generic.GenericData.Array<"
+               + avroInnerType(s.getElementType()) + ">";
+      case MAP:
+        return "java.util.HashMap<org.apache.avro.util.Utf8,"
+               + avroInnerType(s.getValueType()) + ">";
+      default:
+        return avroInnerType(s);
+    }
+  }
+
+  protected String avroEntryType(Schema s) {
+    if (s.getType() == Schema.Type.MAP) {
+      return "java.util.Map.Entry<org.apache.avro.util.Utf8,"
+             + avroInnerType(s.getValueType()) + ">";
+    }
+    return avroInnerType(s.getElementType());
+  }
+
 }

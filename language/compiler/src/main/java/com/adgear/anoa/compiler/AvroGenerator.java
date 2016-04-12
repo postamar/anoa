@@ -6,6 +6,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+/**
+ * Generates Avro protocol schema and Avro enum and SpecificRecord implementations.
+ */
 final class AvroGenerator extends GeneratorBase {
 
   final public String schema;

@@ -5,6 +5,9 @@ import org.apache.avro.Schema;
 
 import java.io.IOException;
 
+/**
+ * Custom java source code generator for Avro enums and SpecificRecords.
+ */
 public class AvroJavaGenerator extends JavaGeneratorBase {
 
   public AvroJavaGenerator(Protocol protocol) {
@@ -28,94 +31,27 @@ public class AvroJavaGenerator extends JavaGeneratorBase {
         .substring(0, super.anoaInterfaceFullName(schema).length() - 4);
   }
 
-  protected String avroInnerType(Schema s) {
-    switch (s.getType()) {
-      case STRING:  return "org.apache.avro.util.Utf8";
-      case BYTES:   return "java.nio.ByteBuffer";
-      case INT:     return "java.lang.Integer";
-      case LONG:    return "java.lang.Long";
-      case FLOAT:   return "java.lang.Float";
-      case DOUBLE:  return "java.lang.Double";
-      case BOOLEAN: return "java.lang.Boolean";
-      default:      return anoaInterfaceFullName(s) + "Avro";
-    }
-  }
-
-  public String avroType(Schema s) {
-    switch (s.getType()) {
-      case BOOLEAN:
-      case INT:
-      case LONG:
-      case FLOAT:
-      case DOUBLE:
-        return s.getType().toString().toLowerCase();
-      case ARRAY:
-        return "org.apache.avro.generic.GenericData.Array<"
-               + avroInnerType(s.getElementType()) + ">";
-      case MAP:
-        return "java.util.HashMap<org.apache.avro.util.Utf8,"
-               + avroInnerType(s.getValueType()) + ">";
-      default:
-        return avroInnerType(s);
-    }
-  }
-
-  protected String avroEntryType(Schema s) {
-    if (s.getType() == Schema.Type.MAP) {
-      return "java.util.Map.Entry<org.apache.avro.util.Utf8,"
-             + avroInnerType(s.getValueType()) + ">";
-    }
-    return avroInnerType(s.getElementType());
-  }
-
-  public boolean hasExportField(Schema.Field field) {
+  public boolean isRecursiveFreeze(Schema.Field field) {
     switch (field.schema().getType()) {
-      case BYTES:
-      case ARRAY:
-      case MAP:
+      case RECORD:
         return true;
-      default:
-        return false;
+      case ARRAY:
+        return (field.schema().getElementType().getType() == Schema.Type.RECORD);
+      case MAP:
+        return (field.schema().getValueType().getType() == Schema.Type.RECORD);
     }
+    return false;
   }
 
-  public String exportValue(Schema.Field field) {
-    String bytesSupplier = "byte[] b = new byte[bb.remaining()]; "
-                           + "bb.asReadOnlyBuffer().get(b); "
-                           + "return (java.util.function.Supplier<byte[]>)(b::clone);";
+  public String recursiveFreeze(Schema.Field field) {
     switch (field.schema().getType()) {
-      case BYTES:
-        return "java.util.Optional.of(" + mangle(field.name()) + ")"
-               + ".map(bb -> {" + bytesSupplier + "}).get()";
       case ARRAY:
-        switch (field.schema().getElementType().getType()) {
-          case BYTES:
-            return "java.util.Collections.unmodifiableList(" + mangle(field.name()) + ".stream()"
-                   + ".map(bb -> {" + bytesSupplier + "})"
-                   + ".collect(java.util.stream.Collectors.toCollection("
-                   + "() -> new java.util.ArrayList<>(" + mangle(field.name()) + ".size()))))";
-          case STRING:
-          case ENUM:
-          case RECORD:
-            return "(" + exportType(field.schema()) + ")(java.util.List<?>) "
-                   + "java.util.Collections.unmodifiableList(" + mangle(field.name()) + ")";
-          default:
-            return "java.util.Collections.unmodifiableList(" + mangle(field.name()) + ")";
-        }
+        return mangle(field.name()) + ".forEach(e -> e.freeze())";
       case MAP:
-        if (field.schema().getValueType().getType() == Schema.Type.BYTES) {
-          return "java.util.Collections.unmodifiableMap(" + mangle(field.name()) + ".entrySet()"
-                 + ".stream().collect(java.util.stream.Collectors.toMap("
-                 + "e -> (java.lang.CharSequence) e.getKey(), "
-                 + "e -> { java.nio.ByteBuffer bb = e.getValue(); " + bytesSupplier + " }, "
-                 + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
-                 + "() -> new java.util.HashMap<java.lang.CharSequence,"
-                 + "java.util.function.Supplier<byte[]>>(" + mangle(field.name()) + ".size()))))";
-        }
-        return "(" + exportType(field.schema())+ ")(java.util.Map<?,?>) "
-               + "java.util.Collections.unmodifiableMap(" + mangle(field.name()) + ")";
+        return mangle(field.name()) + ".forEach((k, v) -> v.freeze())";
+      default:
+        return mangle(field.name()) + ".freeze()";
     }
-    throw new IllegalStateException();
   }
 
   static final public String ENCODER = "_encoder";
@@ -202,58 +138,5 @@ public class AvroJavaGenerator extends JavaGeneratorBase {
         )) + ".decode(" + DECODER + ")";
     }
     throw new IllegalStateException();
-  }
-
-
-  public String avroValue(Schema schema, Schema.Field field) {
-    String get = IMPORTED + "." + generateGetMethod(schema, field) + "()";
-    switch (field.schema().getType()) {
-      case BYTES:
-        return "java.nio.ByteBuffer.wrap(" + get + ".get())";
-      case STRING:
-        return "new org.apache.avro.util.Utf8(" + get + ".toString())";
-      case ENUM:
-      case RECORD:
-        return avroType(field.schema()) + ".from(" + get + ").get()";
-      case ARRAY:
-        String map = "";
-        switch (field.schema().getElementType().getType()) {
-          case BYTES:
-            map = ".map(java.util.function.Supplier::get).map(java.nio.ByteBuffer::wrap)";
-            break;
-          case STRING:
-            map = ".map(Object::toString).map(org.apache.avro.util.Utf8::new)";
-            break;
-          case ENUM:
-          case RECORD:
-            map = ".map(" + avroType(field.schema().getElementType()) + "::from)"
-                  + ".map(java.util.function.Supplier::get)";
-            break;
-        }
-        return get + ".stream()" + map + ".collect(java.util.stream.Collectors.toCollection(() -> "
-               + "new " + avroType(field.schema()) + "(" + get + ".size(), SCHEMA$.getFields().get("
-               + field.pos() + ").schema())))";
-      case MAP:
-        String fn = "e -> e.getValue()";
-        switch (field.schema().getValueType().getType()) {
-          case BYTES:
-            fn = "e -> java.nio.ByteBuffer.wrap(e.getValue().get())";
-            break;
-          case STRING:
-            fn = "e -> new org.apache.avro.util.Utf8(e.getValue().toString())";
-            break;
-          case ENUM:
-          case RECORD:
-            fn = "e -> " + avroType(field.schema().getValueType()) + ".from(e.getValue()).get()";
-            break;
-        }
-        return get + ".entrySet().stream().collect(java.util.stream.Collectors.toMap("
-               + "e -> new org.apache.avro.util.Utf8(e.getKey().toString()), "
-               + fn + ", "
-               + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
-               + "() -> new " + avroType(field.schema()) + "(" + get + ".size())))";
-      default:
-        return get;
-    }
   }
 }

@@ -6,6 +6,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+/**
+ * Generates Anoa java interfaces.
+ */
 class InterfaceGenerator extends GeneratorBase {
 
   final boolean withAvro;

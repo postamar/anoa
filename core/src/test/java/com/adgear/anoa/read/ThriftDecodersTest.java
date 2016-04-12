@@ -41,6 +41,18 @@ public class ThriftDecodersTest {
 
   @Test
   public void testJackson() {
+    int i = 0;
+    for (LogEventThrift actual : ATS.jsonObjects()
+        .map(TreeNode::traverse)
+        .map(ThriftDecoders.jackson(ATS.thriftClass, true)).collect(Collectors.toList())) {
+
+      LogEventThrift expected = ATS.thrift().skip(i++).findFirst().get();
+      if (!expected.equals(actual)) {
+        Assert.assertEquals(expected.getRequest().getTmax(), actual.getRequest().getTmax());
+        Assert.assertEquals(expected, actual);
+      }
+    }
+
     ATS.assertThriftObjects(
         ATS.jsonObjects()
             .map(TreeNode::traverse)

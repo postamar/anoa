@@ -7,13 +7,13 @@ bytes {
 enum bit [ OFF, ON ]
 
 variant {
-  1: int(-1) int_variant;
-  2: long(-1) long_variant;
-  3: float(-1.0) float_variant;
-  4: double(-1.0) double_variant;
-  5: boolean(true) boolean_variant;
-  6: string("foo") string_variant;
-  7: bytes(0x01 0x02 0x03) bytes_variant;
+  10: uint32(1) int_variant;
+  20: integer[,](-1) long_variant;
+  30: rational[,,23](-1.0) float_variant;
+  40: float64(-1.0) double_variant;
+  50: boolean(true) boolean_variant;
+  60: string("foo") string_variant;
+  70: bytes(0x01 0x02 0x03) bytes_variant;
 }
 
 nested {
@@ -21,13 +21,15 @@ nested {
   2: `bytes` struct_field;
   3: list<bit> enum_list_field;
   4: list<`bytes`> struct_list_field;
-  5: map<string,bit> enum_map_field;
-  6: map<string,`bytes`> struct_map_field;
+  5: set<bit> enum_set_field;
+  6: set<`bytes`> struct_set_field;
+  7: map<string,bit> enum_map_field;
+  8: map<string,`bytes`> struct_map_field;
 
-  8: map<string,string> @removed foo, bar;
+  9: map<string,string> @removed foo, bar;
 
-  10: list<float> @deprecated float_list_field;
-  11: map<string,float> @deprecated float_map_field;
+  10: list<rational[,,23]> @deprecated float_list_field;
+  11: map<string,rational[,,23]> @deprecated float_map_field;
 
   12: variant variant;
 }

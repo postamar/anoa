@@ -91,7 +91,7 @@ public class TestSample {
     DatumReader<LogEventAvro> specificReader = new SpecificDatumReader<>(avroClass);
     for (String json : AVRO.jsonStrings) {
       Decoder decoder = DecoderFactory.get().jsonDecoder(avroSchema, json);
-      avroPojos.add(specificReader.read(null, decoder));
+      avroPojos.add(specificReader.read(null, decoder).freeze());
     }
     ByteArrayOutputStream osBatch = new ByteArrayOutputStream();
     DatumWriter<LogEventAvro> specificWriter = new SpecificDatumWriter<>(avroClass);

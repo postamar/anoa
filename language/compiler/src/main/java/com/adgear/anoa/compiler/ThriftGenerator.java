@@ -12,6 +12,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,6 +24,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * .thrift schema generator and TEnum / TBase java source code generator.
+ */
 final class ThriftGenerator extends GeneratorBase {
 
   final String thriftCommand;
@@ -78,12 +82,25 @@ final class ThriftGenerator extends GeneratorBase {
   private String fieldType(Schema schema) {
     switch (schema.getType()) {
       case ARRAY:
-        return "list<" + wrappedType(schema.getElementType()) + ">";
+        return Optional.ofNullable(schema.getJsonProp(AnoaParserBase.SET_PROP_KEY))
+            .filter(JsonNode::asBoolean)
+            .map(__ -> "set<").orElse("list<") + wrappedType(schema.getElementType()) + ">";
       case MAP:
         return "map<string," + wrappedType(schema.getValueType()) + ">";
       default:
         return wrappedType(schema);
     }
+  }
+
+  static int getThriftPrecision(Schema schema) {
+    final long lb = Optional.ofNullable(schema.getJsonProp(AnoaParserBase.LOWER_BOUND_PROP_KEY))
+        .map(JsonNode::asLong)
+        .orElse(Long.MIN_VALUE);
+    final long ub = Optional.ofNullable(schema.getJsonProp(AnoaParserBase.UPPER_BOUND_PROP_KEY))
+        .map(JsonNode::asLong)
+        .orElse(Long.MAX_VALUE);
+    final long b = Math.max(Math.abs(lb), Math.abs(ub));
+    return (b < 0x80000000L) ? ((b < 0x8000L) ? ((b < 0x80L) ? 8 : 16) : 32) : 64;
   }
 
   private String wrappedType(Schema schema) {
@@ -96,9 +113,17 @@ final class ThriftGenerator extends GeneratorBase {
       case FLOAT:
         return "double";
       case INT:
-        return "i32";
       case LONG:
-        return "i64";
+        switch (getThriftPrecision(schema)) {
+          case 32:
+            return "i32";
+          case 16:
+            return "i16";
+          case 8:
+            return "byte";
+          default:
+            return "i64";
+        }
       case STRING:
         return "string";
       default:
@@ -128,7 +153,6 @@ final class ThriftGenerator extends GeneratorBase {
         return Optional.empty();
     }
   }
-
 
   @Override
   public void generateJava(File schemaRootDir, File javaRootDir)
