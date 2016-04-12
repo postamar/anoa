@@ -1,9 +1,9 @@
 # anoa
 
-Anoa is a Java 8 library, language, compiler and Maven plugin for serializing structured data with
-[Avro](https://avro.apache.org), [Protobuf](https://developers.google.com/protocol-buffers/),
-[Thrift](https://thrift.apache.org) and [Jackson](https://github.com/FasterXML/jackson) in a sane
-and consistent manner.
+Anoa is a Java 8 library, language, compiler and Maven plugin for accessing and serializing
+structured data with [Avro](https://avro.apache.org),
+[Protobuf](https://developers.google.com/protocol-buffers/), [Thrift](https://thrift.apache.org) and
+[Jackson](https://github.com/FasterXML/jackson) in a sane and consistent manner.
 
 ## Rationale
 
@@ -28,8 +28,7 @@ Anoa glues these tools together and exposes them with a consistent API:
     boilerplate. Exception-handling facilities are provided for dealing with broken data in batch
     de/serialization.
   * Last but not least the Anoa tools provide comprehensive Jackson support. This allows conversion
-    of an Avro, Protobuf or Thrift object to and from a natural representation as a JSON object as
-    long as the schema allows it.
+    of an Avro, Protobuf or Thrift object to and from a natural representation as a JSON object.
 
 ## Project Structure
 
