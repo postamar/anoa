@@ -10,8 +10,6 @@ import org.codehaus.jackson.JsonNode;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 /**
  * Base class for custom java source code generator.
@@ -79,7 +77,7 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
 
   public String exportValueType(Schema s) {
     switch (s.getType()) {
-      case STRING:  return "java.lang.CharSequence";
+      case STRING:  return "java.lang.String";
       case BYTES:   return "java.util.function.Supplier<byte[]>";
       case INT:     return "java.lang.Integer";
       case LONG:    return "java.lang.Long";
@@ -99,7 +97,7 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
       case BOOLEAN: return "boolean";
       case ARRAY:   return "java.util." + (isSet(s) ? "SortedSet<" : "List<")
                            + exportValueType(s.getElementType()) + ">";
-      case MAP:     return "java.util.SortedMap<java.lang.CharSequence,"
+      case MAP:     return "java.util.SortedMap<java.lang.String,"
                            + exportValueType(s.getValueType()) + ">";
       default: return exportValueType(s);
     }

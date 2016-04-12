@@ -6,7 +6,6 @@ import com.adgear.anoa.test.AnoaTestSample;
 import com.adgear.anoa.test.ad_exchange.LogEvent;
 import com.adgear.anoa.test.ad_exchange.LogEventAvro;
 import com.adgear.anoa.test.ad_exchange.LogEventType;
-import com.adgear.anoa.test.ad_exchange.LogEventTypeAvro;
 import com.fasterxml.jackson.core.TreeNode;
 
 import org.junit.Assert;

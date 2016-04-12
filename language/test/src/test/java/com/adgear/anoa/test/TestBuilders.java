@@ -1,13 +1,8 @@
 package com.adgear.anoa.test;
 
-import com.adgear.anoa.test.ad_exchange.AdExchangeProtobuf;
 import com.adgear.anoa.test.ad_exchange.LogEvent;
 import com.adgear.anoa.test.ad_exchange.LogEventAvro;
-import com.adgear.anoa.test.ad_exchange.LogEventThrift;
 
-import org.apache.thrift.protocol.TJSONProtocol;
-import org.apache.thrift.transport.TMemoryBuffer;
-import org.apache.thrift.transport.TTransportFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
