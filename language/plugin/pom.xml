@@ -7,7 +7,7 @@
   <parent>
     <artifactId>anoa-language</artifactId>
     <groupId>com.adgear</groupId>
-    <version>3.0.0-alpha-2</version>
+    <version>3.0.0-alpha-3</version>
   </parent>
 
   <artifactId>anoa-maven-plugin</artifactId>

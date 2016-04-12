@@ -3,8 +3,6 @@ package com.adgear.anoa.compiler;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 
-import java.nio.ByteBuffer;
-
 /**
  * Custom Anoa interface java source code generator.
  */
@@ -84,14 +82,14 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         String ae = "_ae" + field.pos();
         String be = "_be" + field.pos();
         Schema v = field.schema().getValueType();
-        String et = "java.util.Map.Entry<java.lang.CharSequence," + exportValueType(v) + ">";
+        String et = "java.util.Map.Entry<java.lang.String," + exportValueType(v) + ">";
         return "int _cmp = 0; "
                + "java.util.Iterator<" + et + "> " + a + " = " + CMP_A + ".entrySet().iterator(); "
                + "java.util.Iterator<" + et + "> " + b + " = " + CMP_B + ".entrySet().iterator(); "
                + "while (" + a + ".hasNext() && " + b + ".hasNext()) { "
                + et + " " + ae + " = " + a + ".next(); " + et + " " + be + " = " + b + ".next(); "
-               + "if (0 != (_cmp = " + ae
-               + ".getKey().toString().compareTo(" + be + ".getKey().toString()))) return _cmp; "
+               + "if (0 != (_cmp = " + ae + ".getKey().compareTo(" + be + ".getKey()))) "
+               + "return _cmp; "
                + "if (0 != (_cmp = " + compareSimpleField(v, ae + ".getValue()", be + ".getValue()")
                + ")) return _cmp; } "
                + "if (" + a + ".hasNext()) return 1; if (" + b + ".hasNext()) return -1; return 0;";
@@ -107,8 +105,6 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
       case BYTES:
         return "java.nio.ByteBuffer.wrap(" + a + ".get())"
                + ".compareTo(java.nio.ByteBuffer.wrap(" + b + ".get()))";
-      case STRING:
-        return a + ".toString().compareTo(" + b + ".toString())";
       case INT:
         return "java.lang.Integer.compare"
                + (GeneratorBase.isUnsigned(s) ? "Unsigned(" : "(")
@@ -129,6 +125,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
   public boolean hasAvroExportField(Schema.Field field) {
     switch (field.schema().getType()) {
       case BYTES:
+      case STRING:
       case ENUM:
       case RECORD:
       case ARRAY:
@@ -146,6 +143,8 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
       case BYTES:
         return "java.util.Optional.of(" + value + ")"
                + ".map(bb -> {" + BYTES_SUPPLIER + "}).get()";
+      case STRING:
+        return "java.util.Optional.of(" + value + ").map(java.lang.Object::toString).orElse(\"\")";
       case ENUM:
       case RECORD:
         return mangle(field.schema().getFullName()) + ".avro(" + value + ")";
@@ -159,8 +158,6 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         } else {
           switch (field.schema().getElementType().getType()) {
             case STRING:
-              return "(" + exportType(field.schema()) + ")(java.util.List<?>)"
-                     + unmod + "List(" + value + ")";
             case BYTES:
             case ENUM:
             case RECORD:
@@ -180,7 +177,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
                + "e -> e.getKey().toString(), "
                + avroExportMapValueFunction(field.schema().getValueType()) + ", "
                + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
-               + "() -> new java.util.TreeMap<java.lang.CharSequence,"
+               + "() -> new java.util.TreeMap<java.lang.String,"
                + exportValueType(field.schema().getValueType()) + ">())))";
       default:
         return value;
@@ -221,7 +218,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
       case BYTES:
         return "java.nio.ByteBuffer.wrap(" + get + ".get())";
       case STRING:
-        return "new org.apache.avro.util.Utf8(" + get + ".toString())";
+        return "new org.apache.avro.util.Utf8(" + get + ")";
       case ENUM:
       case RECORD:
         return anoaInterfaceFullName(field.schema()) + ".avro(" + get + ").get()";
@@ -232,7 +229,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
                + avroClassName(schema) + ".SCHEMA$.getFields().get("+ field.pos() +").schema())))";
       case MAP:
         return get + ".entrySet().stream().collect(java.util.stream.Collectors.toMap("
-               + "e -> new org.apache.avro.util.Utf8(e.getKey().toString()), "
+               + "e -> new org.apache.avro.util.Utf8(e.getKey()), "
                + avroImportMapValueFunction(field.schema().getValueType()) + ", "
                + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
                + "() -> new " + avroType(field.schema()) + "(" + get + ".size())))";
@@ -246,7 +243,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
       case BYTES:
         return ".map(java.util.function.Supplier::get).map(java.nio.ByteBuffer::wrap)";
       case STRING:
-        return ".map(Object::toString).map(org.apache.avro.util.Utf8::new)";
+        return ".map(org.apache.avro.util.Utf8::new)";
       case ENUM:
       case RECORD:
         return ".map(" + anoaInterfaceFullName(s) + "::avro)"
@@ -260,7 +257,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
       case BYTES:
         return "e -> java.nio.ByteBuffer.wrap(e.getValue().get())";
       case STRING:
-        return "e -> new org.apache.avro.util.Utf8(e.getValue().toString())";
+        return "e -> new org.apache.avro.util.Utf8(e.getValue())";
       case ENUM:
       case RECORD:
         return "e -> " + anoaInterfaceFullName(s) + ".avro(e.getValue()).get()";
@@ -302,7 +299,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
     if (!hasProtobufExportField(field)) {
       if (field.schema().getType() == Schema.Type.ARRAY
           && field.schema().getElementType().getType() == Schema.Type.STRING) {
-        value = "(java.util.List<java.lang.CharSequence>)(java.util.List<?>) " + value;
+        value = "(java.util.List<java.lang.String>)(java.util.List<?>) " + value;
       }
       return value;
     }
@@ -325,10 +322,10 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
       case MAP:
         return "java.util.Collections.unmodifiableSortedMap(" + value + ".entrySet().stream()"
                + ".collect(java.util.stream.Collectors.toMap("
-               + "e -> e.getKey().toString(), "
+               + "e -> e.getKey(), "
                + protobufExportMapValueFunction(field.schema().getValueType()) + ", "
                + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
-               + "() -> new java.util.TreeMap<java.lang.CharSequence,"
+               + "() -> new java.util.TreeMap<java.lang.String,"
                + exportValueType(field.schema().getValueType()) + ">())))";
       case LONG:
         return "((long) " + value + ") & 0xFFFFFFFFL";
@@ -386,9 +383,6 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
       case BYTES:
         value = "com.google.protobuf.ByteString.copyFrom(" + value + ".get())";
         break;
-      case STRING:
-        value += ".toString()";
-        break;
       case ENUM:
       case RECORD:
         value = mangle(field.schema().getFullName()) + ".protobuf(" + value + ").get()";
@@ -405,7 +399,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         setter = "putAll" + setter.substring(3);
         String fn = protobufImportMapValueFunction(field.schema().getValueType());
         value += ".entrySet().stream().collect(java.util.stream.Collectors.toMap("
-                 + "e -> e.getKey().toString(), " + fn + ", (u,v) -> { "
+                 + "e -> e.getKey(), " + fn + ", (u,v) -> { "
                  + "throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
                  + "() -> new java.util.HashMap(" + value + ".size())))";
         break;
@@ -423,8 +417,6 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
       case BYTES:
         return ".map(java.util.function.Supplier::get)"
                + ".map(com.google.protobuf.ByteString::copyFrom)";
-      case STRING:
-        return ".map(java.lang.Object::toString)";
       case ENUM:
       case RECORD:
         return ".map(" + mangle(s.getFullName()) + "::protobuf)"
@@ -442,8 +434,6 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         break;
       case BYTES:
         return "e -> com.google.protobuf.ByteString.copyFrom(e.getValue().get())";
-      case STRING:
-        return "e -> e.getValue().toString()";
       case ENUM:
       case RECORD:
         return "e -> " + mangle(s.getFullName()) + ".protobuf(e.getValue()).get()";
@@ -493,10 +483,10 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
       case MAP:
         return value + ".orElseGet(java.util.Collections::emptyMap).entrySet().stream().collect("
                + "java.util.stream.Collectors.toMap("
-               + "e -> e.getKey().toString(), "
+               + "e -> e.getKey(), "
                + thriftExportMapValueFunction(field.schema().getValueType()) + ", "
                + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
-               + "() -> new java.util.TreeMap<java.lang.CharSequence,"
+               + "() -> new java.util.TreeMap<java.lang.String,"
                + exportValueType(field.schema().getValueType()) + ">()))";
       default:
         return value;
@@ -507,8 +497,6 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
     switch (s.getType()) {
       case BYTES:
         return ".map(bb -> {" + BYTES_SUPPLIER + "})";
-      case STRING:
-        return ".map(java.lang.Object::toString)";
       case INT:
       case LONG:
       case FLOAT:
@@ -525,8 +513,6 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
     switch (s.getType()) {
       case BYTES:
         return "e -> { java.nio.ByteBuffer bb = e.getValue(); " + BYTES_SUPPLIER + " }";
-      case STRING:
-        return "e -> e.getValue().toString()";
       case INT:
       case LONG:
       case FLOAT:
@@ -559,9 +545,6 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
       case BYTES:
         value = "java.nio.ByteBuffer.wrap(" + value + ".get())";
         break;
-      case STRING:
-        value += ".toString()";
-        break;
       case ENUM:
       case RECORD:
         value = mangle(field.schema().getFullName()) + ".thrift(" + value + ").get()";
@@ -574,7 +557,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         break;
       case MAP:
         value += ".entrySet().stream().collect(java.util.stream.Collectors.toMap("
-                 + "e -> e.getKey().toString(), "
+                 + "e -> e.getKey(), "
                  + thriftImportMapValueFunction(field.schema().getValueType()) + ", (u,v) -> {"
                  + "throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
                  + "() -> new java.util.HashMap<>(" + value + ".size())))";
@@ -601,8 +584,6 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         break;
       case BYTES:
         return ".map(java.util.function.Supplier::get).map(java.nio.ByteBuffer::wrap)";
-      case STRING:
-        return ".map(java.lang.Object::toString)";
       case ENUM:
       case RECORD:
         return  ".map(" + mangle(s.getFullName()) + "::thrift)"
@@ -630,8 +611,6 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         break;
       case BYTES:
         return "e -> java.nio.ByteBuffer.wrap(e.getValue().get())";
-      case STRING:
-        return "e -> e.getValue().toString()";
       case ENUM:
       case RECORD:
         return "e -> " + mangle(s.getFullName()) + ".thrift(e.getValue()).get()";

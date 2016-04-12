@@ -277,11 +277,8 @@ objects. Protobuf does this already, unfortunately Avro and Thrift don't and we'
 the source of countless subtle bugs. We try to make the underlying code as fast as possible while
 remaining correct.
 
-The Avro implementation for this example will be `com.adgear.anoa.test.SimpleAvro`. This class will
-also implement `org.apache.avro.specific.SpecificRecord` and thus `get()` will return `this`. The
-Protobuf and Thrift implementations will be `com.adgear.anoa.test.Simple.Protobuf` and
-`com.adgear.anoa.test.Simple.Thrift` respectively. All implementations define static builder methods
-`avro`, `protobuf` and `thrift` for the desired underlying representation.
+The interface defines static methods `avro`, `protobuf` and `thrift` for instantiation based
+on the respective underlying representations.
 
 ## Library
 
