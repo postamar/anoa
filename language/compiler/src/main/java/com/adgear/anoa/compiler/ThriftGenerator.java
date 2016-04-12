@@ -111,17 +111,16 @@ final class ThriftGenerator extends GeneratorBase {
       case DOUBLE:
       case FLOAT:
         return "double";
-      case INT:
       case LONG:
+        return "i64";
+      case INT:
         switch (getThriftPrecision(schema)) {
-          case 32:
-            return "i32";
-          case 16:
-            return "i16";
           case 8:
             return "byte";
+          case 16:
+            return "i16";
           default:
-            return "i64";
+            return "i32";
         }
       case STRING:
         return "string";

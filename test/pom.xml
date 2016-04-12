@@ -7,7 +7,7 @@
   <parent>
     <artifactId>anoa</artifactId>
     <groupId>com.adgear</groupId>
-    <version>3.0.0-alpha-3</version>
+    <version>3.0.0-alpha-4</version>
   </parent>
 
   <artifactId>anoa-test</artifactId>

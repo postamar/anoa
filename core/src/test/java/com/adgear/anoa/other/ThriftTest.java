@@ -22,25 +22,6 @@ public class ThriftTest {
 
   static final AnoaTestSample ATS = new AnoaTestSample();
 
-  /*
-  @Test
-  public void test1() throws Exception {
-    try (FileWriter fw = new FileWriter("/tmp/poop")) {
-      for (String json : ATS.json().collect(Collectors.toList())) {
-        TMemoryBuffer tMemoryBuffer = new TMemoryBuffer(1000);
-        TJSONProtocol tjsonProtocol = new TJSONProtocol(tMemoryBuffer);
-        ThriftDecoders.jackson(LogEventThrift.class, true).apply(
-            new ObjectMapper().readTree(json).traverse()).write(tjsonProtocol);
-
-        fw.write(tMemoryBuffer.toString("UTF-8"));
-        fw.write("\n");
-      }
-      fw.flush();
-    }
-
-  }
-
-  */
   @Test
   public void test() throws Exception {
     final List<LogEventThrift> collected = new ArrayList<>();

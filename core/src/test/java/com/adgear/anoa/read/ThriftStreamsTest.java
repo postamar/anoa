@@ -87,7 +87,7 @@ public class ThriftStreamsTest {
         .entrySet()
         .stream()
         .forEach(e -> System.err.format("%d\t= %s\n", e.getValue().size(), e.getKey()));
-    Assert.assertEquals(13, anoas.stream().filter(Anoa::isPresent).count());
+    Assert.assertEquals(14, anoas.stream().filter(Anoa::isPresent).count());
   }
 
   @Test
