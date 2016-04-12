@@ -6,6 +6,7 @@ import com.adgear.anoa.read.ProtobufDecoders;
 import com.adgear.anoa.test.AnoaTestSample;
 import com.adgear.anoa.test.ad_exchange.AdExchangeProtobuf;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 import org.jooq.lambda.Unchecked;
@@ -13,6 +14,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import junitx.framework.ListAssert;
@@ -54,21 +56,26 @@ public class ProtobufEncodersTest {
     Assert.assertTrue(node.isObject());
     Assert.assertEquals(0, node.size());
 
-    ListAssert.assertEquals(
+    List<String> one =
         ATS.avroSpecific()
             .map(AvroEncoders.jackson(
                 ATS.avroClass,
                 () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
                 false))
-            .map(Unchecked.function(tb -> tb.asParser().readValueAsTree()))
-            .collect(Collectors.toList()),
+            .map(Unchecked.function(tb -> (ObjectNode) tb.asParser().readValueAsTree()))
+            .map(java.lang.Object::toString)
+            .collect(Collectors.toList());
+    List<String> two =
         ATS.protobuf()
             .map(ProtobufEncoders.jackson(
                 ATS.protobufClass,
                 () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
                 false))
-            .map(Unchecked.function(tb -> tb.asParser().readValueAsTree()))
-            .collect(Collectors.toList()));
+            .map(Unchecked.function(tb -> (ObjectNode) tb.asParser().readValueAsTree()))
+            .map(java.lang.Object::toString)
+            .collect(Collectors.toList());
+
+    ListAssert.assertEquals(one, two);
   }
 
     @Test

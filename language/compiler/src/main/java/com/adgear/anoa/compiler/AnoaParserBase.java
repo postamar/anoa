@@ -1,7 +1,5 @@
 package com.adgear.anoa.compiler;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
-
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -20,7 +18,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -382,19 +379,19 @@ abstract class AnoaParserBase implements Closeable {
   }
 
   protected Schema buildCollectionType(Schema elementType, Token token) {
-    Schema type = Schema.createArray(elementType);
+    Schema schema = Schema.createArray(elementType);
     switch (token.image.toUpperCase()) {
       case "SET":
-        type.addProp(SET_PROP_KEY, BooleanNode.TRUE);
-        type.addProp(SORTED_PROP_KEY, BooleanNode.TRUE);
+        schema.addProp(SET_PROP_KEY, BooleanNode.TRUE);
+        schema.addProp(SORTED_PROP_KEY, BooleanNode.TRUE);
     }
-    return type;
+    return schema;
   }
 
   protected Schema buildMapType(Schema valueType) {
-    Schema type = Schema.createMap(valueType);
-    type.addProp(SORTED_PROP_KEY, BooleanNode.TRUE);
-    return type;
+    Schema schema = Schema.createMap(valueType);
+    schema.addProp(SORTED_PROP_KEY, BooleanNode.TRUE);
+    return schema;
   }
 
   /* PRIVATE METHODS */

@@ -112,7 +112,7 @@ struct.
 
     FieldDefinition      ::=  FieldOrdinal ':' FieldType FieldProperty* FieldName? FieldAlias* ';'
     FieldOrdinal         ::=  IntegerLiteral
-    FieldType            ::=  ReferenceType | ListType | MapType | PrimitiveType
+    FieldType            ::=  ReferenceType | SeqType | MapType | PrimitiveType
     FieldName            ::=  Identifier
     FieldAlias           ::=  ','? Identifier
 
@@ -141,29 +141,57 @@ symbol of that type, as in Protobuf 3.
 
     ReferenceType        ::=  QualifiedIdentifier | Identifier | '`' Identifier '`'
 
-A field's type can also be a list or a map of values, whose type is either a struct, or an enum, or
-a primitive type. The field's default value is the empty collection, as in Protobuf 3. At this time,
-only `string` is allowed as a map key type.
+A field's type can also be a list or a set or a map of values, whose type is either a struct, or an
+enum, or a primitive type. The field's default value is the empty collection, as in Protobuf 3. At
+this time, only `string` is allowed as a map key type. Sets and Maps are sorted by key.
 
-    ListType             ::=  'list' '<' ValueType '>'
+    SeqType              ::=  ( 'list' | 'set' ) '<' ValueType '>'
     MapType              ::=  'map' '<' MapKeyType ',' ValueType '>'
     MapKeyType           ::=  'string'
     ValueType            ::=  ReferenceType | PrimitiveValueType
-    PrimitiveValueType   ::=  'boolean' | 'bytes' | 'string' | 'int' | 'long' | 'float' | 'double'
+    PrimitiveValueType   ::=  'boolean' | 'bytes' | 'string' | IntegerType | RationalType
+
+#### Primitive field types and default values
 
 Finally, a field's type can be a primitive type. In this case, the field can also specify a custom
 default value. This custom default value is considered to be part of the field's type: for example,
-`int(1)` is a type, and `int(2)` is another, different type. The standard default values are the
-same ones as in Protobuf 3: zero for numerical types, `false` for the boolean, and the empty string
-for the string types. Consequently, the type `boolean` is equal to the type `boolean(false)`, and
-likewise `int`, `long`, `float`, `double`, `bytes`, `string` are equal to `int(0)`, `long(0L)`,
-`float(0x0p0)`, `double(0x0p0)`, `bytes()` and `string("")`, respectively.
+`string("foo")` is a type, and `string("bar")` is another, different type. The standard default
+values are the same ones as in Protobuf 3: zero for numerical types, `false` for the boolean, and
+the empty string for the string types. Consequently, the type `boolean` is equal to the type
+`boolean(false)`, and likewise `integer[,]`, `rational[,,]`, `bytes`, `string` are equal to
+`integer[,](0)`, `rational[,,](0x0p0)`, `bytes()` and `string("")`, respectively.
 
     PrimitiveType        ::=    'boolean'              ( '(' BooleanLiteral ')' )?
                               | 'bytes'                ( '(' BytesLiteral   ')' )?
-                              | ( 'int' | 'long' )     ( '(' IntegerLiteral ')' )?
-                              | ( 'float' | 'double' ) ( '(' FloatLiteral   ')' )?
+                              | IntegerType            ( '(' IntegerLiteral ')' )?
+                              | RationalType           ( '(' FloatLiteral   ')' )?
                               | 'string'               ( '(' StringLiteral  ')' )?
+
+#### Numerical types
+
+Anoa requests that numerical types specify range and precision information.
+
+    IntegerType          ::=   'sint8' | 'uint8' | 'sint16' | 'uint16' | 'sint32' | 'uint32'
+                              | ( 'integer' IntegerPrecision )
+    RationalType         ::=   'float64'
+                              | ( 'rational' '[' RatBound ',' RatBound ',' Mantissa ']' )
+    IntegerPrecision     ::=  '[' IntegerLiteral? ',' IntegerLiteral? ']'
+    RationalPrecision    ::=  '[' FloatLiteral? ',' FloatLiteral? ',' IntegerLiteral? ']'
+
+The first and second literals are the lower and upper bounds, respectively. They default to `-2^63`
+and `2^63-1` in the integral case, and `-0x1.fffffffffffffP+1023` and `0x1.fffffffffffffP+1023`
+in the rational case. The third literal in the rational precision information is the number of bits
+required for representing the mantissa. If not specified, this corresponds to 53, the setting for
+IEEE 754 doubles.
+
+Aliases are provided for the more common numerical types, `float64` is `rational[,,53]` and
+
+    sint8    =  integer  [          -128, 127          ]
+    uint8    =  integer  [             0, 256          ]
+    sint16   =  integer  [       -32'768, 32'767       ]
+    uint16   =  integer  [             0, 65'536       ]
+    sint32   =  integer  [-2'147'483'648, 2'147'483'647]
+    uint32   =  integer  [             0, 4'294'967'296]
 
 #### Literals
 
@@ -226,16 +254,16 @@ accessing those in an representationally-agnostic manner.
 Consider for example the `simple` struct defined in `com.adgear.anoa.test`:
 
     simple {
-      1: int foo;
+      1: integer[,] foo;
       2: bytes bar;
-      3: double baz;
+      3: rational[,,] baz;
     }
 
 The compiler will generate an interface `com.adgear.anoa.test.Simple` that looks somewhat like this:
 
     public interface Simple<T> extends Supplier<T>, Serializable {
 
-      int getFoo();
+      long getFoo();
       boolean isDefaultFoo();
 
       Supplier<byte[]> getBar();
@@ -253,8 +281,8 @@ remaining correct.
 The Avro implementation for this example will be `com.adgear.anoa.test.SimpleAvro`. This class will
 also implement `org.apache.avro.specific.SpecificRecord` and thus `get()` will return `this`. The
 Protobuf and Thrift implementations will be `com.adgear.anoa.test.Simple.Protobuf` and
-`com.adgear.anoa.test.Simple.Thrift` respectively. All implementtions define static builder methods
-`from`.
+`com.adgear.anoa.test.Simple.Thrift` respectively. All implementations define static builder methods
+`avro`, `protobuf` and `thrift` for the desired underlying representation.
 
 ## Library
 

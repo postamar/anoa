@@ -8,12 +8,10 @@ import org.apache.avro.generic.GenericData;
 import org.codehaus.jackson.JsonNode;
 
 import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.List;
-import java.util.NavigableMap;
 import java.util.Optional;
-import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Base class for custom java source code generator.
@@ -178,4 +176,46 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
       "byte[] b = new byte[bb.remaining()]; "
       + "bb.asReadOnlyBuffer().get(b); "
       + "return (java.util.function.Supplier<byte[]>)(b::clone);";
+
+
+  protected String avroInnerType(Schema s) {
+    switch (s.getType()) {
+      case STRING:  return "org.apache.avro.util.Utf8";
+      case BYTES:   return "java.nio.ByteBuffer";
+      case INT:     return "java.lang.Integer";
+      case LONG:    return "java.lang.Long";
+      case FLOAT:   return "java.lang.Float";
+      case DOUBLE:  return "java.lang.Double";
+      case BOOLEAN: return "java.lang.Boolean";
+      default:      return anoaInterfaceFullName(s) + "Avro";
+    }
+  }
+
+  public String avroType(Schema s) {
+    switch (s.getType()) {
+      case BOOLEAN:
+      case INT:
+      case LONG:
+      case FLOAT:
+      case DOUBLE:
+        return s.getType().toString().toLowerCase();
+      case ARRAY:
+        return "org.apache.avro.generic.GenericData.Array<"
+               + avroInnerType(s.getElementType()) + ">";
+      case MAP:
+        return "java.util.HashMap<org.apache.avro.util.Utf8,"
+               + avroInnerType(s.getValueType()) + ">";
+      default:
+        return avroInnerType(s);
+    }
+  }
+
+  protected String avroEntryType(Schema s) {
+    if (s.getType() == Schema.Type.MAP) {
+      return "java.util.Map.Entry<org.apache.avro.util.Utf8,"
+             + avroInnerType(s.getValueType()) + ">";
+    }
+    return avroInnerType(s.getElementType());
+  }
+
 }

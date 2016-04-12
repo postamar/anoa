@@ -84,6 +84,7 @@ final public class CompilationUnit {
                                    schema.getDoc(),
                                    schema.getNamespace(),
                                    schema.getEnumSymbols());
+        schema.getAliases().forEach(result::addAlias);
         break;
       case RECORD:
         result = Schema.createRecord(schema.getName() + suffix,
@@ -95,15 +96,17 @@ final public class CompilationUnit {
                                           || !(f.getJsonProp("removed").asBoolean()))
                              .map(f -> modifySchema(f, suffix, includeRemoved))
                              .collect(Collectors.toList()));
+        schema.getAliases().forEach(result::addAlias);
         break;
       case ARRAY:
-        return Schema.createArray(modifySchema(schema.getElementType(), suffix, includeRemoved));
+        result = Schema.createArray(modifySchema(schema.getElementType(), suffix, includeRemoved));
+        break;
       case MAP:
-        return Schema.createMap(modifySchema(schema.getValueType(), suffix, includeRemoved));
+        result = Schema.createMap(modifySchema(schema.getValueType(), suffix, includeRemoved));
+        break;
       default:
         return schema;
     }
-    schema.getAliases().forEach(result::addAlias);
     schema.getJsonProps().forEach(result::addProp);
     return result;
   }

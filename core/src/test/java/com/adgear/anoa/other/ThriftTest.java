@@ -10,18 +10,42 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.apache.thrift.protocol.TJSONProtocol;
+import org.apache.thrift.transport.TMemoryBuffer;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class ThriftTest {
 
   static final AnoaTestSample ATS = new AnoaTestSample();
 
+  /*
+  @Test
+  public void test1() throws Exception {
+    try (FileWriter fw = new FileWriter("/tmp/poop")) {
+      for (String json : ATS.json().collect(Collectors.toList())) {
+        TMemoryBuffer tMemoryBuffer = new TMemoryBuffer(1000);
+        TJSONProtocol tjsonProtocol = new TJSONProtocol(tMemoryBuffer);
+        ThriftDecoders.jackson(LogEventThrift.class, true).apply(
+            new ObjectMapper().readTree(json).traverse()).write(tjsonProtocol);
+
+        fw.write(tMemoryBuffer.toString("UTF-8"));
+        fw.write("\n");
+      }
+      fw.flush();
+    }
+
+  }
+
+  */
   @Test
   public void test() throws Exception {
     final List<LogEventThrift> collected = new ArrayList<>();

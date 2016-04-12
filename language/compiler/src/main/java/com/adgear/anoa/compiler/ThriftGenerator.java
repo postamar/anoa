@@ -12,6 +12,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -81,12 +82,25 @@ final class ThriftGenerator extends GeneratorBase {
   private String fieldType(Schema schema) {
     switch (schema.getType()) {
       case ARRAY:
-        return "list<" + wrappedType(schema.getElementType()) + ">";
+        return Optional.ofNullable(schema.getJsonProp(AnoaParserBase.SET_PROP_KEY))
+            .filter(JsonNode::asBoolean)
+            .map(__ -> "set<").orElse("list<") + wrappedType(schema.getElementType()) + ">";
       case MAP:
         return "map<string," + wrappedType(schema.getValueType()) + ">";
       default:
         return wrappedType(schema);
     }
+  }
+
+  static int getThriftPrecision(Schema schema) {
+    final long lb = Optional.ofNullable(schema.getJsonProp(AnoaParserBase.LOWER_BOUND_PROP_KEY))
+        .map(JsonNode::asLong)
+        .orElse(Long.MIN_VALUE);
+    final long ub = Optional.ofNullable(schema.getJsonProp(AnoaParserBase.UPPER_BOUND_PROP_KEY))
+        .map(JsonNode::asLong)
+        .orElse(Long.MAX_VALUE);
+    final long b = Math.max(Math.abs(lb), Math.abs(ub));
+    return (b < 0x80000000L) ? ((b < 0x8000L) ? ((b < 0x80L) ? 8 : 16) : 32) : 64;
   }
 
   private String wrappedType(Schema schema) {
@@ -100,7 +114,7 @@ final class ThriftGenerator extends GeneratorBase {
         return "double";
       case INT:
       case LONG:
-        switch (getPrecision(schema)) {
+        switch (getThriftPrecision(schema)) {
           case 32:
             return "i32";
           case 16:

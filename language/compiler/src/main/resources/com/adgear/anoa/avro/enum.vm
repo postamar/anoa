@@ -12,55 +12,13 @@ package $schema.getNamespace();
 @$annotation
 #end
 @org.apache.avro.specific.AvroGenerated
-public enum ${this.mangle($schema.getName())} implements ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> {
+public enum ${this.mangle($schema.getName())} {
 #foreach ($symbol in ${schema.getEnumSymbols()})
   ${this.mangle($symbol)}#if ($velocityHasNext),#else;#end
 #end
-
-  @Override
-  public boolean isAvro() { return true; }
-
-  @Override
-  public ${this.mangle($schema.getName())} get() { return this; }
-
-  @Override
-  public int getOrdinal() { return this.ordinal(); }
-
-  /** Returns enum instance for the given ${this.anoaInterfaceName($schema)}. */
-  static public ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> from(${this.anoaInterfaceFullName($schema)}<?> instance) {
-    return from(instance.getOrdinal());
-  }
-
-  /** Returns enum instance for the given ordinal, defaults to first enum value. */
-  static public ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> from(int ordinal) {
-    switch (ordinal) {
-#set( $i = 0 )
-#foreach ($symbol in ${schema.getEnumSymbols()})
-      case $i: return ${this.mangle($symbol)};
-#set( $i = $i + 1 )
-#end
-    }
-    return ${this.mangle($schema.getEnumSymbols().get(0))};
-  }
-
-  /** Returns enum instance for the given label, defaults to first enum value. */
-  static public ${this.anoaInterfaceFullName($schema)}<${this.mangle($schema.getName())}> from(java.lang.CharSequence str) {
-    if (str != null) {
-      switch (str.toString().toUpperCase()) {
-#set( $i = 0 )
-#foreach ($symbol in ${schema.getEnumSymbols()})
-        case "${this.mangle($symbol)}": return ${this.mangle($symbol)};
-#set( $i = $i + 1 )
-#end
-      }
-    }
-    return ${this.mangle($schema.getEnumSymbols().get(0))};
-  }
 
   /** Returns Avro enum schema. */
   static public org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   static public final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(${this.escapedSchema($schema)});
-
-  static public final long serialVersionUID = ${this.version($schema)};
 }

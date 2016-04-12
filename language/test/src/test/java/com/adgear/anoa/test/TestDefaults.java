@@ -4,7 +4,6 @@ package com.adgear.anoa.test;
 import com.google.protobuf.ByteString;
 
 import com.adgear.anoa.test.nested.Nested;
-import com.adgear.anoa.test.nested.NestedAvro;
 import com.adgear.anoa.test.nested.NestedProtobuf;
 
 import org.junit.Assert;
@@ -43,8 +42,8 @@ public class TestDefaults {
     Assert.assertFalse(nested.getVariant().isDefaultStringVariant());
   }
 
-  Nested<NestedProtobuf.Nested> nonDefault = Nested.Protobuf.from(
-      NestedProtobuf.Nested.newBuilder()
+  Nested<NestedProtobuf.Nested> nonDefault = Nested.protobuf(
+      Nested.newProtobufBuilder()
           .setEnumField(NestedProtobuf.Enum.ON)
           .addEnumListField(
               NestedProtobuf.Enum.OFF)
@@ -64,19 +63,19 @@ public class TestDefaults {
 
   @Test
   public void testAvro() {
-    testIsDefault(NestedAvro.newBuilder().build());
-    testNonDefault(NestedAvro.from(nonDefault));
+    testIsDefault(Nested.avro(Nested.newAvroBuilder().build()));
+    testNonDefault(Nested.avro(nonDefault));
   }
 
   @Test
   public void testProtobuf() {
-    testIsDefault(Nested.Protobuf.from(NestedProtobuf.Nested.getDefaultInstance()));
+    testIsDefault(Nested.protobuf(NestedProtobuf.Nested.getDefaultInstance()));
     testNonDefault(nonDefault);
   }
 
   @Test
   public void testThrift() {
     testIsDefault(new Nested.Thrift());
-    testNonDefault(Nested.Thrift.from(nonDefault));
+    testNonDefault(Nested.thrift(nonDefault));
   }
 }

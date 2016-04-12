@@ -20,14 +20,18 @@ public class TestJavaSerialization {
   public void testAvro() throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
-    for (LogEvent avro : ts.avroPojos) {
+    for (LogEvent avro : ts.avroSpecific()
+        .map(LogEvent::avro)
+        .collect(Collectors.toList())) {
       oos.writeObject(avro);
     }
     oos.close();
     ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
     ObjectInputStream ois = new ObjectInputStream(bais);
     for (int i = 0; i < ts.avroPojos.size(); i++) {
-      LogEventAvro actual = (LogEventAvro) ois.readObject();
+      Object object = ois.readObject();
+      Assert.assertTrue(object instanceof LogEvent.Avro);
+      LogEventAvro actual = ((LogEvent.Avro) object).get();
       LogEventAvro expected = ts.avroPojos.get(i);
       Assert.assertEquals(expected, actual);
     }
@@ -38,7 +42,7 @@ public class TestJavaSerialization {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
     for (LogEvent proto : ts.protobufPojos.stream()
-        .map(LogEvent.Protobuf::from)
+        .map(LogEvent::protobuf)
         .collect(Collectors.toList())) {
       oos.writeObject(proto);
     }
@@ -46,7 +50,7 @@ public class TestJavaSerialization {
     ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
     ObjectInputStream ois = new ObjectInputStream(bais);
     for (int i = 0; i < ts.protobufPojos.size(); i++) {
-      Assert.assertEquals(LogEvent.Protobuf.from(ts.protobufPojos.get(i)), ois.readObject());
+      Assert.assertEquals(LogEvent.protobuf(ts.protobufPojos.get(i)), ois.readObject());
     }
   }
 
@@ -55,7 +59,7 @@ public class TestJavaSerialization {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
     for (LogEvent thrift : ts.thriftPojos.stream()
-        .map(LogEvent.Thrift::from)
+        .map(LogEvent::thrift)
         .collect(Collectors.toList())) {
       oos.writeObject(thrift);
     }
@@ -63,7 +67,7 @@ public class TestJavaSerialization {
     ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
     ObjectInputStream ois = new ObjectInputStream(bais);
     for (int i = 0; i < ts.thriftPojos.size(); i++) {
-      Assert.assertEquals(LogEvent.Thrift.from(ts.thriftPojos.get(i)), ois.readObject());
+      Assert.assertEquals(LogEvent.thrift(ts.thriftPojos.get(i)), ois.readObject());
     }
   }
 }

@@ -3,7 +3,7 @@ package com.adgear.anoa.compiler;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 
-import java.util.Collections;
+import java.nio.ByteBuffer;
 
 /**
  * Custom Anoa interface java source code generator.
@@ -56,15 +56,218 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
     return anoaInterfaceFullName(schema) + "Thrift";
   }
 
-  public String cast(Schema.Field field) {
+  static public final String OTHER = "other";
+
+
+  static public String generateCmpMethod(Schema schema, Schema.Field field) {
+    return "compare" + generateGetMethod(schema, field).substring(3);
+  }
+
+  static public final String CMP_A = "fa";
+  static public final String CMP_B = "fb";
+
+  public String generateCmpMethodBody(Schema.Field field) {
+    String a = "a_it" + field.pos();
+    String b = "b_it" + field.pos();
     switch (field.schema().getType()) {
-      case MAP:
-        return "(" + exportType(field.schema()) + ")(java.util.Map<?,?>) ";
       case ARRAY:
-        return "(" + exportType(field.schema()) + ")(java.util.List<?>) ";
+        Schema e = field.schema().getElementType();
+        return "int _cmp = 0; "
+               + "java.util.Iterator<" + exportValueType(e) + "> " + a
+               + " = " + CMP_A + ".iterator(); "
+               + "java.util.Iterator<" + exportValueType(e) + "> " + b
+               + " = " + CMP_B+ ".iterator(); "
+               + "while (" + a + ".hasNext() && " + b + ".hasNext()) { if (0 != (_cmp = "
+               + compareSimpleField(e, a + ".next()", b + ".next()") + ")) return _cmp; } "
+               + "if (" + a + ".hasNext()) return 1; if (" + b + ".hasNext()) return -1; return 0;";
+      case MAP:
+        String ae = "_ae" + field.pos();
+        String be = "_be" + field.pos();
+        Schema v = field.schema().getValueType();
+        String et = "java.util.Map.Entry<java.lang.CharSequence," + exportValueType(v) + ">";
+        return "int _cmp = 0; "
+               + "java.util.Iterator<" + et + "> " + a + " = " + CMP_A + ".entrySet().iterator(); "
+               + "java.util.Iterator<" + et + "> " + b + " = " + CMP_B + ".entrySet().iterator(); "
+               + "while (" + a + ".hasNext() && " + b + ".hasNext()) { "
+               + et + " " + ae + " = " + a + ".next(); " + et + " " + be + " = " + b + ".next(); "
+               + "if (0 != (_cmp = " + ae
+               + ".getKey().toString().compareTo(" + be + ".getKey().toString()))) return _cmp; "
+               + "if (0 != (_cmp = " + compareSimpleField(v, ae + ".getValue()", be + ".getValue()")
+               + ")) return _cmp; } "
+               + "if (" + a + ".hasNext()) return 1; if (" + b + ".hasNext()) return -1; return 0;";
+      default:
+        return "return " +  compareSimpleField(field.schema(), CMP_A, CMP_B) + ";";
+    }
+  }
+
+  private String compareSimpleField(Schema s, String a, String b) {
+    switch (s.getType()) {
+      case BOOLEAN:
+        return "((" + a + ") ? 1 : 0) - ((" + b + ") ? 1 : 0)";
+      case BYTES:
+        return "java.nio.ByteBuffer.wrap(" + a + ".get())"
+               + ".compareTo(java.nio.ByteBuffer.wrap(" + b + ".get()))";
+      case STRING:
+        return a + ".toString().compareTo(" + b + ".toString())";
+      case INT:
+        return "java.lang.Integer.compare"
+               + (GeneratorBase.isUnsigned(s) ? "Unsigned(" : "(")
+               + a + ", " + b + ")";
+      case LONG:
+        return "java.lang.Long.compare"
+               + (GeneratorBase.isUnsigned(s) ? "Unsigned(" : "(")
+               + a + ", " + b + ")";
+      case FLOAT:
+        return "java.lang.Float.compare(" + a + ", " + b + ")";
+      case DOUBLE:
+        return "java.lang.Double.compare(" + a + ", " + b + ")";
+      default:
+        return a + ".compareTo(" + b + ")";
+    }
+  }
+
+  public boolean hasAvroExportField(Schema.Field field) {
+    switch (field.schema().getType()) {
+      case BYTES:
+      case ENUM:
+      case RECORD:
+      case ARRAY:
+      case MAP:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  public String avroExportValue(Schema.Field field) {
+    String value = "get()." + mangle(field.name());
+    final String unmod = "java.util.Collections.unmodifiable";
+    switch (field.schema().getType()) {
+      case BYTES:
+        return "java.util.Optional.of(" + value + ")"
+               + ".map(bb -> {" + BYTES_SUPPLIER + "}).get()";
+      case ENUM:
+      case RECORD:
+        return mangle(field.schema().getFullName()) + ".avro(" + value + ")";
+      case ARRAY:
+        if (isSet(field.schema())) {
+          return unmod + "SortedSet(" + value + ".stream()"
+                 + avroExportArrayMapper(field.schema().getElementType())
+                 + ".collect(java.util.stream.Collectors.toCollection("
+                 + "() -> new java.util.TreeSet<" + exportValueType(field.schema().getElementType())
+                 + ">())))";
+        } else {
+          switch (field.schema().getElementType().getType()) {
+            case STRING:
+              return "(" + exportType(field.schema()) + ")(java.util.List<?>)"
+                     + unmod + "List(" + value + ")";
+            case BYTES:
+            case ENUM:
+            case RECORD:
+              return unmod + "List(" + value + ".stream()"
+                     + avroExportArrayMapper(field.schema().getElementType())
+                     + ".collect(java.util.stream.Collectors.toCollection("
+                     + "() -> new java.util.ArrayList<"
+                     + exportValueType(field.schema().getElementType())
+                     + ">(" + value + ".size()))))";
+            default:
+              return unmod + "List(" + value + ")";
+          }
+        }
+      case MAP:
+        return "java.util.Collections.unmodifiableSortedMap(" + value + ".entrySet().stream()"
+               + ".collect(java.util.stream.Collectors.toMap("
+               + "e -> e.getKey().toString(), "
+               + avroExportMapValueFunction(field.schema().getValueType()) + ", "
+               + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
+               + "() -> new java.util.TreeMap<java.lang.CharSequence,"
+               + exportValueType(field.schema().getValueType()) + ">())))";
+      default:
+        return value;
+    }
+  }
+
+  private String avroExportArrayMapper(Schema s) {
+    switch (s.getType()) {
+      case BYTES:
+        return ".map(bb -> {" + BYTES_SUPPLIER + "})";
+      case STRING:
+        return ".map(java.lang.Object::toString)";
+      case ENUM:
+      case RECORD:
+        return ".map(" + mangle(s.getFullName()) + "::avro)";
+      default:
+        return "";
+    }
+  }
+
+  private String avroExportMapValueFunction(Schema s) {
+    switch (s.getType()) {
+      case BYTES:
+        return  "e -> { java.nio.ByteBuffer bb = e.getValue(); " + BYTES_SUPPLIER + " }";
+      case STRING:
+        return "e -> e.getValue().toString()";
+      case ENUM:
+      case RECORD:
+        return "e -> " + mangle(s.getFullName()) + ".avro(e.getValue())";
+      default:
+        return "e -> e.getValue()";
+    }
+  }
+
+  public String avroImportValue(Schema schema, Schema.Field field) {
+    String get = IMPORTED + "." + generateGetMethod(schema, field) + "()";
+    switch (field.schema().getType()) {
+      case BYTES:
+        return "java.nio.ByteBuffer.wrap(" + get + ".get())";
+      case STRING:
+        return "new org.apache.avro.util.Utf8(" + get + ".toString())";
+      case ENUM:
+      case RECORD:
+        return anoaInterfaceFullName(field.schema()) + ".avro(" + get + ").get()";
+      case ARRAY:
+        return get + ".stream()" + avroImportArrayMapper(field.schema().getElementType())
+               + ".collect(java.util.stream.Collectors.toCollection(() -> "
+               + "new " + avroType(field.schema()) + "(" + get + ".size(), "
+               + avroClassName(schema) + ".SCHEMA$.getFields().get("+ field.pos() +").schema())))";
+      case MAP:
+        return get + ".entrySet().stream().collect(java.util.stream.Collectors.toMap("
+               + "e -> new org.apache.avro.util.Utf8(e.getKey().toString()), "
+               + avroImportMapValueFunction(field.schema().getValueType()) + ", "
+               + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
+               + "() -> new " + avroType(field.schema()) + "(" + get + ".size())))";
+      default:
+        return get;
+    }
+  }
+
+  private String avroImportArrayMapper(Schema s) {
+    switch (s.getType()) {
+      case BYTES:
+        return ".map(java.util.function.Supplier::get).map(java.nio.ByteBuffer::wrap)";
+      case STRING:
+        return ".map(Object::toString).map(org.apache.avro.util.Utf8::new)";
+      case ENUM:
+      case RECORD:
+        return ".map(" + anoaInterfaceFullName(s) + "::avro)"
+               + ".map(java.util.function.Supplier::get)";
     }
     return "";
   }
+
+  private String avroImportMapValueFunction(Schema s) {
+    switch (s.getType()) {
+      case BYTES:
+        return "e -> java.nio.ByteBuffer.wrap(e.getValue().get())";
+      case STRING:
+        return "e -> new org.apache.avro.util.Utf8(e.getValue().toString())";
+      case ENUM:
+      case RECORD:
+        return "e -> " + anoaInterfaceFullName(s) + ".avro(e.getValue()).get()";
+    }
+    return "e -> e.getValue()";
+  }
+
 
   public boolean hasProtobufExportField(Schema.Field field) {
     switch (field.schema().getType()) {
@@ -75,6 +278,9 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
       case RECORD:
         return true;
       case ARRAY:
+        if (isSet(field.schema())) {
+          return true;
+        }
         switch (field.schema().getElementType().getType()) {
           case LONG:
             return (GeneratorBase.getPrecision(field.schema().getElementType()) == 32);
@@ -85,15 +291,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         }
         return false;
       case MAP:
-        switch (field.schema().getValueType().getType()) {
-          case LONG:
-            return (GeneratorBase.getPrecision(field.schema().getValueType()) == 32);
-          case BYTES:
-          case ENUM:
-          case RECORD:
-            return true;
-        }
-        return false;
+        return true;
     }
     return false;
   }
@@ -102,59 +300,77 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
     String base = "get()." + generateGetMethod(schema, field).replace("$", "");
     String value = base + ((field.schema().getType() == Schema.Type.ARRAY) ? "List()" : "()");
     if (!hasProtobufExportField(field)) {
-      switch (field.schema().getType()) {
-        case MAP:
-          return "(" + exportType(field.schema()) + ")(java.util.Map<?,?>) " + value;
-        case ARRAY:
-          if (field.schema().getElementType().getType() == Schema.Type.STRING) {
-            return "(java.util.List<java.lang.CharSequence>)(java.util.List<?>) " + value;
-          }
+      if (field.schema().getType() == Schema.Type.ARRAY
+          && field.schema().getElementType().getType() == Schema.Type.STRING) {
+        value = "(java.util.List<java.lang.CharSequence>)(java.util.List<?>) " + value;
       }
       return value;
     }
     switch (field.schema().getType()) {
       case ARRAY:
-        return "java.util.Collections.unmodifiableList(" + value + ".stream().map("
-               + protobufExportArrayMapper(field.schema().getElementType())
-               + ").collect(java.util.stream.Collectors.toCollection("
-               + "() -> new java.util.ArrayList(" + base + "Count()))))";
+        if (isSet(field.schema())) {
+          return "java.util.Collections.unmodifiableSortedSet(" + value + ".stream()"
+                 + protobufExportArrayMapper(field.schema().getElementType())
+                 + ".collect(java.util.stream.Collectors.toCollection("
+                 + "() -> new java.util.TreeSet<"
+                 + exportValueType(field.schema().getElementType()) + ">())))";
+        } else {
+          return "java.util.Collections.unmodifiableList(" + value + ".stream()"
+                 + protobufExportArrayMapper(field.schema().getElementType())
+                 + ".collect(java.util.stream.Collectors.toCollection("
+                 + "() -> new java.util.ArrayList<"
+                 + exportValueType(field.schema().getElementType())
+                 + ">(" + base + "Count()))))";
+        }
       case MAP:
-        return "java.util.Collections.unmodifiableMap(" + value + ".entrySet().stream().collect("
-               + "java.util.stream.Collectors.toMap(e -> e.getKey().toString(), "
+        return "java.util.Collections.unmodifiableSortedMap(" + value + ".entrySet().stream()"
+               + ".collect(java.util.stream.Collectors.toMap("
+               + "e -> e.getKey().toString(), "
                + protobufExportMapValueFunction(field.schema().getValueType()) + ", "
                + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
-               + "() -> new java.util.HashMap(" + value + ".size()))))";
+               + "() -> new java.util.TreeMap<java.lang.CharSequence,"
+               + exportValueType(field.schema().getValueType()) + ">())))";
       case LONG:
         return "((long) " + value + ") & 0xFFFFFFFFL";
       case BYTES:
         return "() -> " + value + ".toByteArray()";
       default:
-        return mangle(field.schema().getFullName()) + ".Protobuf.from(" + value + ")";
+        return mangle(field.schema().getFullName()) + ".protobuf(" + value + ")";
     }
   }
 
   private String protobufExportArrayMapper(Schema s) {
     switch (s.getType()) {
-      case LONG:
-        return "i -> i.longValue() & 0xFFFFFFFFL";
       case BYTES:
-        return "bs -> new java.util.function.Supplier<byte[]>() { "
-                  + "public byte[] get() { return bs.toByteArray();} }";
+        return ".map(bs -> new java.util.function.Supplier<byte[]>() { "
+                  + "public byte[] get() { return bs.toByteArray();} })";
+      case ENUM:
+      case RECORD:
+        return ".map(" + mangle(s.getFullName()) + "::protobuf)";
+      case LONG:
+        if (GeneratorBase.getPrecision(s) == 32) {
+          return ".map(i -> i.longValue() & 0xFFFFFFFFL)";
+        }
       default:
-        return mangle(s.getFullName()) + ".Protobuf::from";
+        return "";
     }
   }
 
   private String protobufExportMapValueFunction(Schema s) {
     switch (s.getType()) {
-      case LONG:
-        return "e -> e.getValue().longValue() & 0xFFFFFFFFL";
       case BYTES:
         return "e -> { com.google.protobuf.ByteString bs = e.getValue(); "
                + "return new java.util.function.Supplier<byte[]>() { "
                + "public byte[] get() { return bs.toByteArray();} }; }";
+      case ENUM:
+      case RECORD:
+        return "e -> " + mangle(s.getFullName()) + ".protobuf(e.getValue())";
+      case LONG:
+        if (GeneratorBase.getPrecision(s) == 32) {
+          return "e -> e.getValue().longValue() & 0xFFFFFFFFL";
+        }
       default:
-        return "e -> " + mangle(s.getFullName()) + ".Protobuf.from(e.getValue())";
+        return "e -> e.getValue()";
     }
   }
 
@@ -175,7 +391,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         break;
       case ENUM:
       case RECORD:
-        value = mangle(field.schema().getFullName()) + ".Protobuf.from(" + value + ").get()";
+        value = mangle(field.schema().getFullName()) + ".protobuf(" + value + ").get()";
         break;
       case ARRAY:
         setter = "addAll" + setter.substring(3);
@@ -211,7 +427,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         return ".map(java.lang.Object::toString)";
       case ENUM:
       case RECORD:
-        return ".map(" + mangle(s.getFullName()) + ".Protobuf::from)"
+        return ".map(" + mangle(s.getFullName()) + "::protobuf)"
                + ".map(java.util.function.Supplier::get)";
     }
     return "";
@@ -230,7 +446,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         return "e -> e.getValue().toString()";
       case ENUM:
       case RECORD:
-        return "e -> " + mangle(s.getFullName()) + ".Protobuf.from(e.getValue()).get()";
+        return "e -> " + mangle(s.getFullName()) + ".protobuf(e.getValue()).get()";
     }
     return "e -> e.getValue()";
   }
@@ -262,25 +478,26 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
       case STRING:
         return value + ".orElse(\"\")";
       case ENUM:
-        return mangle(field.schema().getFullName()) + ".Thrift.from(" + value
+        return mangle(field.schema().getFullName()) + ".thrift(" + value
                + ".map(org.apache.thrift.TEnum::getValue).orElse(0))";
       case RECORD:
-        return mangle(field.schema().getFullName()) + ".Thrift.from(" + value + ".orElseGet("
+        return mangle(field.schema().getFullName()) + ".thrift(" + value + ".orElseGet("
                + thriftClassName(field.schema()) + "::new))";
       case ARRAY:
-        return value + ".map(l -> l.stream()"
+        return value + ".orElseGet(java.util.Collections::empty"
+               + (isSet(field.schema()) ? "Set" : "List") + ").stream()"
                + thriftExportArrayMapper(field.schema().getElementType()) + ".collect("
                + "java.util.stream.Collectors.toCollection("
-               + "() -> new java.util.ArrayList(l.size()))))"
-               + ".orElseGet(() -> new java.util.ArrayList())";
+               + "() -> new java.util." + (isSet(field.schema()) ? "TreeSet" : "ArrayList")
+               + "<" + exportValueType(field.schema().getElementType()) + ">()))";
       case MAP:
-        return value + ".map(m -> m.entrySet().stream().collect("
+        return value + ".orElseGet(java.util.Collections::emptyMap).entrySet().stream().collect("
                + "java.util.stream.Collectors.toMap("
                + "e -> e.getKey().toString(), "
                + thriftExportMapValueFunction(field.schema().getValueType()) + ", "
                + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
-               + "() -> new java.util.HashMap(m.size()))))"
-               + ".orElseGet(() -> new java.util.HashMap())";
+               + "() -> new java.util.TreeMap<java.lang.CharSequence,"
+               + exportValueType(field.schema().getValueType()) + ">()))";
       default:
         return value;
     }
@@ -290,6 +507,8 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
     switch (s.getType()) {
       case BYTES:
         return ".map(bb -> {" + BYTES_SUPPLIER + "})";
+      case STRING:
+        return ".map(java.lang.Object::toString)";
       case INT:
       case LONG:
       case FLOAT:
@@ -297,7 +516,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         return ".map(java.lang.Number::" + s.getType().toString().toLowerCase() + "Value)";
       case ENUM:
       case RECORD:
-        return  ".map(" + mangle(s.getFullName()) + ".Thrift::from)";
+        return  ".map(" + mangle(s.getFullName()) + "::thrift)";
     }
     return "";
   }
@@ -306,6 +525,8 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
     switch (s.getType()) {
       case BYTES:
         return "e -> { java.nio.ByteBuffer bb = e.getValue(); " + BYTES_SUPPLIER + " }";
+      case STRING:
+        return "e -> e.getValue().toString()";
       case INT:
       case LONG:
       case FLOAT:
@@ -313,7 +534,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         return "e -> e.getValue()." + s.getType().toString().toLowerCase() + "Value()";
       case ENUM:
       case RECORD:
-        return "e -> " + mangle(s.getFullName()) + ".Thrift.from(e.getValue())";
+        return "e -> " + mangle(s.getFullName()) + ".thrift(e.getValue())";
     }
     return "e -> e.getValue()";
   }
@@ -328,7 +549,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         break;
       case LONG:
       case INT:
-        switch (GeneratorBase.getPrecision(field.schema())) {
+        switch (ThriftGenerator.getThriftPrecision(field.schema())) {
           case 64: value = "(long) "  + value; break;
           case 32: value = "(int) "   + value; break;
           case 16: value = "(short) " + value; break;
@@ -343,19 +564,20 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         break;
       case ENUM:
       case RECORD:
-        value = mangle(field.schema().getFullName()) + ".Thrift.from(" + value + ").get()";
+        value = mangle(field.schema().getFullName()) + ".thrift(" + value + ").get()";
         break;
       case ARRAY:
         value += ".stream()" + thriftImportArrayMapper(field.schema().getElementType())
                  + ".collect(java.util.stream.Collectors.toCollection(() ->"
-                 + " new java.util.ArrayList(" + value + ".size())))";
+                 + " new java.util." + (isSet(field.schema()) ? "HashSet" : "ArrayList")
+                 + "<>(" + value + ".size())))";
         break;
       case MAP:
         value += ".entrySet().stream().collect(java.util.stream.Collectors.toMap("
                  + "e -> e.getKey().toString(), "
                  + thriftImportMapValueFunction(field.schema().getValueType()) + ", (u,v) -> {"
                  + "throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
-                 + "() -> new java.util.HashMap(" + value + ".size())))";
+                 + "() -> new java.util.HashMap<>(" + value + ".size())))";
     }
     return setter + "(" + value + ")";
   }
@@ -366,7 +588,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         return ".map(java.lang.Float::doubleValue)";
       case LONG:
       case INT:
-        switch (GeneratorBase.getPrecision(s)) {
+        switch (ThriftGenerator.getThriftPrecision(s)) {
           case 64:
             return ".map(java.lang.Number::longValue)";
           case 32:
@@ -383,7 +605,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         return ".map(java.lang.Object::toString)";
       case ENUM:
       case RECORD:
-        return  ".map(" + mangle(s.getFullName()) + ".Thrift::from)"
+        return  ".map(" + mangle(s.getFullName()) + "::thrift)"
                 + ".map(java.util.function.Supplier::get)";
     }
     return "";
@@ -395,7 +617,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         return "e -> e.getValue().doubleValue()";
       case LONG:
       case INT:
-        switch (GeneratorBase.getPrecision(s)) {
+        switch (ThriftGenerator.getThriftPrecision(s)) {
           case 64:
             return "e -> e.getValue().longValue()";
           case 32:
@@ -412,7 +634,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         return "e -> e.getValue().toString()";
       case ENUM:
       case RECORD:
-        return "e -> " + mangle(s.getFullName()) + ".Thrift.from(e.getValue()).get()";
+        return "e -> " + mangle(s.getFullName()) + ".thrift(e.getValue()).get()";
     }
     return "e -> e.getValue()";
   }

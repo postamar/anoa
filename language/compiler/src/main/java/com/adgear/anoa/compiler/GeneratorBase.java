@@ -114,7 +114,6 @@ abstract class GeneratorBase implements Generator {
             .orElse(Long.MIN_VALUE);
         final long ub = Optional.ofNullable(schema.getJsonProp(AnoaParserBase.UPPER_BOUND_PROP_KEY))
             .map(JsonNode::asLong)
-            .map(Math::abs)
             .orElse(Long.MAX_VALUE);
         final long b = Math.max(Math.max(Math.abs(lb), Math.abs(ub)), Math.abs(ub - lb));
         return (b < 0x100000000L) ? ((b < 0x10000L) ? ((b < 0x100L) ? 8 : 16) : 32) : 64;
