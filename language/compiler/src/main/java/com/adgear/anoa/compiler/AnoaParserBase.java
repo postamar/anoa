@@ -304,15 +304,15 @@ abstract class AnoaParserBase implements Closeable {
   }
 
   protected Schema buildIntegerType(Long min, Long max, Token token) throws ParseException {
-    if (min != null && max != null && min > max) {
-      throw error("Invalid range [ " + min + ", " + max + "]", token);
+    Schema schema = Schema.create(Schema.Type.LONG);
+    if (min != null && max != null) {
+      if (min > max) {
+        throw error("Invalid range [ " + min + ", " + max + "]", token);
+      }
+      if (Math.max(Math.max(Math.abs(min), Math.abs(max)), Math.abs(max - min)) < 1L << 32) {
+        schema = Schema.create(Schema.Type.INT);
+      }
     }
-    Schema schema = Schema.create(
-        (min == null || max == null
-         || min < ((long) Integer.MIN_VALUE)
-         || max > ((long) Integer.MAX_VALUE))
-        ? Schema.Type.LONG
-        : Schema.Type.INT);
     if (max != null) {
       schema.addProp(UPPER_BOUND_PROP_KEY, LongNode.valueOf(max));
     }

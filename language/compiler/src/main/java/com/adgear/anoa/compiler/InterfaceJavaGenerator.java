@@ -533,14 +533,15 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
       case FLOAT:
         value = "(double) " + value;
         break;
-      case LONG:
       case INT:
         switch (ThriftGenerator.getThriftPrecision(field.schema())) {
-          case 64: value = "(long) "  + value; break;
-          case 32: value = "(int) "   + value; break;
+          case 8:  value = "(byte) "  + value; break;
           case 16: value = "(short) " + value; break;
-          case 8:  value = "(byte) "  + value;
+          default: value = "(int) "   + value;
         }
+        break;
+      case LONG:
+        value = "(long) " + value;
         break;
       case BYTES:
         value = "java.nio.ByteBuffer.wrap(" + value + ".get())";
