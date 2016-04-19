@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 public class TestDefaults {
 
   void testIsDefault(Nested<?> nested) {
+    Assert.assertTrue(nested.isDefault());
     Assert.assertTrue(nested.isDefaultEnumField());
     Assert.assertTrue(nested.isDefaultEnumListField());
     Assert.assertTrue(nested.isDefaultEnumMapField());
@@ -29,6 +30,7 @@ public class TestDefaults {
   }
 
   void testNonDefault(Nested<?> nested) {
+    Assert.assertFalse(nested.isDefault());
     Assert.assertFalse(nested.isDefaultEnumField());
     Assert.assertFalse(nested.isDefaultEnumListField());
     Assert.assertFalse(nested.isDefaultEnumMapField());
