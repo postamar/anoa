@@ -13,13 +13,22 @@ package $schema.getNamespace();
 #end
 public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.function.Supplier<T>, java.lang.Comparable<${this.anoaInterfaceName($schema)}<?>>, java.io.Serializable {
 
-  default boolean isAvro() { return false; }
-  default boolean isProtobuf() { return false; }
-  default boolean isThrift() { return false; }
+  default boolean wrapsAvro() { return false; }
+  default boolean wrapsProtobuf() { return false; }
+  default boolean wrapsThrift() { return false; }
 
   @Override
-  default int compareTo(${this.anoaInterfaceName($schema)}<?> other) {
+  default int compareTo(${this.anoaInterfaceFullName($schema)}<?> other) {
     return getComparator().compare(this, other);
+  }
+
+  /** True if all fields are set to default values. */
+  default boolean isDefault() {
+    return
+#foreach ($field in ${this.fields($schema)})
+      ${this.generateIsDefaultMethod($schema, $field)}() &&
+#end
+      true;
   }
 
   /** Returns underlying object. */
@@ -37,10 +46,10 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #foreach ($alias in $field.aliases())
 
   @Deprecated
-  default public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, ${this.aliasField($field, $alias)})}() { return ${this.generateGetMethod($schema, $field)}(); }
+  default ${this.exportType($field.schema())} ${this.generateGetMethod($schema, ${this.aliasField($field, $alias)})}() { return ${this.generateGetMethod($schema, $field)}(); }
 
   @Deprecated
-  default public boolean ${this.generateIsDefaultMethod($schema, ${this.aliasField($field, $alias)})}() { return ${this.generateIsDefaultMethod($schema, $field)}(); }
+  default boolean ${this.generateIsDefaultMethod($schema, ${this.aliasField($field, $alias)})}() { return ${this.generateIsDefaultMethod($schema, $field)}(); }
 #end
 #end
 
@@ -49,7 +58,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #if ($this.isDeprecated($schema))
   @Deprecated
 #end
-  static final public class Avro implements ${this.anoaInterfaceName($schema)}<${this.avroClassName($schema)}> {
+  static class Avro implements ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> {
 
     private byte[] binaryEncoding;
     transient private ${this.avroClassName($schema)} wrapped;
@@ -69,7 +78,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     public Avro(byte[] binaryEncoding) { this(null, binaryEncoding); }
 
     @Override
-    public boolean isAvro() { return true; }
+    public boolean wrapsAvro() { return true; }
 
     @Override
     public ${this.avroClassName($schema)} get() {
@@ -125,7 +134,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     public boolean equals(Object other) {
       if (other == this) return true;
       if (other == null && !(other instanceof Avro)) return false;
-      return get().equals(((${this.anoaInterfaceName($schema)}) other).get());
+      return get().equals(((Avro) other).get());
     }
 
     @Override
@@ -166,7 +175,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     }
 
     /** Decodes a Avro message. */
-    static public ${this.anoaInterfaceName($schema)}<${this.avroClassName($schema)}> from(byte[] binaryEncoding) throws java.io.IOException {
+    static public ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> from(byte[] binaryEncoding) throws java.io.IOException {
       return new Avro(decode(binaryEncoding), binaryEncoding);
     }
 
@@ -189,8 +198,11 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     static public final long serialVersionUID = ${this.version($schema)};
   }
 
-  /** Creates a new wrapped Avro message based on an instance of ${this.anoaInterfaceName($schema)}. */
-  static public ${this.anoaInterfaceName($schema)}<${this.avroClassName($schema)}> avro(${this.anoaInterfaceName($schema)}<?> instance) {
+  /** Returns a wrapped Avro message based on an instance of ${this.anoaInterfaceName($schema)}. */
+  static ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> avro(${this.anoaInterfaceFullName($schema)}<?> instance) {
+    if (instance instanceof Avro) {
+      return (Avro) instance;
+    }
     ${this.avroClassName($schema)}.Builder builder = ${this.avroClassName($schema)}.newBuilder();
 #foreach ($field in ${this.fields($schema)})
     if (!instance.${this.generateIsDefaultMethod($schema, $field)}()) {
@@ -201,33 +213,38 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
   }
 
   /** Wraps an existing Avro message. */
-  static public ${this.anoaInterfaceName($schema)}<${this.avroClassName($schema)}> avro(${this.avroClassName($schema)} wrapped) {
+  static ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> avro(${this.avroClassName($schema)} wrapped) {
     assert wrapped != null;
     return new Avro(wrapped.freeze(), null);
   }
 
   /** Returns new Avro builder instance with default values. */
-  static public ${this.avroClassName($schema)}.Builder newAvroBuilder() {
+  static ${this.avroClassName($schema)}.Builder newAvroBuilder() {
     return ${this.avroClassName($schema)}.newBuilder();
   }
 
   /** Returns new Avro builder instance based on existing prototype. */
-  static public ${this.avroClassName($schema)}.Builder newAvroBuilder(${this.avroClassName($schema)} other) {
+  static ${this.avroClassName($schema)}.Builder newAvroBuilder(${this.avroClassName($schema)} other) {
     return ${this.avroClassName($schema)}.newBuilder(other);
   }
 
   /** Returns new Avro builder instance based on existing prototype builder. */
-  static public ${this.avroClassName($schema)}.Builder newAvroBuilder(${this.avroClassName($schema)}.Builder other) {
+  static ${this.avroClassName($schema)}.Builder newAvroBuilder(${this.avroClassName($schema)}.Builder other) {
     return ${this.avroClassName($schema)}.newBuilder(other);
   }
 
+  /** Returns new Avro builder instance based on existing prototype ${this.anoaInterfaceName($schema)}. */
+  static ${this.avroClassName($schema)}.Builder newAvroBuilder(${this.anoaInterfaceFullName($schema)}<?> other) {
+    return newAvroBuilder(avro(other).get());
+  }
+
   /** Returns Avro record class. */
-  static public java.lang.Class<${this.avroClassName($schema)}> getAvroClass() {
+  static java.lang.Class<${this.avroClassName($schema)}> getAvroClass() {
     return ${this.avroClassName($schema)}.class;
   }
 
   /** Returns Avro record schema. */
-  static public org.apache.avro.Schema getAvroSchema() {
+  static org.apache.avro.Schema getAvroSchema() {
     return ${this.avroClassName($schema)}.SCHEMA$;
   }
 #end
@@ -236,7 +253,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #if ($this.isDeprecated($schema))
   @Deprecated
 #end
-  static final public class Protobuf implements ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> {
+  static class Protobuf implements ${this.anoaInterfaceFullName($schema)}<${this.protobufClassName($schema)}> {
 
     private byte[] binaryEncoding;
     transient private ${this.protobufClassName($schema)} wrapped;
@@ -256,7 +273,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     public Protobuf(byte[] binaryEncoding) { this(null, binaryEncoding); }
 
     @Override
-    public boolean isProtobuf() { return true; }
+    public boolean wrapsProtobuf() { return true; }
 
     @Override
     public ${this.protobufClassName($schema)} get() {
@@ -302,7 +319,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     public boolean equals(Object other) {
       if (other == this) return true;
       if (other == null && !(other instanceof Protobuf)) return false;
-      return get().equals(((${this.anoaInterfaceName($schema)}) other).get());
+      return get().equals(((Protobuf) other).get());
     }
 
     @Override
@@ -319,7 +336,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     }
 
     /** Decodes a Protobuf message. */
-    static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> from(byte[] binaryEncoding) throws java.io.IOException {
+    static public ${this.anoaInterfaceFullName($schema)}<${this.protobufClassName($schema)}> from(byte[] binaryEncoding) throws java.io.IOException {
       return new Protobuf(${this.protobufClassName($schema)}.parseFrom(binaryEncoding), binaryEncoding);
     }
 
@@ -330,8 +347,11 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     static public final long serialVersionUID = ${this.version($schema)};
   }
 
-  /** Creates a new wrapped Protobuf message based on an instance of ${this.anoaInterfaceName($schema)}. */
-  static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> protobuf(${this.anoaInterfaceName($schema)}<?> instance) {
+  /** Returns a wrapped Protobuf message based on an instance of ${this.anoaInterfaceName($schema)}. */
+  static ${this.anoaInterfaceFullName($schema)}<${this.protobufClassName($schema)}> protobuf(${this.anoaInterfaceFullName($schema)}<?> instance) {
+    if (instance instanceof Protobuf) {
+      return (Protobuf) instance;
+    }
     ${this.protobufClassName($schema)}.Builder builder = ${this.protobufClassName($schema)}.newBuilder();
 #foreach ($field in ${this.fields($schema)})
     if (!instance.${this.generateIsDefaultMethod($schema, $field)}()) {
@@ -342,38 +362,43 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
   }
 
   /** Wraps an existing Protobuf message. */
-  static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> protobuf(${this.protobufClassName($schema)} wrapped) {
+  static ${this.anoaInterfaceFullName($schema)}<${this.protobufClassName($schema)}> protobuf(${this.protobufClassName($schema)} wrapped) {
     assert wrapped != null;
     return new Protobuf(wrapped, null);
   }
 
   /** Returns new Protobuf builder instance with default values. */
-  static public ${this.protobufClassName($schema)}.Builder newProtobufBuilder() {
+  static ${this.protobufClassName($schema)}.Builder newProtobufBuilder() {
     return ${this.protobufClassName($schema)}.newBuilder();
   }
 
   /** Returns new Protobuf builder instance based on existing prototype. */
-  static public ${this.protobufClassName($schema)}.Builder newProtobufBuilder(${this.protobufClassName($schema)} other) {
+  static ${this.protobufClassName($schema)}.Builder newProtobufBuilder(${this.protobufClassName($schema)} other) {
     return ${this.protobufClassName($schema)}.newBuilder(other);
   }
 
+  /** Returns new Protobuf builder instance based on existing prototype ${this.anoaInterfaceName($schema)}. */
+  static ${this.protobufClassName($schema)}.Builder newProtobufBuilder(${this.anoaInterfaceFullName($schema)}<?> other) {
+    return newProtobufBuilder(protobuf(other).get());
+  }
+
   /** Returns Protobuf class for this struct. */
-  static public java.lang.Class<${this.protobufClassName($schema)}> getProtobufClass() {
+  static java.lang.Class<${this.protobufClassName($schema)}> getProtobufClass() {
     return ${this.protobufClassName($schema)}.class;
   }
 
   /** Returns Protobuf protocol class for this struct. */
-  static public java.lang.Class<${this.protobufProtocolClassName()}> getProtobufProtocolClass() {
+  static java.lang.Class<${this.protobufProtocolClassName()}> getProtobufProtocolClass() {
     return ${this.protobufProtocolClassName()}.class;
   }
 
   /** Returns Protobuf descriptor for this struct. */
-  static public com.google.protobuf.Descriptors.Descriptor getProtobufDescriptor() {
+  static com.google.protobuf.Descriptors.Descriptor getProtobufDescriptor() {
     return ${this.protobufClassName($schema)}.getDescriptor();
   }
 
   /** Returns Protobuf protocol descriptor for this struct. */
-  static public com.google.protobuf.Descriptors.FileDescriptor getProtobufProtocolDescriptor() {
+  static com.google.protobuf.Descriptors.FileDescriptor getProtobufProtocolDescriptor() {
     return ${this.protobufProtocolClassName()}.getDescriptor();
   }
 #end
@@ -382,7 +407,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #if ($this.isDeprecated($schema))
   @Deprecated
 #end
-  static final public class Thrift implements ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> {
+  static class Thrift implements ${this.anoaInterfaceFullName($schema)}<${this.thriftClassName($schema)}> {
 
     private ${this.thriftClassName($schema)} wrapped;
 #foreach ($field in ${this.fields($schema)})
@@ -399,7 +424,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     public Thrift() { this(new ${this.thriftClassName($schema)}()); }
 
     @Override
-    public boolean isThrift() { return true; }
+    public boolean wrapsThrift() { return true; }
 
     @Override
     public ${this.thriftClassName($schema)} get() { return wrapped; }
@@ -452,8 +477,11 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     static public final long serialVersionUID = ${this.version($schema)};
   }
 
-  /** Creates a new wrapped Thrift struct based on an instance of ${this.anoaInterfaceName($schema)}. */
-  static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> thrift(${this.anoaInterfaceName($schema)}<?> instance) {
+  /** Returns a wrapped Thrift struct based on an instance of ${this.anoaInterfaceName($schema)}. */
+  static ${this.anoaInterfaceFullName($schema)}<${this.thriftClassName($schema)}> thrift(${this.anoaInterfaceFullName($schema)}<?> instance) {
+    if (instance instanceof Thrift) {
+      return (Thrift) instance;
+    }
     ${this.thriftClassName($schema)} copy = new ${this.thriftClassName($schema)}();
 #foreach ($field in ${this.fields($schema)})
     if (!instance.${this.generateIsDefaultMethod($schema, $field)}()) {
@@ -465,25 +493,25 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 
   /** Creates a new wrapped Thrift struct copied from an existing instance. */
   @SuppressWarnings("all")
-  static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> thrift(${this.thriftClassName($schema)} instance) {
+  static ${this.anoaInterfaceFullName($schema)}<${this.thriftClassName($schema)}> thrift(${this.thriftClassName($schema)} instance) {
     return new Thrift((${this.thriftClassName($schema)}) instance.deepCopy());
   }
 
   /** Returns Thrift class for this struct. */
-  static public java.lang.Class<${this.thriftClassName($schema)}> getThriftClass() {
+  static java.lang.Class<${this.thriftClassName($schema)}> getThriftClass() {
     return ${this.thriftClassName($schema)}.class;
   }
 
   /** Returns Thrift metadata map for this struct. */
-  static public java.util.Map<${this.thriftClassName($schema)}._Fields, org.apache.thrift.meta_data.FieldMetaData> getThriftMetadataMap() {
+  static java.util.Map<${this.thriftClassName($schema)}._Fields, org.apache.thrift.meta_data.FieldMetaData> getThriftMetadataMap() {
     return ${this.thriftClassName($schema)}.metaDataMap;
   }
 #end
 
-  static final public class Comparator implements java.util.Comparator<${this.anoaInterfaceName($schema)}<?>>, java.io.Serializable {
+  static class Comparator implements java.util.Comparator<${this.anoaInterfaceFullName($schema)}<?>>, java.io.Serializable {
 
     @Override
-    public int compare(${this.anoaInterfaceName($schema)}<?> a, ${this.anoaInterfaceName($schema)}<?> b) {
+    public int compare(${this.anoaInterfaceFullName($schema)}<?> a, ${this.anoaInterfaceFullName($schema)}<?> b) {
       int _cmp;
 #foreach ($field in ${this.fields($schema)})
       if (0 != (_cmp = ${this.generateCmpMethod($schema, $field)}(a, b))) return _cmp;
@@ -492,7 +520,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     }
 #foreach ($field in ${this.fields($schema)})
 
-    private int ${this.generateCmpMethod($schema, $field)} (${this.anoaInterfaceName($schema)}<?> a, ${this.anoaInterfaceName($schema)}<?> b) {
+    private int ${this.generateCmpMethod($schema, $field)} (${this.anoaInterfaceFullName($schema)}<?> a, ${this.anoaInterfaceFullName($schema)}<?> b) {
       final ${this.exportFieldType($field.schema())} fa = a.${this.generateGetMethod($schema, $field)}();
       final ${this.exportFieldType($field.schema())} fb = b.${this.generateGetMethod($schema, $field)}();
       ${this.generateCmpMethodBody($field)}
@@ -504,7 +532,8 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     static public final long serialVersionUID = ${this.version($schema)};
   }
 
-  static public java.util.Comparator<${this.anoaInterfaceName($schema)}<?>> getComparator() {
+  /** Returns comparator instance for ${this.anoaInterfaceName($schema)} objects. */
+  static java.util.Comparator<${this.anoaInterfaceFullName($schema)}<?>> getComparator() {
     return Comparator.INSTANCE;
   }
 }

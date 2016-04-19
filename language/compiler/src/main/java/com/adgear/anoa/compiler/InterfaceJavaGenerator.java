@@ -54,8 +54,14 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
     return anoaInterfaceFullName(schema) + "Thrift";
   }
 
-  static public final String OTHER = "other";
 
+  static public String generateIsMethod(Schema schema, String token) {
+    StringBuilder sb = new StringBuilder("is");
+    for (String blob : token.split("_")) {
+      sb.append(blob.charAt(0)).append(blob.substring(1).toLowerCase());
+    }
+    return sb.toString();
+  }
 
   static public String generateCmpMethod(Schema schema, Schema.Field field) {
     return "compare" + generateGetMethod(schema, field).substring(3);

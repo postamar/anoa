@@ -13,26 +13,32 @@ package $schema.getNamespace();
 #end
 public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.function.Supplier<T>, java.lang.Comparable<${this.anoaInterfaceName($schema)}<?>>, java.io.Serializable {
 
-  default boolean isAvro() { return false; }
-  default boolean isProtobuf() { return false; }
-  default boolean isThrift() { return false; }
+  default boolean wrapsAvro() { return false; }
+  default boolean wrapsProtobuf() { return false; }
+  default boolean wrapsThrift() { return false; }
 
   /** Returns underlying object. */
   T get();
 
   /** Returns enumeration ordinal. */
-  int getOrdinal();
+  default int getOrdinal() { return hashCode(); }
 
   @Override
-  default int compareTo(${this.anoaInterfaceName($schema)}<?> other) {
+  default int compareTo(${this.anoaInterfaceFullName($schema)}<?> other) {
     return getOrdinal() - other.getOrdinal();
   }
+
+#set( $i = 0 )
+#foreach ($symbol in ${schema.getEnumSymbols()})
+  default boolean ${this.generateIsMethod($schema, $symbol)}() { return $i == getOrdinal(); }
+#set( $i = $i + 1 )
+#end
 #if ($this.isWithAvro())
 
 #if ($this.isDeprecated($schema))
   @Deprecated
 #end
-  static final public class Avro implements ${this.anoaInterfaceName($schema)}<${this.avroClassName($schema)}> {
+  static class Avro implements ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> {
 
 #foreach ($symbol in ${schema.getEnumSymbols()})
     static public Avro ${this.mangle($symbol)} = new Avro(${this.avroClassName($schema)}.${this.mangle($symbol)});
@@ -45,16 +51,17 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     }
 
     @Override
-    public boolean isAvro() { return true; }
+    public boolean wrapsAvro() { return true; }
 
     @Override
     public ${this.avroClassName($schema)} get() { return wrapped; }
 
     @Override
-    public int getOrdinal() { return wrapped.ordinal(); }
-
-    @Override
-    public boolean equals(Object other) { return this == other; }
+    public boolean equals(Object other) {
+      if (other == this) return true;
+      if (other == null || !(other instanceof ${this.anoaInterfaceFullName($schema)})) return false;
+      return wrapped.ordinal() == ((${this.anoaInterfaceFullName($schema)}) other).getOrdinal();
+    }
 
     @Override
     public int hashCode() { return wrapped.ordinal(); }
@@ -66,17 +73,17 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
   }
 
   /** Returns enum instance for the given ${this.anoaInterfaceName($schema)}. */
-  static public ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> avro(${this.anoaInterfaceFullName($schema)}<?> instance) {
+  static ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> avro(${this.anoaInterfaceFullName($schema)}<?> instance) {
     return avro(instance.getOrdinal());
   }
 
   /** Returns enum instance for the given Avro enum. */
-  static public ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> avro(${this.avroClassName($schema)} instance) {
+  static ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> avro(${this.avroClassName($schema)} instance) {
     return avro(instance.ordinal());
   }
 
   /** Returns enum instance for the given ordinal, defaults to first enum value. */
-  static public ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> avro(int ordinal) {
+  static ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> avro(int ordinal) {
     switch (ordinal) {
 #set( $i = 0 )
 #foreach ($symbol in ${schema.getEnumSymbols()})
@@ -88,7 +95,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
   }
 
   /** Returns enum instance for the given label, defaults to first enum value. */
-  static public ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> avro(java.lang.CharSequence str) {
+  static ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> avro(java.lang.CharSequence str) {
     if (str != null) {
       switch (str.toString().toUpperCase()) {
 #foreach ($symbol in ${schema.getEnumSymbols()})
@@ -100,12 +107,12 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
   }
 
   /** Returns Avro enum class. */
-  static public java.lang.Class<${this.avroClassName($schema)}> getAvroClass() {
+  static java.lang.Class<${this.avroClassName($schema)}> getAvroClass() {
     return ${this.avroClassName($schema)}.class;
   }
 
   /** Returns Avro enum schema. */
-  static public org.apache.avro.Schema getAvroSchema() {
+  static org.apache.avro.Schema getAvroSchema() {
     return ${this.avroClassName($schema)}.SCHEMA$;
   }
 #end
@@ -114,7 +121,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #if ($this.isDeprecated($schema))
   @Deprecated
 #end
-  static final public class Protobuf implements ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> {
+  static class Protobuf implements ${this.anoaInterfaceFullName($schema)}<${this.protobufClassName($schema)}> {
 
 #foreach ($symbol in ${schema.getEnumSymbols()})
     static public Protobuf ${this.mangle($symbol)} = new Protobuf(${this.protobufClassName($schema)}.${this.mangle($symbol)});
@@ -127,19 +134,20 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     }
 
     @Override
-    public boolean isProtobuf() { return true; }
+    public boolean wrapsProtobuf() { return true; }
 
     @Override
     public ${this.protobufClassName($schema)} get() { return wrapped; }
 
     @Override
-    public int getOrdinal() { return wrapped.getNumber(); }
+    public boolean equals(Object other) {
+      if (other == this) return true;
+      if (other == null || !(other instanceof ${this.anoaInterfaceFullName($schema)})) return false;
+      return wrapped.getNumber() == ((${this.anoaInterfaceFullName($schema)}) other).getOrdinal();
+    }
 
     @Override
-    public boolean equals(Object other) { return other == this; }
-
-    @Override
-    public int hashCode() { return getOrdinal(); }
+    public int hashCode() { return wrapped.getNumber(); }
 
     @Override
     public String toString() { return wrapped.toString(); }
@@ -148,17 +156,17 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
   }
 
   /** Returns enum instance for the given ${this.anoaInterfaceName($schema)}. */
-  static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> protobuf(${this.anoaInterfaceName($schema)}<?> instance) {
+  static ${this.anoaInterfaceFullName($schema)}<${this.protobufClassName($schema)}> protobuf(${this.anoaInterfaceFullName($schema)}<?> instance) {
     return protobuf(instance.getOrdinal());
   }
 
   /** Returns enum instance for the given Protobuf enum. */
-  static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> protobuf(${this.protobufClassName($schema)} instance) {
+  static ${this.anoaInterfaceFullName($schema)}<${this.protobufClassName($schema)}> protobuf(${this.protobufClassName($schema)} instance) {
     return protobuf(instance.getNumber());
   }
 
   /** Returns enum instance for the given ordinal, defaults to first enum value. */
-  static public ${this.anoaInterfaceName($schema)}<${this.protobufClassName($schema)}> protobuf(int ordinal) {
+  static ${this.anoaInterfaceFullName($schema)}<${this.protobufClassName($schema)}> protobuf(int ordinal) {
     switch (ordinal) {
 #set( $i = 0 )
 #foreach ($symbol in ${schema.getEnumSymbols()})
@@ -170,7 +178,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
   }
 
   /** Returns enum instance for the given label, defaults to first enum value. */
-  static public ${this.anoaInterfaceFullName($schema)}<${this.protobufClassName($schema)}> protobuf(java.lang.CharSequence str) {
+  static ${this.anoaInterfaceFullName($schema)}<${this.protobufClassName($schema)}> protobuf(java.lang.CharSequence str) {
     if (str != null) {
       switch (str.toString().toUpperCase()) {
 #set( $i = 0 )
@@ -184,22 +192,22 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
   }
 
   /** Returns Protobuf class for this enum. */
-  static public java.lang.Class<${this.protobufClassName($schema)}> getProtobufClass() {
+  static java.lang.Class<${this.protobufClassName($schema)}> getProtobufClass() {
     return ${this.protobufClassName($schema)}.class;
   }
 
   /** Returns Protobuf protocol class for this enum. */
-  static public java.lang.Class<${this.protobufProtocolClassName()}> getProtobufProtocolClass() {
+  static java.lang.Class<${this.protobufProtocolClassName()}> getProtobufProtocolClass() {
     return ${this.protobufProtocolClassName()}.class;
   }
 
   /** Returns Protobuf descriptor for this enum. */
-  static public com.google.protobuf.Descriptors.EnumDescriptor getProtobufDescriptor() {
+  static com.google.protobuf.Descriptors.EnumDescriptor getProtobufDescriptor() {
     return ${this.protobufClassName($schema)}.getDescriptor();
   }
 
   /** Returns Protobuf protocol descriptor for this enum. */
-  static public com.google.protobuf.Descriptors.FileDescriptor getProtobufProtocolDescriptor() {
+  static com.google.protobuf.Descriptors.FileDescriptor getProtobufProtocolDescriptor() {
     return ${this.protobufProtocolClassName()}.getDescriptor();
   }
 #end
@@ -208,7 +216,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #if ($this.isDeprecated($schema))
   @Deprecated
 #end
-  static final public class Thrift implements ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> {
+  static class Thrift implements ${this.anoaInterfaceFullName($schema)}<${this.thriftClassName($schema)}> {
 
 #foreach ($symbol in ${schema.getEnumSymbols()})
     static public Thrift ${this.mangle($symbol)} = new Thrift(${this.thriftClassName($schema)}.${this.mangle($symbol)});
@@ -221,19 +229,20 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     final private ${this.thriftClassName($schema)} wrapped;
 
     @Override
-    public boolean isThrift() { return true; }
+    public boolean wrapsThrift() { return true; }
 
     @Override
     public ${this.thriftClassName($schema)} get() { return wrapped; }
 
     @Override
-    public int getOrdinal() { return wrapped.getValue(); }
+    public boolean equals(Object other) {
+      if (other == this) return true;
+      if (other == null || !(other instanceof ${this.anoaInterfaceFullName($schema)})) return false;
+      return wrapped.getValue() == ((${this.anoaInterfaceFullName($schema)}) other).getOrdinal();
+    }
 
     @Override
-    public boolean equals(Object other) { return other == this; }
-
-    @Override
-    public int hashCode() { return getOrdinal(); }
+    public int hashCode() { return wrapped.getValue(); }
 
     @Override
     public String toString() { return wrapped.toString(); }
@@ -242,17 +251,17 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
   }
 
   /** Returns enum instance for the given ${this.anoaInterfaceName($schema)}. */
-  static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> thrift(${this.anoaInterfaceName($schema)}<?> instance) {
+  static ${this.anoaInterfaceFullName($schema)}<${this.thriftClassName($schema)}> thrift(${this.anoaInterfaceFullName($schema)}<?> instance) {
     return thrift(instance.getOrdinal());
   }
 
   /** Returns enum instance for the given Thrift enum. */
-  static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> thrift(${this.thriftClassName($schema)} instance) {
+  static ${this.anoaInterfaceFullName($schema)}<${this.thriftClassName($schema)}> thrift(${this.thriftClassName($schema)} instance) {
     return thrift(instance.ordinal());
   }
 
   /** Returns enum instance for the given ordinal, defaults to first enum value. */
-  static public ${this.anoaInterfaceName($schema)}<${this.thriftClassName($schema)}> thrift(int ordinal) {
+  static ${this.anoaInterfaceFullName($schema)}<${this.thriftClassName($schema)}> thrift(int ordinal) {
     switch (ordinal) {
 #set( $i = 0 )
 #foreach ($symbol in ${schema.getEnumSymbols()})
@@ -264,7 +273,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
   }
 
   /** Returns enum instance for the given label, defaults to first enum value. */
-  static public ${this.anoaInterfaceFullName($schema)}<${this.thriftClassName($schema)}> thrift(java.lang.CharSequence str) {
+  static ${this.anoaInterfaceFullName($schema)}<${this.thriftClassName($schema)}> thrift(java.lang.CharSequence str) {
     if (str != null) {
       switch (str.toString().toUpperCase()) {
 #set( $i = 0 )
@@ -278,7 +287,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
   }
 
   /** Returns Thrift class for this enum. */
-  static public java.lang.Class<${this.thriftClassName($schema)}> getThriftClass() {
+  static java.lang.Class<${this.thriftClassName($schema)}> getThriftClass() {
     return ${this.thriftClassName($schema)}.class;
   }
 #end
