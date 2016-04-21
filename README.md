@@ -277,8 +277,8 @@ objects. Protobuf does this already, unfortunately Avro and Thrift don't and we'
 the source of countless subtle bugs. We try to make the underlying code as fast as possible while
 remaining correct.
 
-The interface defines static methods `avro`, `protobuf` and `thrift` for instantiation based
-on the respective underlying representations.
+The interface also exposes builder objects, and defines static methods `avro`, `protobuf` and
+`thrift` for instantiation backed by the respective underlying representations.
 
 ## Library
 

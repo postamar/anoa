@@ -5,10 +5,12 @@ import com.google.protobuf.ByteString;
 
 import com.adgear.anoa.test.nested.Nested;
 import com.adgear.anoa.test.nested.NestedProtobuf;
+import com.adgear.anoa.test.nested.Variant;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,17 +46,17 @@ public class TestDefaults {
     Assert.assertFalse(nested.getVariant().isDefaultStringVariant());
   }
 
-  Nested<NestedProtobuf.Nested> nonDefault = Nested.protobuf(
+  Nested<?> nonDefault = Nested.protobuf(
       Nested.newProtobufBuilder()
-          .setEnumField(NestedProtobuf.Enum.ON)
-          .addEnumListField(
-              NestedProtobuf.Enum.OFF)
-          .putAllEnumMapField(Stream.of(NestedProtobuf.Enum.ON, NestedProtobuf.Enum.OFF)
-                                  .collect(Collectors.toMap(e -> e.toString(), e -> e)))
-          .setVariant(NestedProtobuf.Variant
-                          .newBuilder()
+          .setEnumField(com.adgear.anoa.test.nested.Enum.Values.ON)
+          .setEnumListField(Collections.singletonList(com.adgear.anoa.test.nested.Enum.Values.OFF))
+          .setEnumMapField(
+              Stream.of(com.adgear.anoa.test.nested.Enum.Values.ON,
+                        com.adgear.anoa.test.nested.Enum.Values.OFF)
+                  .collect(Collectors.toMap(e -> e.toString(), e -> e)))
+          .setVariant(Variant.newProtobufBuilder()
                           .setBooleanVariant(false)
-                          .setBytesVariant(ByteString.copyFromUtf8("bar"))
+                          .setBytesVariant("foo"::getBytes)
                           .setDoubleVariant(0)
                           .setFloatVariant(0)
                           .setIntVariant(0)

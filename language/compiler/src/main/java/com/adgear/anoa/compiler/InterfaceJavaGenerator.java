@@ -54,6 +54,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
     return anoaInterfaceFullName(schema) + "Thrift";
   }
 
+  static final public String VALUE = "value";
 
   static public String generateIsMethod(Schema schema, String token) {
     StringBuilder sb = new StringBuilder("is");
@@ -77,9 +78,9 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
       case ARRAY:
         Schema e = field.schema().getElementType();
         return "int _cmp = 0; "
-               + "java.util.Iterator<" + exportValueType(e) + "> " + a
+               + "java.util.Iterator<" + anoaValueType(e) + "> " + a
                + " = " + CMP_A + ".iterator(); "
-               + "java.util.Iterator<" + exportValueType(e) + "> " + b
+               + "java.util.Iterator<" + anoaValueType(e) + "> " + b
                + " = " + CMP_B+ ".iterator(); "
                + "while (" + a + ".hasNext() && " + b + ".hasNext()) { if (0 != (_cmp = "
                + compareSimpleField(e, a + ".next()", b + ".next()") + ")) return _cmp; } "
@@ -88,7 +89,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         String ae = "_ae" + field.pos();
         String be = "_be" + field.pos();
         Schema v = field.schema().getValueType();
-        String et = "java.util.Map.Entry<java.lang.String," + exportValueType(v) + ">";
+        String et = "java.util.Map.Entry<java.lang.String," + anoaValueType(v) + ">";
         return "int _cmp = 0; "
                + "java.util.Iterator<" + et + "> " + a + " = " + CMP_A + ".entrySet().iterator(); "
                + "java.util.Iterator<" + et + "> " + b + " = " + CMP_B + ".entrySet().iterator(); "
@@ -111,6 +112,8 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
       case BYTES:
         return "java.nio.ByteBuffer.wrap(" + a + ".get())"
                + ".compareTo(java.nio.ByteBuffer.wrap(" + b + ".get()))";
+      case ENUM:
+        return a + ".getOrdinal() - " + b + ".getOrdinal()";
       case INT:
         return "java.lang.Integer.compare"
                + (GeneratorBase.isUnsigned(s) ? "Unsigned(" : "(")
@@ -159,7 +162,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
           return unmod + "SortedSet(" + value + ".stream()"
                  + avroExportArrayMapper(field.schema().getElementType())
                  + ".collect(java.util.stream.Collectors.toCollection("
-                 + "() -> new java.util.TreeSet<" + exportValueType(field.schema().getElementType())
+                 + "() -> new java.util.TreeSet<" + anoaValueType(field.schema().getElementType())
                  + ">())))";
         } else {
           switch (field.schema().getElementType().getType()) {
@@ -171,7 +174,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
                      + avroExportArrayMapper(field.schema().getElementType())
                      + ".collect(java.util.stream.Collectors.toCollection("
                      + "() -> new java.util.ArrayList<"
-                     + exportValueType(field.schema().getElementType())
+                     + anoaValueType(field.schema().getElementType())
                      + ">(" + value + ".size()))))";
             default:
               return unmod + "List(" + value + ")";
@@ -184,7 +187,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
                + avroExportMapValueFunction(field.schema().getValueType()) + ", "
                + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
                + "() -> new java.util.TreeMap<java.lang.String,"
-               + exportValueType(field.schema().getValueType()) + ">())))";
+               + anoaValueType(field.schema().getValueType()) + ">())))";
       default:
         return value;
     }
@@ -219,28 +222,27 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
   }
 
   public String avroImportValue(Schema schema, Schema.Field field) {
-    String get = IMPORTED + "." + generateGetMethod(schema, field) + "()";
     switch (field.schema().getType()) {
       case BYTES:
-        return "java.nio.ByteBuffer.wrap(" + get + ".get())";
+        return "java.nio.ByteBuffer.wrap(" + VALUE + ".get())";
       case STRING:
-        return "new org.apache.avro.util.Utf8(" + get + ")";
+        return "new org.apache.avro.util.Utf8(" + VALUE + ")";
       case ENUM:
       case RECORD:
-        return anoaInterfaceFullName(field.schema()) + ".avro(" + get + ").get()";
+        return anoaInterfaceFullName(field.schema()) + ".avro(" + VALUE + ").get()";
       case ARRAY:
-        return get + ".stream()" + avroImportArrayMapper(field.schema().getElementType())
+        return VALUE + ".stream()" + avroImportArrayMapper(field.schema().getElementType())
                + ".collect(java.util.stream.Collectors.toCollection(() -> "
-               + "new " + avroType(field.schema()) + "(" + get + ".size(), "
+               + "new " + avroType(field.schema()) + "(" + VALUE + ".size(), "
                + avroClassName(schema) + ".SCHEMA$.getFields().get("+ field.pos() +").schema())))";
       case MAP:
-        return get + ".entrySet().stream().collect(java.util.stream.Collectors.toMap("
+        return VALUE + ".entrySet().stream().collect(java.util.stream.Collectors.toMap("
                + "e -> new org.apache.avro.util.Utf8(e.getKey()), "
                + avroImportMapValueFunction(field.schema().getValueType()) + ", "
                + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
-               + "() -> new " + avroType(field.schema()) + "(" + get + ".size())))";
+               + "() -> new " + avroType(field.schema()) + "(" + VALUE + ".size())))";
       default:
-        return get;
+        return VALUE;
     }
   }
 
@@ -316,13 +318,13 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
                  + protobufExportArrayMapper(field.schema().getElementType())
                  + ".collect(java.util.stream.Collectors.toCollection("
                  + "() -> new java.util.TreeSet<"
-                 + exportValueType(field.schema().getElementType()) + ">())))";
+                 + anoaValueType(field.schema().getElementType()) + ">())))";
         } else {
           return "java.util.Collections.unmodifiableList(" + value + ".stream()"
                  + protobufExportArrayMapper(field.schema().getElementType())
                  + ".collect(java.util.stream.Collectors.toCollection("
                  + "() -> new java.util.ArrayList<"
-                 + exportValueType(field.schema().getElementType())
+                 + anoaValueType(field.schema().getElementType())
                  + ">(" + base + "Count()))))";
         }
       case MAP:
@@ -332,7 +334,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
                + protobufExportMapValueFunction(field.schema().getValueType()) + ", "
                + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
                + "() -> new java.util.TreeMap<java.lang.String,"
-               + exportValueType(field.schema().getValueType()) + ">())))";
+               + anoaValueType(field.schema().getValueType()) + ">())))";
       case LONG:
         return "((long) " + value + ") & 0xFFFFFFFFL";
       case BYTES:
@@ -377,9 +379,13 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
     }
   }
 
+  public String protobufDefaultTest(Schema schema, Schema.Field field) {
+    return defaultTest(schema, field, VALUE, "Protobuf._DEFAULT");
+  }
+
   public String protobufImportField(Schema schema, Schema.Field field) {
     String setter = generateSetMethod(schema, field).replace("$", "");
-    String value = "instance." + generateGetMethod(schema, field) + "()";
+    String value = VALUE;
     switch (field.schema().getType()) {
       case LONG:
         if (GeneratorBase.getPrecision(field.schema()) == 32) {
@@ -485,7 +491,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
                + thriftExportArrayMapper(field.schema().getElementType()) + ".collect("
                + "java.util.stream.Collectors.toCollection("
                + "() -> new java.util." + (isSet(field.schema()) ? "TreeSet" : "ArrayList")
-               + "<" + exportValueType(field.schema().getElementType()) + ">()))";
+               + "<" + anoaValueType(field.schema().getElementType()) + ">()))";
       case MAP:
         return value + ".orElseGet(java.util.Collections::emptyMap).entrySet().stream().collect("
                + "java.util.stream.Collectors.toMap("
@@ -493,7 +499,7 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
                + thriftExportMapValueFunction(field.schema().getValueType()) + ", "
                + "(u,v) -> { throw new java.lang.IllegalStateException(\"Duplicate key \" + u); }, "
                + "() -> new java.util.TreeMap<java.lang.String,"
-               + exportValueType(field.schema().getValueType()) + ">()))";
+               + anoaValueType(field.schema().getValueType()) + ">()))";
       default:
         return value;
     }
@@ -531,10 +537,14 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
     return "e -> e.getValue()";
   }
 
+  public String thriftDefaultTest(Schema schema, Schema.Field field) {
+    return defaultTest(schema, field, VALUE, "Thrift._DEFAULT");
+  }
+
   public String thriftImportField(Schema schema, Schema.Field field) {
     String setter = "set" + Character.toUpperCase(field.name().charAt(0))
                     + field.name().substring(1);
-    String value = IMPORTED + "." + generateGetMethod(schema, field) + "()";
+    String value = VALUE;
     switch (field.schema().getType()) {
       case FLOAT:
         value = "(double) " + value;

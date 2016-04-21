@@ -13,12 +13,7 @@ package $schema.getNamespace();
 #end
 public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.function.Supplier<T>, java.lang.Comparable<${this.anoaInterfaceName($schema)}<?>>, java.io.Serializable {
 
-  default boolean wrapsAvro() { return false; }
-  default boolean wrapsProtobuf() { return false; }
-  default boolean wrapsThrift() { return false; }
-
-  @Override
-  default int compareTo(${this.anoaInterfaceFullName($schema)}<?> other) {
+  @Override default int compareTo(${this.anoaInterfaceFullName($schema)}<?> other) {
     return getComparator().compare(this, other);
   }
 
@@ -26,9 +21,10 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
   default boolean isDefault() {
     return
 #foreach ($field in ${this.fields($schema)})
-      ${this.generateIsDefaultMethod($schema, $field)}() &&
+      ${this.generateIsDefaultMethod($schema, $field)}()#if ($velocityHasNext) &&
+#else;
 #end
-      true;
+#end
   }
 
   /** Returns underlying object. */
@@ -53,6 +49,16 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #end
 #end
 
+  public interface Builder<T> {
+
+    ${this.anoaInterfaceName($schema)}<T> build();
+#foreach ($field in ${this.fields($schema)})
+
+#if ($this.isDeprecated($field))  @Deprecated
+#end
+    Builder<T> ${this.generateSetMethod($schema, $field)}(${this.importType($field.schema())} value);
+#end
+  }
 #if ($this.isWithAvro())
 
 #if ($this.isDeprecated($schema))
@@ -77,11 +83,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     /** Constructs a new Avro instance based on a message's binary encoding. Only use this if you know what you're doing. */
     public Avro(byte[] binaryEncoding) { this(null, binaryEncoding); }
 
-    @Override
-    public boolean wrapsAvro() { return true; }
-
-    @Override
-    public ${this.avroClassName($schema)} get() {
+    @Override public ${this.avroClassName($schema)} get() {
       if (wrapped == null) {
         try {
           wrapped = decode(binaryEncoding);
@@ -103,11 +105,10 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     }
 #foreach ($field in ${this.fields($schema)})
 
-    @Override
 #if ($this.isDeprecated($field))
     @Deprecated
 #end
-    public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+    @Override public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
 #if ($this.hasAvroExportField($field))
       if (export_${this.mangle($field.name())} == null) {
         export_${this.mangle($field.name())} = ${this.avroExportValue($field)};
@@ -118,30 +119,26 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #end
     }
 
-    @Override
 #if ($this.isDeprecated($field))
     @Deprecated
 #end
-    public boolean ${this.generateIsDefaultMethod($schema, $field)}() {
+    @Override public boolean ${this.generateIsDefaultMethod($schema, $field)}() {
       if (${this.isDefaultFieldName($field)} == null) {
-        ${this.isDefaultFieldName($field)} = ${this.isDefaultValue($schema, $field)};
+        ${this.isDefaultFieldName($field)} = ${this.defaultMethodTest($schema, $field)};
       }
       return ${this.isDefaultFieldName($field)};
     }
 #end
 
-    @Override
-    public boolean equals(Object other) {
+    @Override public boolean equals(Object other) {
       if (other == this) return true;
       if (other == null && !(other instanceof Avro)) return false;
       return get().equals(((Avro) other).get());
     }
 
-    @Override
-    public int hashCode() { return get().hashCode(); }
+    @Override public int hashCode() { return get().hashCode(); }
 
-    @Override
-    public String toString() { return get().toString(); }
+    @Override public String toString() { return get().toString(); }
 
     private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
       if (binaryEncoding == null) { encode(); }
@@ -198,44 +195,68 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     static public final long serialVersionUID = ${this.version($schema)};
   }
 
+  static class AvroBuilder implements Builder<${this.avroClassName($schema)}> {
+
+    final private ${this.avroClassName($schema)}.Builder builder;
+
+    /** Only use this if you know what you are doing. */
+    public AvroBuilder(${this.avroClassName($schema)}.Builder builder) { this.builder = builder; }
+
+    @Override public ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> build() {
+      return new Avro(builder.build(), null);
+    }
+#foreach ($field in ${this.fields($schema)})
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public Builder<${this.avroClassName($schema)}> ${this.generateSetMethod($schema, $field)}(${this.importType($field.schema())} value) {
+      builder.${this.generateSetMethod($schema, $field)}(${this.avroImportValue($schema, $field)});
+      return this;
+    }
+#end
+  }
+
+  /** Returns new Avro builder instance with default values. */
+  static Builder<${this.avroClassName($schema)}> newAvroBuilder() {
+    return new AvroBuilder(${this.avroClassName($schema)}.newBuilder());
+  }
+
+  /** Returns new Avro builder instance based on existing prototype. */
+  static Builder<${this.avroClassName($schema)}> newAvroBuilder(${this.avroClassName($schema)} other) {
+    return new AvroBuilder(${this.avroClassName($schema)}.newBuilder(other));
+  }
+
+  /** Returns new Avro builder instance based on existing prototype builder. */
+  static Builder<${this.avroClassName($schema)}> newAvroBuilder(${this.avroClassName($schema)}.Builder other) {
+    return new AvroBuilder(${this.avroClassName($schema)}.newBuilder(other));
+  }
+
+  /** Returns new Avro builder instance based on existing prototype ${this.anoaInterfaceName($schema)}. */
+  static Builder<${this.avroClassName($schema)}> newAvroBuilder(${this.anoaInterfaceFullName($schema)}<?> other) {
+    return newAvroBuilder()
+#foreach ($field in ${this.fields($schema)})
+#if ($velocityHasNext)
+      .${this.generateSetMethod($schema, $field)}(other.${this.generateGetMethod($schema, $field)}())
+#else
+      .${this.generateSetMethod($schema, $field)}(other.${this.generateGetMethod($schema, $field)}());
+#end
+#end
+  }
+
   /** Returns a wrapped Avro message based on an instance of ${this.anoaInterfaceName($schema)}. */
   static ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> avro(${this.anoaInterfaceFullName($schema)}<?> instance) {
     if (instance instanceof Avro) {
       return (Avro) instance;
+    } else {
+      return newAvroBuilder(instance).build();
     }
-    ${this.avroClassName($schema)}.Builder builder = ${this.avroClassName($schema)}.newBuilder();
-#foreach ($field in ${this.fields($schema)})
-    if (!instance.${this.generateIsDefaultMethod($schema, $field)}()) {
-      builder.${this.generateSetMethod($schema, $field)}(${this.avroImportValue($schema, $field)});
-    }
-#end
-    return new Avro(builder.build(), null);
   }
 
   /** Wraps an existing Avro message. */
   static ${this.anoaInterfaceFullName($schema)}<${this.avroClassName($schema)}> avro(${this.avroClassName($schema)} wrapped) {
     assert wrapped != null;
     return new Avro(wrapped.freeze(), null);
-  }
-
-  /** Returns new Avro builder instance with default values. */
-  static ${this.avroClassName($schema)}.Builder newAvroBuilder() {
-    return ${this.avroClassName($schema)}.newBuilder();
-  }
-
-  /** Returns new Avro builder instance based on existing prototype. */
-  static ${this.avroClassName($schema)}.Builder newAvroBuilder(${this.avroClassName($schema)} other) {
-    return ${this.avroClassName($schema)}.newBuilder(other);
-  }
-
-  /** Returns new Avro builder instance based on existing prototype builder. */
-  static ${this.avroClassName($schema)}.Builder newAvroBuilder(${this.avroClassName($schema)}.Builder other) {
-    return ${this.avroClassName($schema)}.newBuilder(other);
-  }
-
-  /** Returns new Avro builder instance based on existing prototype ${this.anoaInterfaceName($schema)}. */
-  static ${this.avroClassName($schema)}.Builder newAvroBuilder(${this.anoaInterfaceFullName($schema)}<?> other) {
-    return newAvroBuilder(avro(other).get());
   }
 
   /** Returns Avro record class. */
@@ -272,11 +293,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     /** Constructs a new Protobuf instance based on a message's binary encoding. Only use this if you know what you're doing. */
     public Protobuf(byte[] binaryEncoding) { this(null, binaryEncoding); }
 
-    @Override
-    public boolean wrapsProtobuf() { return true; }
-
-    @Override
-    public ${this.protobufClassName($schema)} get() {
+    @Override public ${this.protobufClassName($schema)} get() {
       if (wrapped == null) {
         try {
           wrapped = ${this.protobufClassName($schema)}.parseFrom(binaryEncoding);
@@ -288,11 +305,10 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     }
 #foreach ($field in ${this.fields($schema)})
 
-    @Override
 #if ($this.isDeprecated($field))
     @Deprecated
 #end
-    public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+    @Override public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
 #if ($this.hasProtobufExportField($field))
       if (export_${this.mangle($field.name())} == null) {
         export_${this.mangle($field.name())} = ${this.protobufExportValue($schema, $field)};
@@ -303,30 +319,26 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #end
     }
 
-    @Override
 #if ($this.isDeprecated($field))
     @Deprecated
 #end
-    public boolean ${this.generateIsDefaultMethod($schema, $field)}() {
+    @Override public boolean ${this.generateIsDefaultMethod($schema, $field)}() {
       if (${this.isDefaultFieldName($field)} == null) {
-        ${this.isDefaultFieldName($field)} = ${this.isDefaultValue($schema, $field)};
+        ${this.isDefaultFieldName($field)} = ${this.defaultMethodTest($schema, $field)};
       }
       return ${this.isDefaultFieldName($field)};
     }
 #end
 
-    @Override
-    public boolean equals(Object other) {
+    @Override public boolean equals(Object other) {
       if (other == this) return true;
       if (other == null && !(other instanceof Protobuf)) return false;
       return get().equals(((Protobuf) other).get());
     }
 
-    @Override
-    public int hashCode() { return get().hashCode(); }
+    @Override public int hashCode() { return get().hashCode(); }
 
-    @Override
-    public String toString() { return get().toString(); }
+    @Override public String toString() { return get().toString(); }
 
     private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
       if (binaryEncoding == null) {
@@ -347,39 +359,64 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     static public final long serialVersionUID = ${this.version($schema)};
   }
 
+  static class ProtobufBuilder implements Builder<${this.protobufClassName($schema)}> {
+
+    final private ${this.protobufClassName($schema)}.Builder builder;
+
+    /** Only use this if you know what you are doing. */
+    public ProtobufBuilder(${this.protobufClassName($schema)}.Builder builder) { this.builder = builder; }
+
+    @Override public ${this.anoaInterfaceFullName($schema)}<${this.protobufClassName($schema)}> build() {
+      return new Protobuf(builder.build(), null);
+    }
+#foreach ($field in ${this.fields($schema)})
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public Builder<${this.protobufClassName($schema)}> ${this.generateSetMethod($schema, $field)}(${this.importType($field.schema())} value) {
+      if (!(${this.protobufDefaultTest($schema, $field)})) {
+        builder.${this.protobufImportField($schema, $field)};
+      }
+      return this;
+    }
+#end
+  }
+
+  /** Returns new Protobuf builder instance with default values. */
+  static Builder<${this.protobufClassName($schema)}> newProtobufBuilder() {
+    return new ProtobufBuilder(${this.protobufClassName($schema)}.newBuilder());
+  }
+
+  /** Returns new Protobuf builder instance based on existing prototype. */
+  static Builder<${this.protobufClassName($schema)}> newProtobufBuilder(${this.protobufClassName($schema)} other) {
+    return new ProtobufBuilder(${this.protobufClassName($schema)}.newBuilder(other));
+  }
+
+  /** Returns new Protobuf builder instance based on existing prototype ${this.anoaInterfaceName($schema)}. */
+  static Builder<${this.protobufClassName($schema)}> newProtobufBuilder(${this.anoaInterfaceFullName($schema)}<?> other) {
+    return newProtobufBuilder()
+#foreach ($field in ${this.fields($schema)})
+#if ($velocityHasNext)
+      .${this.generateSetMethod($schema, $field)}(other.${this.generateGetMethod($schema, $field)}())
+#else
+      .${this.generateSetMethod($schema, $field)}(other.${this.generateGetMethod($schema, $field)}());
+#end
+#end
+  }
+
   /** Returns a wrapped Protobuf message based on an instance of ${this.anoaInterfaceName($schema)}. */
   static ${this.anoaInterfaceFullName($schema)}<${this.protobufClassName($schema)}> protobuf(${this.anoaInterfaceFullName($schema)}<?> instance) {
     if (instance instanceof Protobuf) {
       return (Protobuf) instance;
     }
-    ${this.protobufClassName($schema)}.Builder builder = ${this.protobufClassName($schema)}.newBuilder();
-#foreach ($field in ${this.fields($schema)})
-    if (!instance.${this.generateIsDefaultMethod($schema, $field)}()) {
-      builder.${this.protobufImportField($schema, $field)};
-    }
-#end
-    return new Protobuf(builder.build(), null);
+    return newProtobufBuilder(instance).build();
   }
 
   /** Wraps an existing Protobuf message. */
   static ${this.anoaInterfaceFullName($schema)}<${this.protobufClassName($schema)}> protobuf(${this.protobufClassName($schema)} wrapped) {
     assert wrapped != null;
     return new Protobuf(wrapped, null);
-  }
-
-  /** Returns new Protobuf builder instance with default values. */
-  static ${this.protobufClassName($schema)}.Builder newProtobufBuilder() {
-    return ${this.protobufClassName($schema)}.newBuilder();
-  }
-
-  /** Returns new Protobuf builder instance based on existing prototype. */
-  static ${this.protobufClassName($schema)}.Builder newProtobufBuilder(${this.protobufClassName($schema)} other) {
-    return ${this.protobufClassName($schema)}.newBuilder(other);
-  }
-
-  /** Returns new Protobuf builder instance based on existing prototype ${this.anoaInterfaceName($schema)}. */
-  static ${this.protobufClassName($schema)}.Builder newProtobufBuilder(${this.anoaInterfaceFullName($schema)}<?> other) {
-    return newProtobufBuilder(protobuf(other).get());
   }
 
   /** Returns Protobuf class for this struct. */
@@ -423,18 +460,13 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     /** Create a new wrapper. */
     public Thrift() { this(new ${this.thriftClassName($schema)}()); }
 
-    @Override
-    public boolean wrapsThrift() { return true; }
-
-    @Override
-    public ${this.thriftClassName($schema)} get() { return wrapped; }
+    @Override public ${this.thriftClassName($schema)} get() { return wrapped; }
 #foreach ($field in ${this.fields($schema)})
 
-    @Override
 #if ($this.isDeprecated($field))
     @Deprecated
 #end
-    public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+    @Override public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
 #if ($this.hasThriftExportField($field))
       if (export_${this.mangle($field.name())} == null) {
         export_${this.mangle($field.name())} = ${this.thriftExportValue($field)};
@@ -445,30 +477,26 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #end
     }
 
-    @Override
 #if ($this.isDeprecated($field))
     @Deprecated
 #end
-    public boolean ${this.generateIsDefaultMethod($schema, $field)}() {
+    @Override public boolean ${this.generateIsDefaultMethod($schema, $field)}() {
       if (${this.isDefaultFieldName($field)} == null) {
-        ${this.isDefaultFieldName($field)} = ${this.isDefaultValue($schema, $field)};
+        ${this.isDefaultFieldName($field)} = ${this.defaultMethodTest($schema, $field)};
       }
       return ${this.isDefaultFieldName($field)};
     }
 #end
 
-    @Override
-    public boolean equals(Object other) {
+    @Override public boolean equals(Object other) {
       if (other == this) return true;
       if (other == null || !(other instanceof Thrift)) return false;
       return wrapped.equals(((Thrift) other).wrapped);
     }
 
-    @Override
-    public int hashCode() { return wrapped.hashCode(); }
+    @Override public int hashCode() { return wrapped.hashCode(); }
 
-    @Override
-    public String toString() { return wrapped.toString(); }
+    @Override public String toString() { return wrapped.toString(); }
 
     static private java.lang.ThreadLocal<Thrift> _DEFAULT = new java.lang.ThreadLocal<Thrift>() {
       @Override protected Thrift initialValue() { return new Thrift(); }
@@ -477,18 +505,58 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     static public final long serialVersionUID = ${this.version($schema)};
   }
 
+  static class ThriftBuilder implements Builder<${this.thriftClassName($schema)}> {
+
+    final private ${this.thriftClassName($schema)} builder;
+
+    /** Only use this if you know what you are doing. */
+    public ThriftBuilder(${this.thriftClassName($schema)} builder) { this.builder = builder; }
+
+    @Override public ${this.anoaInterfaceFullName($schema)}<${this.thriftClassName($schema)}> build() {
+      return new Thrift((${this.thriftClassName($schema)}) builder.deepCopy());
+    }
+#foreach ($field in ${this.fields($schema)})
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public Builder<${this.thriftClassName($schema)}> ${this.generateSetMethod($schema, $field)}(${this.importType($field.schema())} value) {
+      if (!(${this.thriftDefaultTest($schema, $field)})) {
+        builder.${this.thriftImportField($schema, $field)};
+      }
+      return this;
+    }
+#end
+  }
+
+  /** Returns new Thrift builder instance with default values. */
+  static Builder<${this.thriftClassName($schema)}> newThriftBuilder() {
+    return new ThriftBuilder(new ${this.thriftClassName($schema)}());
+  }
+
+  /** Returns new Thrift builder instance based on existing prototype. */
+  static Builder<${this.thriftClassName($schema)}> newThriftBuilder(${this.thriftClassName($schema)} other) {
+    return new ThriftBuilder((${this.thriftClassName($schema)}) other.deepCopy());
+  }
+
+  /** Returns new Thrift builder instance based on existing prototype ${this.anoaInterfaceName($schema)}. */
+  static Builder<${this.thriftClassName($schema)}> newThriftBuilder(${this.anoaInterfaceFullName($schema)}<?> other) {
+    return newThriftBuilder()
+#foreach ($field in ${this.fields($schema)})
+#if ($velocityHasNext)
+      .${this.generateSetMethod($schema, $field)}(other.${this.generateGetMethod($schema, $field)}())
+#else
+      .${this.generateSetMethod($schema, $field)}(other.${this.generateGetMethod($schema, $field)}());
+#end
+#end
+  }
+
   /** Returns a wrapped Thrift struct based on an instance of ${this.anoaInterfaceName($schema)}. */
   static ${this.anoaInterfaceFullName($schema)}<${this.thriftClassName($schema)}> thrift(${this.anoaInterfaceFullName($schema)}<?> instance) {
     if (instance instanceof Thrift) {
       return (Thrift) instance;
     }
-    ${this.thriftClassName($schema)} copy = new ${this.thriftClassName($schema)}();
-#foreach ($field in ${this.fields($schema)})
-    if (!instance.${this.generateIsDefaultMethod($schema, $field)}()) {
-      copy.${this.thriftImportField($schema, $field)};
-    }
-#end
-    return new Thrift(copy);
+    return newThriftBuilder(instance).build();
   }
 
   /** Creates a new wrapped Thrift struct copied from an existing instance. */
@@ -510,8 +578,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 
   static class Comparator implements java.util.Comparator<${this.anoaInterfaceFullName($schema)}<?>>, java.io.Serializable {
 
-    @Override
-    public int compare(${this.anoaInterfaceFullName($schema)}<?> a, ${this.anoaInterfaceFullName($schema)}<?> b) {
+    @Override public int compare(${this.anoaInterfaceFullName($schema)}<?> a, ${this.anoaInterfaceFullName($schema)}<?> b) {
       int _cmp;
 #foreach ($field in ${this.fields($schema)})
       if (0 != (_cmp = ${this.generateCmpMethod($schema, $field)}(a, b))) return _cmp;
@@ -520,7 +587,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
     }
 #foreach ($field in ${this.fields($schema)})
 
-    private int ${this.generateCmpMethod($schema, $field)} (${this.anoaInterfaceFullName($schema)}<?> a, ${this.anoaInterfaceFullName($schema)}<?> b) {
+    static private int ${this.generateCmpMethod($schema, $field)} (${this.anoaInterfaceFullName($schema)}<?> a, ${this.anoaInterfaceFullName($schema)}<?> b) {
       final ${this.exportFieldType($field.schema())} fa = a.${this.generateGetMethod($schema, $field)}();
       final ${this.exportFieldType($field.schema())} fb = b.${this.generateGetMethod($schema, $field)}();
       ${this.generateCmpMethodBody($field)}

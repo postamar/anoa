@@ -11,22 +11,24 @@ package $schema.getNamespace();
 #foreach ($annotation in $this.javaAnnotations($schema))
 @$annotation
 #end
-public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.function.Supplier<T>, java.lang.Comparable<${this.anoaInterfaceName($schema)}<?>>, java.io.Serializable {
+public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.function.Supplier<T>, java.io.Serializable {
 
-  default boolean wrapsAvro() { return false; }
-  default boolean wrapsProtobuf() { return false; }
-  default boolean wrapsThrift() { return false; }
+  enum Values implements ${this.anoaInterfaceFullName($schema)}<Values> {
+#foreach ($symbol in ${schema.getEnumSymbols()})
+    ${this.mangle($symbol)}#if ($velocityHasNext),
+#else;
+#end
+#end
+    @Override public Values get() { return this; }
+    @Override public int getOrdinal() { return ordinal(); }
+    static public final long serialVersionUID = ${this.version($schema)};
+  }
 
   /** Returns underlying object. */
   T get();
 
   /** Returns enumeration ordinal. */
   default int getOrdinal() { return hashCode(); }
-
-  @Override
-  default int compareTo(${this.anoaInterfaceFullName($schema)}<?> other) {
-    return getOrdinal() - other.getOrdinal();
-  }
 
 #set( $i = 0 )
 #foreach ($symbol in ${schema.getEnumSymbols()})
@@ -50,24 +52,17 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
       this.wrapped = wrapped;
     }
 
-    @Override
-    public boolean wrapsAvro() { return true; }
+    @Override public ${this.avroClassName($schema)} get() { return wrapped; }
 
-    @Override
-    public ${this.avroClassName($schema)} get() { return wrapped; }
-
-    @Override
-    public boolean equals(Object other) {
+    @Override public boolean equals(Object other) {
       if (other == this) return true;
       if (other == null || !(other instanceof ${this.anoaInterfaceFullName($schema)})) return false;
       return wrapped.ordinal() == ((${this.anoaInterfaceFullName($schema)}) other).getOrdinal();
     }
 
-    @Override
-    public int hashCode() { return wrapped.ordinal(); }
+    @Override public int hashCode() { return wrapped.ordinal(); }
 
-    @Override
-    public String toString() { return wrapped.toString(); }
+    @Override public String toString() { return wrapped.toString(); }
 
     static public final long serialVersionUID = ${this.version($schema)};
   }
@@ -133,24 +128,17 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
       this.wrapped = wrapped;
     }
 
-    @Override
-    public boolean wrapsProtobuf() { return true; }
+    @Override public ${this.protobufClassName($schema)} get() { return wrapped; }
 
-    @Override
-    public ${this.protobufClassName($schema)} get() { return wrapped; }
-
-    @Override
-    public boolean equals(Object other) {
+    @Override public boolean equals(Object other) {
       if (other == this) return true;
       if (other == null || !(other instanceof ${this.anoaInterfaceFullName($schema)})) return false;
       return wrapped.getNumber() == ((${this.anoaInterfaceFullName($schema)}) other).getOrdinal();
     }
 
-    @Override
-    public int hashCode() { return wrapped.getNumber(); }
+    @Override public int hashCode() { return wrapped.getNumber(); }
 
-    @Override
-    public String toString() { return wrapped.toString(); }
+    @Override public String toString() { return wrapped.toString(); }
 
     static public final long serialVersionUID = ${this.version($schema)};
   }
@@ -228,24 +216,17 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 
     final private ${this.thriftClassName($schema)} wrapped;
 
-    @Override
-    public boolean wrapsThrift() { return true; }
+    @Override public ${this.thriftClassName($schema)} get() { return wrapped; }
 
-    @Override
-    public ${this.thriftClassName($schema)} get() { return wrapped; }
-
-    @Override
-    public boolean equals(Object other) {
+    @Override public boolean equals(Object other) {
       if (other == this) return true;
       if (other == null || !(other instanceof ${this.anoaInterfaceFullName($schema)})) return false;
       return wrapped.getValue() == ((${this.anoaInterfaceFullName($schema)}) other).getOrdinal();
     }
 
-    @Override
-    public int hashCode() { return wrapped.getValue(); }
+    @Override public int hashCode() { return wrapped.getValue(); }
 
-    @Override
-    public String toString() { return wrapped.toString(); }
+    @Override public String toString() { return wrapped.toString(); }
 
     static public final long serialVersionUID = ${this.version($schema)};
   }
