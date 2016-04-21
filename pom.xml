@@ -27,7 +27,7 @@
 
   <groupId>com.adgear</groupId>
   <artifactId>anoa</artifactId>
-  <version>3.0.0-alpha-6</version>
+  <version>3.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Anoa</name>
