@@ -41,11 +41,9 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
   boolean ${this.generateIsDefaultMethod($schema, $field)}();
 #foreach ($alias in $field.aliases())
 
-  @Deprecated
-  default ${this.exportType($field.schema())} ${this.generateGetMethod($schema, ${this.aliasField($field, $alias)})}() { return ${this.generateGetMethod($schema, $field)}(); }
+  @Deprecated default ${this.exportType($field.schema())} ${this.generateGetMethod($schema, ${this.aliasField($field, $alias)})}() { return ${this.generateGetMethod($schema, $field)}(); }
 
-  @Deprecated
-  default boolean ${this.generateIsDefaultMethod($schema, ${this.aliasField($field, $alias)})}() { return ${this.generateIsDefaultMethod($schema, $field)}(); }
+  @Deprecated default boolean ${this.generateIsDefaultMethod($schema, ${this.aliasField($field, $alias)})}() { return ${this.generateIsDefaultMethod($schema, $field)}(); }
 #end
 #end
 
@@ -57,6 +55,16 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #if ($this.isDeprecated($field))  @Deprecated
 #end
     Builder<T> ${this.generateSetMethod($schema, $field)}(${this.importType($field.schema())} value);
+
+#if ($this.isDeprecated($field))  @Deprecated
+#end
+    Builder<T> ${this.generateClearMethod($schema, $field)}();
+#foreach ($alias in $field.aliases())
+
+    @Deprecated default Builder<T> ${this.generateSetMethod($schema, ${this.aliasField($field, $alias)})}(${this.importType($field.schema())} value) { return ${this.generateSetMethod($schema, $field)}(value); }
+
+    @Deprecated default Builder<T> ${this.generateClearMethod($schema, ${this.aliasField($field, $alias)})}() { return ${this.generateClearMethod($schema, $field)}(); }
+#end
 #end
   }
 #if ($this.isWithAvro())
@@ -71,7 +79,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #foreach ($field in ${this.fields($schema)})
     transient private java.lang.Boolean ${this.isDefaultFieldName($field)};
 #if ($this.hasAvroExportField($field))
-    transient private ${this.exportFieldType($field.schema())} export_${this.mangle($field.name())};
+    transient private ${this.exportFieldType($field.schema())} ${this.exportFieldName($field)};
 #end
 #end
 
@@ -110,10 +118,10 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #end
     @Override public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
 #if ($this.hasAvroExportField($field))
-      if (export_${this.mangle($field.name())} == null) {
-        export_${this.mangle($field.name())} = ${this.avroExportValue($field)};
+      if (${this.exportFieldName($field)} == null) {
+        ${this.exportFieldName($field)} = ${this.avroExportValue($field)};
       }
-      return export_${this.mangle($field.name())};
+      return ${this.exportFieldName($field)};
 #else
       return ${this.avroExportValue($field)};
 #end
@@ -214,6 +222,14 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
       builder.${this.generateSetMethod($schema, $field)}(${this.avroImportValue($schema, $field)});
       return this;
     }
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public Builder<${this.avroClassName($schema)}> ${this.generateClearMethod($schema, $field)}() {
+      builder.${this.generateClearMethod($schema, $field)}();
+      return this;
+    }
 #end
   }
 
@@ -281,7 +297,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #foreach ($field in ${this.fields($schema)})
     transient private java.lang.Boolean ${this.isDefaultFieldName($field)};
 #if ($this.hasProtobufExportField($field))
-    transient private ${this.exportFieldType($field.schema())} export_${this.mangle($field.name())};
+    transient private ${this.exportFieldType($field.schema())} ${this.exportFieldName($field)};
 #end
 #end
 
@@ -310,10 +326,10 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #end
     @Override public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
 #if ($this.hasProtobufExportField($field))
-      if (export_${this.mangle($field.name())} == null) {
-        export_${this.mangle($field.name())} = ${this.protobufExportValue($schema, $field)};
+      if (${this.exportFieldName($field)} == null) {
+        ${this.exportFieldName($field)} = ${this.protobufExportValue($schema, $field)};
       }
-      return export_${this.mangle($field.name())};
+      return ${this.exportFieldName($field)};
 #else
       return ${this.protobufExportValue($schema, $field)};
 #end
@@ -378,6 +394,14 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
       if (!(${this.protobufDefaultTest($schema, $field)})) {
         builder.${this.protobufImportField($schema, $field)};
       }
+      return this;
+    }
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public Builder<${this.protobufClassName($schema)}> ${this.generateClearMethod($schema, $field)}() {
+      builder.${this.protobufClearMethod($schema, $field)};
       return this;
     }
 #end
@@ -450,7 +474,7 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #foreach ($field in ${this.fields($schema)})
     transient private java.lang.Boolean ${this.isDefaultFieldName($field)};
 #if ($this.hasThriftExportField($field))
-    transient private ${this.exportFieldType($field.schema())} export_${this.mangle($field.name())};
+    transient private ${this.exportFieldType($field.schema())} ${this.exportFieldName($field)};
 #end
 #end
 
@@ -468,10 +492,10 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
 #end
     @Override public ${this.exportType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
 #if ($this.hasThriftExportField($field))
-      if (export_${this.mangle($field.name())} == null) {
-        export_${this.mangle($field.name())} = ${this.thriftExportValue($field)};
+      if (${this.exportFieldName($field)} == null) {
+        ${this.exportFieldName($field)} = ${this.thriftExportValue($field)};
       }
-      return export_${this.mangle($field.name())};
+      return ${this.exportFieldName($field)};
 #else
       return ${this.thriftExportValue($field)};
 #end
@@ -524,6 +548,14 @@ public interface ${this.anoaInterfaceName($schema)}<T> extends java.util.functio
       if (!(${this.thriftDefaultTest($schema, $field)})) {
         builder.${this.thriftImportField($schema, $field)};
       }
+      return this;
+    }
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public Builder<${this.thriftClassName($schema)}> ${this.generateClearMethod($schema, $field)}() {
+      builder.${this.thriftClearMethod($schema, $field)};
       return this;
     }
 #end

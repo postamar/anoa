@@ -1,8 +1,6 @@
 package com.adgear.anoa.test;
 
 
-import com.google.protobuf.ByteString;
-
 import com.adgear.anoa.test.nested.Nested;
 import com.adgear.anoa.test.nested.NestedProtobuf;
 import com.adgear.anoa.test.nested.Variant;

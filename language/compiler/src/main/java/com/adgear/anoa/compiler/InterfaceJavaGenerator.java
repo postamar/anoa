@@ -453,6 +453,15 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
     return "e -> e.getValue()";
   }
 
+  public String protobufClearMethod(Schema schema, Schema.Field field) {
+    if (field.schema().getType() == Schema.Type.MAP) {
+      return "putAll"
+             + generateSetMethod(schema, field).substring(3) + "(java.util.Collections.emptyMap())";
+    } else {
+      return generateClearMethod(schema, field).replace("$", "") + "()";
+    }
+  }
+
   public boolean hasThriftExportField(Schema.Field field) {
     switch (field.schema().getType()) {
       case BYTES:
@@ -633,5 +642,10 @@ public class InterfaceJavaGenerator extends JavaGeneratorBase {
         return "e -> " + mangle(s.getFullName()) + ".thrift(e.getValue()).get()";
     }
     return "e -> e.getValue()";
+  }
+
+  public String thriftClearMethod(Schema schema, Schema.Field field) {
+    return "unset"
+           + Character.toUpperCase(field.name().charAt(0)) + field.name().substring(1) + "()";
   }
 }
