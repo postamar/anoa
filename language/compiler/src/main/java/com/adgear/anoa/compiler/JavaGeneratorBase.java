@@ -75,7 +75,7 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
         field.order());
   }
 
-  public String exportValueType(Schema s) {
+  protected String anoaValueType(Schema s) {
     switch (s.getType()) {
       case STRING:  return "java.lang.String";
       case BYTES:   return "java.util.function.Supplier<byte[]>";
@@ -88,19 +88,27 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
     }
   }
 
-  public String exportType(Schema s) {
+  protected String anoaType(Schema s, boolean export) {
     switch (s.getType()) {
       case INT:     return "int";
       case LONG:    return "long";
       case FLOAT:   return "float";
       case DOUBLE:  return "double";
       case BOOLEAN: return "boolean";
-      case ARRAY:   return "java.util." + (isSet(s) ? "SortedSet<" : "List<")
-                           + exportValueType(s.getElementType()) + ">";
-      case MAP:     return "java.util.SortedMap<java.lang.String,"
-                           + exportValueType(s.getValueType()) + ">";
-      default: return exportValueType(s);
+      case ARRAY:   return "java.util." + (isSet(s) ? (export ? "SortedSet<" : "Set<") : "List<")
+                           + anoaValueType(s.getElementType()) + ">";
+      case MAP:     return "java.util." + (export ? "Sorted" : "") + "Map<java.lang.String,"
+                           + anoaValueType(s.getValueType()) + ">";
+      default: return anoaValueType(s);
     }
+  }
+
+  public String exportType(Schema s) {
+    return anoaType(s, true);
+  }
+
+  public String importType(Schema s) {
+    return anoaType(s, false);
   }
 
   protected boolean isSet(Schema s) {
@@ -113,9 +121,9 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
     switch (s.getType()) {
       case ARRAY:
       case MAP:
-        return exportType(s);
+        return anoaType(s, true);
       default:
-        return exportValueType(s);
+        return anoaValueType(s);
     }
   }
 
@@ -127,38 +135,47 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
     return "_is_default_" + mangle(field.name());
   }
 
-  public String isDefaultValue(Schema schema, Schema.Field field) {
-    String getValue = generateGetMethod(schema, field) + "()";
+  static final public String VALUE = "value";
+
+  public String defaultMethodTest(Schema schema, Schema.Field field) {
+    return defaultTest(schema, field, generateGetMethod(schema, field) + "()", "_DEFAULT");
+  }
+
+  protected String defaultTest(Schema schema,
+                               Schema.Field field,
+                               String value,
+                               String defaultInstance) {
     JsonNode node = field.defaultValue();
     switch (field.schema().getType()) {
       case ARRAY:
       case MAP:
-        return getValue + ".isEmpty()";
+        return value + ".isEmpty()";
       case ENUM:
-        return getValue + ".getOrdinal() == 0";
+        return value + ".getOrdinal() == 0";
       case RECORD:
-        return getValue + ".get().equals(_DEFAULT.get()." + getValue + ".get())";
+        return value + ".get().equals("
+               + defaultInstance + ".get()." + generateGetMethod(schema, field) + "().get())";
       case BOOLEAN:
-        return (node.getBooleanValue() ? "" : "!") + getValue;
+        return (node.getBooleanValue() ? "" : "!") + value;
       case INT:
-        return Integer.toString(node.getIntValue(), 16) + " == " + getValue;
+        return Integer.toString(node.getIntValue(), 16) + " == " + value;
       case LONG:
-        return Long.toString(node.getLongValue(), 16) + " == " + getValue;
+        return Long.toString(node.getLongValue(), 16) + " == " + value;
       case FLOAT:
-        return Float.toHexString((float) node.getDoubleValue()) + " == " + getValue;
+        return Float.toHexString((float) node.getDoubleValue()) + " == " + value;
       case DOUBLE:
-        return Double.toHexString(node.getDoubleValue()) + " == " + getValue;
+        return Double.toHexString(node.getDoubleValue()) + " == " + value;
       case STRING:
         if (node.getTextValue().isEmpty()) {
-          return getValue + ".length() == 0";
+          return value + ".length() == 0";
         }
-        return node.toString() + ".equals(" + getValue + ".toString())";
+        return node.toString() + ".equals(" + value + ".toString())";
       case BYTES:
         AnoaBinaryNode binaryNode = (AnoaBinaryNode) field.defaultValue();
         if (binaryNode.getBinaryValue().length == 0) {
-          return getValue + ".get().length == 0";
+          return value + ".get().length == 0";
         }
-        return "java.util.Arrays.equals(" + getValue + ".get(), "
+        return "java.util.Arrays.equals(" + value + ".get(), "
                + binaryNode.toOctalString() + ".getBytes())";
     }
     throw new IllegalStateException();
@@ -167,8 +184,6 @@ abstract class JavaGeneratorBase extends SpecificCompiler {
   public String generateIsDefaultMethod(Schema schema, Schema.Field field) {
     return "isDefault" + generateHasMethod(schema, field).substring(3);
   }
-
-  static final public String IMPORTED = "instance";
 
   static protected String BYTES_SUPPLIER =
       "byte[] b = new byte[bb.remaining()]; "
