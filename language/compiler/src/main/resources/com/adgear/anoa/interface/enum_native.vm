@@ -1,0 +1,46 @@
+
+#if ($this.isDeprecated($schema))
+  @Deprecated
+#end
+  enum NativeImpl implements ${this.anoaInterfaceFullName()}<NativeImpl> {
+#foreach ($symbol in ${schema.getEnumSymbols()})
+    ${this.mangle($symbol)}#if ($velocityHasNext),
+#else;
+#end
+#end
+
+    @Override public NativeImpl get() { return this; }
+
+    @Override public int getOrdinal() { return ordinal(); }
+
+    static public final long serialVersionUID = ${this.version()};
+  }
+
+  /** Returns enum instance for the given ${this.anoaInterfaceName()}. */
+  static NativeImpl nativeImpl(${this.anoaInterfaceFullName()}<?> instance) {
+    return nativeImpl(instance.getOrdinal());
+  }
+
+  /** Returns enum instance for the given ordinal, defaults to first enum value. */
+  static NativeImpl nativeImpl(int ordinal) {
+    switch (ordinal) {
+#set( $i = 0 )
+#foreach ($symbol in ${schema.getEnumSymbols()})
+      case $i: return NativeImpl.${this.mangle($symbol)};
+#set( $i = $i + 1 )
+#end
+    }
+    return NativeImpl.${this.mangle($schema.getEnumSymbols().get(0))};
+  }
+
+  /** Returns enum instance for the given label, defaults to first enum value. */
+  static NativeImpl nativeImpl(java.lang.CharSequence str) {
+    if (str != null) {
+      switch (str.toString().toUpperCase()) {
+#foreach ($symbol in ${schema.getEnumSymbols()})
+        case "${this.mangle($symbol)}": return NativeImpl.${this.mangle($symbol)};
+#end
+      }
+    }
+    return NativeImpl.${this.mangle($schema.getEnumSymbols().get(0))};
+  }

@@ -1,0 +1,32 @@
+
+  static class Comparator implements java.util.Comparator<${this.anoaInterfaceFullName()}<?>>, java.io.Serializable {
+
+    @Override public int compare(${this.anoaInterfaceFullName()}<?> a, ${this.anoaInterfaceFullName()}<?> b) {
+      int _cmp;
+#foreach ($field in ${this.fields()})
+      if (0 != (_cmp = ${this.cmpMethod($field)}(a, b))) return _cmp;
+#end
+      return 0;
+    }
+#foreach ($field in ${this.fields()})
+
+    static private int ${this.cmpMethod($field)} (${this.anoaInterfaceFullName()}<?> a, ${this.anoaInterfaceFullName()}<?> b) {
+      final ${this.exportFieldType($field)} fa = a.${this.getMethod($field)}();
+      final ${this.exportFieldType($field)} fb = b.${this.getMethod($field)}();
+      ${this.cmpMethodBody($field)}
+    }
+#end
+
+    static private final Comparator INSTANCE = new Comparator();
+
+    static public final long serialVersionUID = ${this.version()};
+  }
+
+  /** Returns comparator instance for ${this.anoaInterfaceName()} objects. */
+  static java.util.Comparator<${this.anoaInterfaceFullName()}<?>> getComparator() {
+    return Comparator.INSTANCE;
+  }
+
+  @Override default int compareTo(${this.anoaInterfaceFullName()}<?> other) {
+    return getComparator().compare(this, other);
+  }

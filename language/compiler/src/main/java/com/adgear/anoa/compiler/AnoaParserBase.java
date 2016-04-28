@@ -25,26 +25,26 @@ import java.util.stream.Stream;
 /**
  * Superclass for javacc-generated parser class AnoaParser.
  */
-abstract class AnoaParserBase implements Closeable {
+abstract public class AnoaParserBase implements Closeable {
 
   /* STATIC MEMBERS */
 
   /**
    * Schema.Field property key for field ordinal value.
    */
-  static final String ORDINAL_PROP_KEY = "ordinal_";
+  static public final String ORDINAL_PROP_KEY = "ordinal_";
 
 
   /**
    * Schema property key for type modifiers.
    */
-  static final String SORTED_PROP_KEY = "sorted";
-  static final String SET_PROP_KEY = "set";
+  static public final String SORTED_PROP_KEY = "sorted";
+  static public final String SET_PROP_KEY = "set";
 
-  static final String LOWER_BOUND_PROP_KEY = "min";
-  static final String UPPER_BOUND_PROP_KEY = "max";
-  static final String MANTISSA_BITS_PROP_KEY = "mantissa";
-  static final String UNSIGNED_PROP_KEY = "unsigned";
+  static public final String LOWER_BOUND_PROP_KEY = "min";
+  static public final String UPPER_BOUND_PROP_KEY = "max";
+  static public final String MANTISSA_BITS_PROP_KEY = "mantissa";
+  static public final String UNSIGNED_PROP_KEY = "unsigned";
 
 
   /**
@@ -451,7 +451,7 @@ abstract class AnoaParserBase implements Closeable {
     return capitalizeQualified(((index < 0) ? (getNamespace() + ".") : "") + name);
   }
 
-  static String capitalizeQualified(String name) {
+  static public String capitalizeQualified(String name) {
     StringBuilder sb = new StringBuilder();
     int index = name.lastIndexOf('.');
     if (index >= 0) {

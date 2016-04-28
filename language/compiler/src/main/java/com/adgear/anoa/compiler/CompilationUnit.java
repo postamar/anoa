@@ -2,9 +2,11 @@ package com.adgear.anoa.compiler;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
+import org.codehaus.jackson.JsonNode;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -76,7 +78,53 @@ final public class CompilationUnit {
     return result;
   }
 
-  static Schema modifySchema(Schema schema, String suffix, boolean includeRemoved) {
+  static public int getPrecision(Schema schema) {
+    switch (schema.getType()) {
+      case FLOAT:
+      case DOUBLE:
+        return Optional.ofNullable(schema.getJsonProp(AnoaParserBase.MANTISSA_BITS_PROP_KEY))
+                   .filter(node -> node.asInt() < 24)
+                   .isPresent() ? 32 : 64;
+      case INT:
+      case LONG:
+        final long lb = Optional.ofNullable(schema.getJsonProp(AnoaParserBase.LOWER_BOUND_PROP_KEY))
+            .map(JsonNode::asLong)
+            .orElse(Long.MIN_VALUE);
+        final long ub = Optional.ofNullable(schema.getJsonProp(AnoaParserBase.UPPER_BOUND_PROP_KEY))
+            .map(JsonNode::asLong)
+            .orElse(Long.MAX_VALUE);
+        final long b = Math.max(Math.max(Math.abs(lb), Math.abs(ub)), Math.abs(ub - lb));
+        return (b < 0x100000000L) ? ((b < 0x10000L) ? ((b < 0x100L) ? 8 : 16) : 32) : 64;
+    }
+    throw new IllegalArgumentException(schema.toString());
+  }
+
+  static public int getThriftPrecision(Schema schema) {
+    final long lb = Optional.ofNullable(schema.getJsonProp(AnoaParserBase.LOWER_BOUND_PROP_KEY))
+        .map(JsonNode::asLong)
+        .orElse(Long.MIN_VALUE);
+    final long ub = Optional.ofNullable(schema.getJsonProp(AnoaParserBase.UPPER_BOUND_PROP_KEY))
+        .map(JsonNode::asLong)
+        .orElse(Long.MAX_VALUE);
+    final long b = Math.max(Math.abs(lb), Math.abs(ub));
+    return (b < 0x80000000L) ? ((b < 0x8000L) ? ((b < 0x80L) ? 8 : 16) : 32) : 64;
+  }
+
+  static public boolean isSet(Schema schema) {
+    return Optional.ofNullable(schema.getJsonProp(AnoaParserBase.SET_PROP_KEY))
+        .map(JsonNode::asBoolean)
+        .orElse(false);
+  }
+
+  static public boolean isUnsigned(Schema schema) {
+    return Optional.ofNullable(schema.getJsonProp(AnoaParserBase.LOWER_BOUND_PROP_KEY))
+        .filter(node -> node.isFloatingPointNumber()
+                        ? (node.asDouble() >= 0.0)
+                        : (node.asLong() >= 0L))
+        .isPresent();
+  }
+
+  static public Schema modifySchema(Schema schema, String suffix, boolean includeRemoved) {
     final Schema result;
     switch (schema.getType()) {
       case ENUM:

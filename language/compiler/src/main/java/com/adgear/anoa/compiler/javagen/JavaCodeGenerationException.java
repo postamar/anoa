@@ -1,4 +1,4 @@
-package com.adgear.anoa.compiler;
+package com.adgear.anoa.compiler.javagen;
 
 public class JavaCodeGenerationException extends Exception {
 

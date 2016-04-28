@@ -1,5 +1,8 @@
 package com.adgear.anoa.compiler;
 
+import com.adgear.anoa.compiler.javagen.AvroJavaGenerator;
+import com.adgear.anoa.compiler.javagen.JavaCodeGenerationException;
+
 import org.apache.avro.compiler.specific.SpecificCompiler;
 
 import java.io.File;

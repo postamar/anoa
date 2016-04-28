@@ -1,0 +1,146 @@
+
+#if ($this.isDeprecated($schema))
+  @Deprecated
+#end
+  static class Thrift implements ${this.anoaInterfaceFullName()}<${this.className()}> {
+
+    private ${this.className()} wrapped;
+#foreach ($field in ${this.fields()})
+    transient private java.lang.Boolean ${this.isDefaultFieldName($field)};
+#if ($this.hasExportField($field))
+    transient private ${this.exportFieldType($field)} ${this.exportFieldName($field)};
+#end
+#end
+
+    /** Wraps an existing instance. Only use this if you know what you are doing. */
+    public Thrift(${this.className()} wrapped) { this.wrapped = wrapped; }
+
+    /** Create a new wrapper. */
+    public Thrift() { this(new ${this.className()}()); }
+
+    @Override public ${this.className()} get() { return wrapped; }
+
+    @Override public Builder<${this.className()}> newBuilder() {
+      return newThriftBuilder(get());
+    }
+#foreach ($field in ${this.fields()})
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public ${this.exportType($field)} ${this.getMethod($field)}() {
+#if ($this.hasExportField($field))
+      if (${this.exportFieldName($field)} == null) {
+        ${this.exportFieldName($field)} = ${this.exportValue($field)};
+      }
+      return ${this.exportFieldName($field)};
+#else
+      return ${this.exportValue($field)};
+#end
+    }
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public boolean ${this.isDefaultMethod($field)}() {
+      if (${this.isDefaultFieldName($field)} == null) {
+        ${this.isDefaultFieldName($field)} = ${this.defaultTest($field)};
+      }
+      return ${this.isDefaultFieldName($field)};
+    }
+#end
+
+    @Override public boolean equals(Object other) {
+      if (other == this) return true;
+      if (other == null || !(other instanceof Thrift)) return false;
+      return wrapped.equals(((Thrift) other).wrapped);
+    }
+
+    @Override public int hashCode() { return wrapped.hashCode(); }
+
+    @Override public String toString() { return wrapped.toString(); }
+
+    static private java.lang.ThreadLocal<Thrift> _DEFAULT = new java.lang.ThreadLocal<Thrift>() {
+      @Override protected Thrift initialValue() { return new Thrift(); }
+    };
+
+    static public final long serialVersionUID = ${this.version()};
+  }
+
+  static class ThriftBuilder implements Builder<${this.className()}> {
+
+    final private ${this.className()} builder;
+
+    /** Only use this if you know what you are doing. */
+    public ThriftBuilder(${this.className()} builder) { this.builder = builder; }
+
+    @Override public ${this.anoaInterfaceFullName()}<${this.className()}> build() {
+      return new Thrift((${this.className()}) builder.deepCopy());
+    }
+#foreach ($field in ${this.fields()})
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public Builder<${this.className()}> ${this.setMethod($field)}(${this.importType($field)} value) {
+      if (!(${this.builderDefaultTest($field)})) {
+        builder.${this.importValue($field)};
+      }
+      return this;
+    }
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public Builder<${this.className()}> ${this.clearMethod($field)}() {
+      builder.${this.builderClearMethod($field)};
+      return this;
+    }
+#end
+  }
+
+  /** Returns new Thrift builder instance with default values. */
+  static Builder<${this.className()}> newThriftBuilder() {
+    return new ThriftBuilder(new ${this.className()}());
+  }
+
+  /** Returns new Thrift builder instance based on existing prototype. */
+  static Builder<${this.className()}> newThriftBuilder(${this.className()} other) {
+    return new ThriftBuilder((${this.className()}) other.deepCopy());
+  }
+
+  /** Returns new Thrift builder instance based on existing prototype ${this.anoaInterfaceName()}. */
+  static Builder<${this.className()}> newThriftBuilder(${this.anoaInterfaceFullName()}<?> other) {
+    return newThriftBuilder()
+#foreach ($field in ${this.fields()})
+#if ($velocityHasNext)
+      .${this.setMethod($field)}(other.${this.getMethod($field)}())
+#else
+      .${this.setMethod($field)}(other.${this.getMethod($field)}());
+#end
+#end
+  }
+
+  /** Returns a wrapped Thrift struct based on an instance of ${this.anoaInterfaceName()}. */
+  static Thrift thrift(${this.anoaInterfaceFullName()}<?> instance) {
+    if (instance instanceof Thrift) {
+      return (Thrift) instance;
+    }
+    return (Thrift) newThriftBuilder(instance).build();
+  }
+
+  /** Creates a new wrapped Thrift struct copied from an existing instance. */
+  @SuppressWarnings("all")
+  static Thrift thrift(${this.className()} instance) {
+    return new Thrift((${this.className()}) instance.deepCopy());
+  }
+
+  /** Returns Thrift class for this struct. */
+  static java.lang.Class<${this.className()}> getThriftClass() {
+    return ${this.className()}.class;
+  }
+
+  /** Returns Thrift metadata map for this struct. */
+  static java.util.Map<${this.className()}._Fields, org.apache.thrift.meta_data.FieldMetaData> getThriftMetadataMap() {
+    return ${this.className()}.metaDataMap;
+  }

@@ -1,5 +1,7 @@
 package com.adgear.anoa.compiler;
 
+import com.adgear.anoa.compiler.javagen.JavaCodeGenerationException;
+
 import org.apache.avro.Schema;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.BooleanNode;
@@ -125,11 +127,11 @@ final class ProtobufGenerator extends GeneratorBase {
         return "bytes";
       case DOUBLE:
       case FLOAT:
-        return getPrecision(schema) > 32 ? "double" : "float";
+        return CompilationUnit.getPrecision(schema) > 32 ? "double" : "float";
       case INT:
       case LONG:
-        return (isUnsigned(schema) ? "uint" : "sint")
-               + (getPrecision(schema) > 32 ? "64" : "32");
+        return (CompilationUnit.isUnsigned(schema) ? "uint" : "sint")
+               + (CompilationUnit.getPrecision(schema) > 32 ? "64" : "32");
       case STRING:
         return "string";
       default:

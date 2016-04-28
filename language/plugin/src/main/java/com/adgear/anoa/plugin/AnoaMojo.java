@@ -1,7 +1,7 @@
 package com.adgear.anoa.plugin;
 
 import com.adgear.anoa.compiler.CompilationUnit;
-import com.adgear.anoa.compiler.JavaCodeGenerationException;
+import com.adgear.anoa.compiler.javagen.JavaCodeGenerationException;
 import com.adgear.anoa.compiler.ParseException;
 import com.adgear.anoa.compiler.SchemaGenerationException;
 

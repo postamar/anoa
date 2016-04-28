@@ -1,0 +1,220 @@
+
+#if ($this.isDeprecated($schema))
+  @Deprecated
+#end
+  static class Avro implements ${this.anoaInterfaceFullName()}<${this.className()}> {
+
+    private byte[] binaryEncoding;
+    transient private ${this.className()} wrapped;
+#foreach ($field in ${this.fields()})
+    transient private java.lang.Boolean ${this.isDefaultFieldName($field)};
+#if ($this.hasExportField($field))
+    transient private ${this.exportFieldType($field)} ${this.exportFieldName($field)};
+#end
+#end
+
+    private Avro(${this.className()} wrapped, byte[] binaryEncoding) {
+      this.wrapped = wrapped;
+      this.binaryEncoding = binaryEncoding;
+    }
+
+    /** Constructs a new Avro instance based on a message's binary encoding. Only use this if you know what you're doing. */
+    public Avro(byte[] binaryEncoding) { this(null, binaryEncoding); }
+
+    @Override public ${this.className()} get() {
+      if (wrapped == null) {
+        try {
+          wrapped = decode(binaryEncoding);
+        } catch (java.io.IOException e) {
+          throw new java.io.UncheckedIOException(e);
+        }
+      }
+      return wrapped;
+    }
+
+    @Override public Builder<${this.className()}> newBuilder() {
+      return newAvroBuilder(get());
+    }
+
+    /** Returns an Avro binary encoding of this record. */
+    public byte[] toByteArray() {
+      return (byte[]) encoded().binaryEncoding.clone();
+    }
+
+    /** Returns the Avro binary encoding of this record wrapped in a read-only buffer. */
+    public java.nio.ByteBuffer toByteBuffer() {
+      return java.nio.ByteBuffer.wrap(encoded().binaryEncoding).asReadOnlyBuffer();
+    }
+#foreach ($field in ${this.fields()})
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public ${this.exportType($field)} ${this.getMethod($field)}() {
+#if ($this.hasExportField($field))
+      if (${this.exportFieldName($field)} == null) {
+        ${this.exportFieldName($field)} = ${this.exportValue($field)};
+      }
+      return ${this.exportFieldName($field)};
+#else
+      return ${this.exportValue($field)};
+#end
+    }
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public boolean ${this.isDefaultMethod($field)}() {
+      if (${this.isDefaultFieldName($field)} == null) {
+        ${this.isDefaultFieldName($field)} = ${this.defaultTest($field)};
+      }
+      return ${this.isDefaultFieldName($field)};
+    }
+#end
+
+    @Override public boolean equals(Object other) {
+      if (other == this) return true;
+      if (other == null && !(other instanceof Avro)) return false;
+      return get().equals(((Avro) other).get());
+    }
+
+    @Override public int hashCode() { return get().hashCode(); }
+
+    @Override public String toString() { return get().toString(); }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      if (binaryEncoding == null) { encode(); }
+      out.defaultWriteObject();
+    }
+
+    public Avro encoded() {
+      if (binaryEncoding != null) {
+        try {
+          encode();
+        } catch (java.io.IOException e) {
+          throw new java.io.UncheckedIOException(e);
+        }
+      }
+      return this;
+    }
+
+    private void encode() throws java.io.IOException {
+      java.io.ByteArrayOutputStream stream = _ENCODER_STREAM.get();
+      org.apache.avro.io.BinaryEncoder encoder = _ENCODER.get();
+      stream.reset();
+      wrapped.encode(encoder);
+      encoder.flush();
+      binaryEncoding = stream.toByteArray();
+    }
+
+    static private ${this.className()} decode(byte[] binaryEncoding) throws java.io.IOException {
+      ${this.className()} instance = new ${this.className()}();
+      org.apache.avro.io.BinaryDecoder decoder = org.apache.avro.io.DecoderFactory.get().binaryDecoder(binaryEncoding, _DECODER.get());
+      return instance.decode(decoder);
+    }
+
+    /** Decodes a Avro record. */
+    static public ${this.anoaInterfaceFullName()}<${this.className()}> from(byte[] binaryEncoding) throws java.io.IOException {
+      return new Avro(decode(binaryEncoding), binaryEncoding);
+    }
+
+    static private java.lang.ThreadLocal<org.apache.avro.io.BinaryDecoder> _DECODER = new java.lang.ThreadLocal<org.apache.avro.io.BinaryDecoder>() {
+      @Override protected org.apache.avro.io.BinaryDecoder initialValue() { return org.apache.avro.io.DecoderFactory.get().binaryDecoder(new byte[0], null); }
+    };
+
+    static private java.lang.ThreadLocal<java.io.ByteArrayOutputStream> _ENCODER_STREAM = new java.lang.ThreadLocal<java.io.ByteArrayOutputStream>() {
+      @Override protected java.io.ByteArrayOutputStream initialValue() { return new java.io.ByteArrayOutputStream(); }
+    };
+
+    static private java.lang.ThreadLocal<org.apache.avro.io.BinaryEncoder> _ENCODER = new java.lang.ThreadLocal<org.apache.avro.io.BinaryEncoder>() {
+      @Override protected org.apache.avro.io.BinaryEncoder initialValue() { return org.apache.avro.io.EncoderFactory.get().binaryEncoder(_ENCODER_STREAM.get(), null); }
+    };
+
+    static private java.lang.ThreadLocal<Avro> _DEFAULT = new java.lang.ThreadLocal<Avro>() {
+      @Override protected Avro initialValue() { return new Avro(${this.className()}.newBuilder().build(), null); }
+    };
+
+    static public final long serialVersionUID = ${this.version()};
+  }
+
+  static class AvroBuilder implements Builder<${this.className()}> {
+
+    final private ${this.className()}.Builder builder;
+
+    /** Only use this if you know what you are doing. */
+    public AvroBuilder(${this.className()}.Builder builder) { this.builder = builder; }
+
+    @Override public ${this.anoaInterfaceFullName()}<${this.className()}> build() {
+      return new Avro(builder.build(), null);
+    }
+#foreach ($field in ${this.fields()})
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public Builder<${this.className()}> ${this.setMethod($field)}(${this.importType($field)} value) {
+      builder.${this.setMethod($field)}(${this.importValue($field)});
+      return this;
+    }
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public Builder<${this.className()}> ${this.clearMethod($field)}() {
+      builder.${this.builderClearMethod($field)};
+      return this;
+    }
+#end
+  }
+
+  /** Returns new Avro builder instance with default values. */
+  static Builder<${this.className()}> newAvroBuilder() {
+    return new AvroBuilder(${this.className()}.newBuilder());
+  }
+
+  /** Returns new Avro builder instance based on existing prototype. */
+  static Builder<${this.className()}> newAvroBuilder(${this.className()} other) {
+    return new AvroBuilder(${this.className()}.newBuilder(other));
+  }
+
+  /** Returns new Avro builder instance based on existing prototype builder. */
+  static Builder<${this.className()}> newAvroBuilder(${this.className()}.Builder other) {
+    return new AvroBuilder(${this.className()}.newBuilder(other));
+  }
+
+  /** Returns new Avro builder instance based on existing prototype ${this.anoaInterfaceName()}. */
+  static Builder<${this.className()}> newAvroBuilder(${this.anoaInterfaceFullName()}<?> other) {
+    return newAvroBuilder()
+#foreach ($field in ${this.fields()})
+#if ($velocityHasNext)
+      .${this.setMethod($field)}(other.${this.getMethod($field)}())
+#else
+      .${this.setMethod($field)}(other.${this.getMethod($field)}());
+#end
+#end
+  }
+
+  /** Returns a wrapped Avro record based on an instance of ${this.anoaInterfaceName()}. */
+  static Avro avro(${this.anoaInterfaceFullName()}<?> instance) {
+    if (instance instanceof Avro) {
+      return (Avro) instance;
+    } else {
+      return (Avro) newAvroBuilder(instance).build();
+    }
+  }
+
+  /** Wraps an existing Avro record. */
+  static Avro avro(${this.className()} wrapped) {
+    assert wrapped != null;
+    return new Avro(wrapped.freeze(), null);
+  }
+
+  /** Returns Avro record class. */
+  static java.lang.Class<${this.className()}> getAvroClass() {
+    return ${this.className()}.class;
+  }
+
+  /** Returns Avro record schema. */
+  static org.apache.avro.Schema getAvroSchema() {
+    return ${this.className()}.SCHEMA$;
+  }

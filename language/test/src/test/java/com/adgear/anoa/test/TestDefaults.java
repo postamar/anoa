@@ -46,11 +46,12 @@ public class TestDefaults {
 
   Nested<?> nonDefault = Nested.protobuf(
       Nested.newProtobufBuilder()
-          .setEnumField(com.adgear.anoa.test.nested.Enum.Values.ON)
-          .setEnumListField(Collections.singletonList(com.adgear.anoa.test.nested.Enum.Values.OFF))
+          .setEnumField(com.adgear.anoa.test.nested.Enum.NativeImpl.ON)
+          .setEnumListField(
+              Collections.singletonList(com.adgear.anoa.test.nested.Enum.NativeImpl.OFF))
           .setEnumMapField(
-              Stream.of(com.adgear.anoa.test.nested.Enum.Values.ON,
-                        com.adgear.anoa.test.nested.Enum.Values.OFF)
+              Stream.of(com.adgear.anoa.test.nested.Enum.NativeImpl.ON,
+                        com.adgear.anoa.test.nested.Enum.NativeImpl.OFF)
                   .collect(Collectors.toMap(e -> e.toString(), e -> e)))
           .setVariant(Variant.newProtobufBuilder()
                           .setBooleanVariant(false)

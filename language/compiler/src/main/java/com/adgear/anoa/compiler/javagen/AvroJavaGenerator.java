@@ -1,4 +1,6 @@
-package com.adgear.anoa.compiler;
+package com.adgear.anoa.compiler.javagen;
+
+import com.adgear.anoa.compiler.CompilationUnit;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
@@ -8,7 +10,7 @@ import java.io.IOException;
 /**
  * Custom java source code generator for Avro enums and SpecificRecords.
  */
-public class AvroJavaGenerator extends JavaGeneratorBase {
+public class AvroJavaGenerator extends AbstractJavaGenerator {
 
   public AvroJavaGenerator(Protocol protocol) {
     super(protocol);
@@ -17,18 +19,6 @@ public class AvroJavaGenerator extends JavaGeneratorBase {
 
   public String escapedSchema(Schema schema) throws IOException {
     return javaSplit(CompilationUnit.modifySchema(schema, "", false).toString());
-  }
-
-  @Override
-  public String anoaInterfaceName(Schema schema) {
-    return super.anoaInterfaceName(schema)
-        .substring(0, super.anoaInterfaceName(schema).length() - 4);
-  }
-
-  @Override
-  public String anoaInterfaceFullName(Schema schema) {
-    return super.anoaInterfaceFullName(schema)
-        .substring(0, super.anoaInterfaceFullName(schema).length() - 4);
   }
 
   public boolean isRecursiveFreeze(Schema.Field field) {
@@ -138,5 +128,46 @@ public class AvroJavaGenerator extends JavaGeneratorBase {
         )) + ".decode(" + DECODER + ")";
     }
     throw new IllegalStateException();
+  }
+
+
+  static protected String avroInnerType(Schema s) {
+    switch (s.getType()) {
+      case STRING:  return "org.apache.avro.util.Utf8";
+      case BYTES:   return "java.nio.ByteBuffer";
+      case INT:     return "java.lang.Integer";
+      case LONG:    return "java.lang.Long";
+      case FLOAT:   return "java.lang.Float";
+      case DOUBLE:  return "java.lang.Double";
+      case BOOLEAN: return "java.lang.Boolean";
+      default:      return  mangle(s.getFullName());
+    }
+  }
+
+  static public String avroType(Schema s) {
+    switch (s.getType()) {
+      case BOOLEAN:
+      case INT:
+      case LONG:
+      case FLOAT:
+      case DOUBLE:
+        return s.getType().toString().toLowerCase();
+      case ARRAY:
+        return "org.apache.avro.generic.GenericData.Array<"
+               + avroInnerType(s.getElementType()) + ">";
+      case MAP:
+        return "java.util.HashMap<org.apache.avro.util.Utf8,"
+               + avroInnerType(s.getValueType()) + ">";
+      default:
+        return avroInnerType(s);
+    }
+  }
+
+  protected String avroEntryType(Schema s) {
+    if (s.getType() == Schema.Type.MAP) {
+      return "java.util.Map.Entry<org.apache.avro.util.Utf8,"
+             + avroInnerType(s.getValueType()) + ">";
+    }
+    return avroInnerType(s.getElementType());
   }
 }

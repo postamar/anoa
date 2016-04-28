@@ -70,4 +70,27 @@ public class TestJavaSerialization {
       Assert.assertEquals(LogEvent.thrift(ts.thriftPojos.get(i)), ois.readObject());
     }
   }
+
+
+  @Test
+  public void testNative() throws Exception {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    ObjectOutputStream oos = new ObjectOutputStream(baos);
+    for (LogEvent nativeImpl : ts.thriftPojos.stream()
+        .map(LogEvent::thrift)
+        .map(LogEvent::nativeImpl)
+        .collect(Collectors.toList())) {
+      oos.writeObject(nativeImpl);
+    }
+    oos.close();
+    ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+    ObjectInputStream ois = new ObjectInputStream(bais);
+    for (int i = 0; i < ts.thriftPojos.size(); i++) {
+      Object expected = LogEvent.nativeImpl(LogEvent.thrift(ts.thriftPojos.get(i)));
+      Object actual = ois.readObject();
+      if (!expected.equals(actual)) {
+        Assert.assertEquals(expected, actual);
+      };
+    }
+  }
 }
