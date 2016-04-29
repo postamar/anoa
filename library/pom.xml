@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>anoa</artifactId>
+    <groupId>com.adgear</groupId>
+    <version>3.0.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>anoa-library</artifactId>
+  <packaging>pom</packaging>
+  <description>
+    Anoa serialization and deserialization library modules.
+  </description>
+
+  <modules>
+    <module>core</module>
+    <module>tools</module>
+  </modules>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.10.2</version>
+        <configuration>
+          <additionalparam>-Xdoclint:none</additionalparam>
+          <show>public</show>
+          <locale>en</locale>
+          <links>
+            <link>http://avro.apache.org/docs/${project.version.avro}/api/java</link>
+            <link>http://fasterxml.github.io/jackson-core/javadoc/2.1.0</link>
+            <link>http://fasterxml.github.io/jackson-databind/javadoc/2.1.0</link>
+            <link>http://people.apache.org/~thejas/thrift-0.9/javadoc</link>
+            <link>http://docs.guava-libraries.googlecode.com/git-history/release/javadoc</link>
+            <link>http://www.jooq.org/products/jool/javadoc/0.9.5</link>
+            <link>http://types.cs.washington.edu/checker-framework/current/api</link>
+          </links>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${project.version.jackson}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+</project>
+

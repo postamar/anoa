@@ -1,9 +1,9 @@
 package com.adgear.anoa.plugin;
 
 import com.adgear.anoa.compiler.CompilationUnit;
-import com.adgear.anoa.compiler.javagen.JavaCodeGenerationException;
 import com.adgear.anoa.compiler.ParseException;
 import com.adgear.anoa.compiler.SchemaGenerationException;
+import com.adgear.anoa.compiler.javagen.JavaCodeGenerationException;
 
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
@@ -47,13 +47,13 @@ public class AnoaMojo extends AbstractMojo {
       defaultValue = "${project.build.directory}/generated-test-sources")
   private File testOutputDirectory;
 
-  @Parameter(property = "generateAvro", defaultValue = "true")
+  @Parameter(property = "generateAvro", defaultValue = "false")
   private boolean generateAvro;
 
-  @Parameter(property = "generateProtobuf", defaultValue = "true")
+  @Parameter(property = "generateProtobuf", defaultValue = "false")
   private boolean generateProtobuf;
 
-  @Parameter(property = "generateThrift", defaultValue = "true")
+  @Parameter(property = "generateThrift", defaultValue = "false")
   private boolean generateThrift;
 
   @Parameter(property = "protocCommand", defaultValue = "protoc")
