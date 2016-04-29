@@ -356,4 +356,8 @@ final public class InterfaceJavaGenerator
   public String nativeDefaultValue(Schema.Field field) {
     return nativeImpl.nativeDefaultValue(field);
   }
+
+  public String nativeToString(Schema.Field field) {
+    return nativeImpl.nativeToString(field);
+  }
 }

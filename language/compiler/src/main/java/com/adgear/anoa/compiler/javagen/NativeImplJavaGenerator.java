@@ -33,28 +33,70 @@ class NativeImplJavaGenerator extends AbstractImplJavaGenerator {
     return false;
   }
 
-  String nativeFieldType(Schema.Field f) {
-    switch (f.schema().getType()) {
+  String nativeFieldType(Schema.Field field) {
+    switch (field.schema().getType()) {
       case BYTES:
         return "byte[]";
       case ARRAY:
-        if (f.schema().getElementType().getType() == Schema.Type.BYTES) {
-          return "java.util." + (CompilationUnit.isSet(f.schema()) ? "SortedSet<" : "List<")
+        if (field.schema().getElementType().getType() == Schema.Type.BYTES) {
+          return "java.util." + (CompilationUnit.isSet(field.schema()) ? "SortedSet<" : "List<")
                  + "byte[]>";
         }
         break;
       case MAP:
-        if (f.schema().getValueType().getType() == Schema.Type.BYTES) {
+        if (field.schema().getValueType().getType() == Schema.Type.BYTES) {
           return "java.util.SortedMap<java.lang.String,byte[]>";
         }
         break;
     }
-    return ijg.exportFieldType(f);
+    return ijg.exportType(field);
   }
 
   String nativeFieldName(Schema.Field field) {
     return "__" + mangle(field.name());
   }
+
+  String nativeToString(Schema.Field field) {
+    switch (field.schema().getType()) {
+      case BYTES:
+        return "\"\\\"\" + java.util.Base64.getEncoder().encodeToString("
+               + nativeFieldName(field) + ") + '\\\"'";
+      case STRING:
+        return "\"\\\"\" + " + nativeFieldName(field) + ".replace(\"\\\"\",\"\\\\\\\"\") + '\\\"'";
+      case ARRAY:
+        final String elementFn;
+        switch (field.schema().getElementType().getType()) {
+          case BYTES:
+            elementFn = "v -> \"\\\"\" + java.util.Base64.getEncoder().encodeToString(v) + '\\\"'";
+            break;
+          case STRING:
+            elementFn = "v -> \"\\\"\" + v.replace(\"\\\"\",\"\\\\\\\"\") + '\\\"'";
+            break;
+          default:
+            elementFn = "java.lang.Object::toString";
+        }
+        return nativeFieldName(field) + ".stream().map(" + elementFn
+               + ").collect(java.util.stream.Collectors.joining(\", \", \"[\", \"]\"))";
+      case MAP:
+        final String value;
+        switch (field.schema().getValueType().getType()) {
+          case BYTES:
+            value = "'\\\"' + java.util.Base64.getEncoder().encodeToString(e.getValue()) + '\\\"'";
+            break;
+          case STRING:
+            value = "'\\\"' + e.getValue().replace(\"\\\"\",\"\\\\\\\"\") + '\\\"'";
+            break;
+          default:
+            value = "e.getValue()";
+        }
+        return nativeFieldName(field) + ".entrySet().stream()"
+               + ".map(e -> \"\\\"\" + e.getKey() + \"\\\": \" + " + value + ").collect("
+               + "java.util.stream.Collectors.joining(\", \", \"{\", \"}\"))";
+      default:
+        return nativeFieldName(field);
+    }
+  }
+
 
   @Override
   String exportValue(Schema.Field field) {

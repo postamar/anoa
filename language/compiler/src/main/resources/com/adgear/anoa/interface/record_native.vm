@@ -4,13 +4,13 @@
 #end
   static class NativeImpl implements ${this.anoaInterfaceFullName()}<NativeImpl> {
 
+    transient private java.lang.String json;
 #foreach ($field in ${this.fields()})
     private ${this.nativeFieldType($field)} ${this.nativeFieldName($field)};
     transient private java.lang.Boolean ${this.isDefaultFieldName($field)};
 #if ($this.hasExportField($field))
     transient private ${this.exportFieldType($field)} ${this.exportFieldName($field)};
 #end
-
 #end
 
     private NativeImpl() {
@@ -18,12 +18,14 @@
       ${this.nativeFieldName($field)} = ${this.nativeDefaultValue($field)};
       ${this.isDefaultFieldName($field)} = java.lang.Boolean.TRUE;
 #end
+      json = "{}";
     }
 
     private NativeImpl(NativeImpl other) {
 #foreach ($field in ${this.fields()})
       ${this.setMethod($field)}(other.${this.getMethod($field)}());
 #end
+      json = other.json;
     }
 
     @Override public NativeImpl get() {
@@ -34,25 +36,33 @@
       return newNativeImplBuilder(this);
     }
 
-    @Override public String toString() {
-      return "${this.anoaInterfaceName()}("
+    private java.lang.String buildJson() {
+      java.lang.StringBuilder sb = new StringBuilder();
 #foreach ($field in ${this.fields()})
-#if ($velocityHasNext)
-         + ${this.nativeToString($field)} + ", "
-#else
-         + ${this.nativeToString($field)} + ")";
+      if (!${this.isDefaultMethod($field)}()) {
+        sb.append((0 == sb.length()) ? "{\"$field.name()\": " : ", \"$field.name()\": ")
+          .append(${this.nativeToString($field)});
+      }
 #end
-#end
+      return (0 == sb.length()) ? "{}" : sb.append('}').toString();
+    }
+
+    @Override public String toString() {
+      if (null == json) {
+        json = buildJson();
+      }
+      return json;
     }
 
     @Override public int hashCode() {
-
+      return toString().hashCode();
     }
 
     @Override public boolean equals(Object other) {
-
+      if (other == this) return true;
+      if (other == null || !(other instanceof NativeImpl)) return false;
+      return toString().equals(other.toString());
     }
-
 #foreach ($field in ${this.fields()})
 
 #if ($this.isDeprecated($field))
@@ -82,6 +92,7 @@
     private void ${this.setMethod($field)}(${this.importType($field)} value) {
       this.${this.nativeFieldName($field)} = ${this.importValue($field)};
       this.${this.isDefaultFieldName($field)} = null;
+      this.json = null;
 #if ($this.hasExportField($field))
       this.${this.exportFieldName($field)} = null;
 #end
