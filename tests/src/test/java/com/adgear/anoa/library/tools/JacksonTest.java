@@ -1,13 +1,13 @@
 package com.adgear.anoa.library.tools;
 
-import com.adgear.anoa.library.write.AvroConsumers;
-import com.adgear.anoa.library.write.AvroEncoders;
-import com.adgear.anoa.library.write.CborConsumers;
-import com.adgear.anoa.library.write.CsvConsumers;
-import com.adgear.anoa.library.write.JacksonEncoders;
-import com.adgear.anoa.library.write.JsonConsumers;
-import com.adgear.anoa.library.write.SmileConsumers;
-import com.adgear.anoa.library.write.WriteConsumer;
+import com.adgear.anoa.write.AvroConsumers;
+import com.adgear.anoa.write.AvroEncoders;
+import com.adgear.anoa.write.CborConsumers;
+import com.adgear.anoa.write.CsvConsumers;
+import com.adgear.anoa.write.JacksonEncoders;
+import com.adgear.anoa.write.JsonConsumers;
+import com.adgear.anoa.write.SmileConsumers;
+import com.adgear.anoa.write.WriteConsumer;
 import com.adgear.anoa.read.AvroDecoders;
 import com.adgear.anoa.read.AvroStreams;
 import com.adgear.anoa.read.CborStreams;

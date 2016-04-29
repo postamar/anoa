@@ -2,8 +2,8 @@ package com.adgear.anoa.library.tools.runnable;
 
 import com.adgear.anoa.AnoaReflectionUtils;
 import com.adgear.anoa.library.tools.function.AnoaFieldNuller;
-import com.adgear.anoa.library.write.AvroConsumers;
-import com.adgear.anoa.library.write.WriteConsumer;
+import com.adgear.anoa.write.AvroConsumers;
+import com.adgear.anoa.write.WriteConsumer;
 import com.adgear.anoa.read.AvroStreams;
 
 import org.apache.avro.specific.SpecificRecord;

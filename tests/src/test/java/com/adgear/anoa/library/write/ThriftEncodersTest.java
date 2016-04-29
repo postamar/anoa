@@ -5,6 +5,7 @@ import com.adgear.anoa.AnoaHandler;
 import com.adgear.anoa.read.ThriftDecoders;
 import com.adgear.anoa.test.AnoaTestSample;
 import com.adgear.anoa.test.ad_exchange.LogEventThrift;
+import com.adgear.anoa.write.ThriftEncoders;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 

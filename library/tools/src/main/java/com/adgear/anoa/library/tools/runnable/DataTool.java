@@ -4,14 +4,15 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 
 import com.adgear.anoa.AnoaReflectionUtils;
-import com.adgear.anoa.library.write.AvroConsumers;
-import com.adgear.anoa.library.write.CborConsumers;
-import com.adgear.anoa.library.write.CsvConsumers;
-import com.adgear.anoa.library.write.JacksonConsumers;
-import com.adgear.anoa.library.write.ProtobufConsumers;
-import com.adgear.anoa.library.write.SmileConsumers;
-import com.adgear.anoa.library.write.ThriftConsumers;
-import com.adgear.anoa.library.write.WriteConsumer;
+import com.adgear.anoa.write.AvroConsumers;
+import com.adgear.anoa.write.CborConsumers;
+import com.adgear.anoa.write.CsvConsumers;
+import com.adgear.anoa.write.JacksonConsumers;
+import com.adgear.anoa.write.JsonConsumers;
+import com.adgear.anoa.write.ProtobufConsumers;
+import com.adgear.anoa.write.SmileConsumers;
+import com.adgear.anoa.write.ThriftConsumers;
+import com.adgear.anoa.write.WriteConsumer;
 import com.adgear.anoa.read.AvroDecoders;
 import com.adgear.anoa.read.AvroStreams;
 import com.adgear.anoa.read.CborStreams;
@@ -280,7 +281,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> imple
             jacksonConsumers = new CsvConsumers(builder.build());
             break;
           case JSON:
-            jacksonConsumers = new com.adgear.anoa.library.write.JsonConsumers();
+            jacksonConsumers = new JsonConsumers();
             break;
           case SMILE:
             jacksonConsumers = new SmileConsumers();
@@ -332,7 +333,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> imple
             jacksonConsumers = new CsvConsumers(builder.build());
             break;
           case JSON:
-            jacksonConsumers = new com.adgear.anoa.library.write.JsonConsumers();
+            jacksonConsumers = new JsonConsumers();
             break;
           case SMILE:
             jacksonConsumers = new SmileConsumers();
@@ -395,7 +396,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> imple
             jacksonConsumers = new CsvConsumers(builder.build());
             break;
           case JSON:
-            jacksonConsumers = new com.adgear.anoa.library.write.JsonConsumers();
+            jacksonConsumers = new JsonConsumers();
             break;
           case SMILE:
             jacksonConsumers = new SmileConsumers();
@@ -436,7 +437,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> imple
         supplier = CborConsumers::new;
         break;
       case JSON:
-        supplier = com.adgear.anoa.library.write.JsonConsumers::new;
+        supplier = JsonConsumers::new;
         break;
       case SMILE:
         supplier = SmileConsumers::new;

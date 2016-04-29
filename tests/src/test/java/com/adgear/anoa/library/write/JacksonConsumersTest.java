@@ -1,7 +1,9 @@
 package com.adgear.anoa.library.write;
 
-import com.adgear.anoa.read.JacksonStreamsTest;
+import com.adgear.anoa.library.read.JacksonStreamsTest;
 import com.adgear.anoa.test.AnoaTestSample;
+import com.adgear.anoa.write.JacksonConsumers;
+import com.adgear.anoa.write.WriteConsumer;
 import com.fasterxml.jackson.core.FormatSchema;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;

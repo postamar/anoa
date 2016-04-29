@@ -2,9 +2,9 @@ package com.adgear.anoa.library.other;
 
 import com.adgear.anoa.Anoa;
 import com.adgear.anoa.AnoaHandler;
-import com.adgear.anoa.library.write.AvroConsumers;
-import com.adgear.anoa.library.write.AvroEncoders;
-import com.adgear.anoa.library.write.WriteConsumer;
+import com.adgear.anoa.write.AvroConsumers;
+import com.adgear.anoa.write.AvroEncoders;
+import com.adgear.anoa.write.WriteConsumer;
 import com.adgear.anoa.read.AvroDecoders;
 import com.adgear.anoa.read.AvroStreams;
 import com.adgear.anoa.read.JacksonStreams;

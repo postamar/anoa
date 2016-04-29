@@ -1,6 +1,6 @@
 package com.adgear.anoa;
 
-import com.adgear.anoa.library.write.WriteConsumer;
+import com.adgear.anoa.write.WriteConsumer;
 
 import org.jooq.lambda.fi.util.function.CheckedBiConsumer;
 import org.jooq.lambda.fi.util.function.CheckedBiFunction;

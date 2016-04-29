@@ -5,6 +5,8 @@ import com.adgear.anoa.AnoaHandler;
 import com.adgear.anoa.read.ProtobufDecoders;
 import com.adgear.anoa.test.AnoaTestSample;
 import com.adgear.anoa.test.ad_exchange.AdExchangeProtobuf;
+import com.adgear.anoa.write.AvroEncoders;
+import com.adgear.anoa.write.ProtobufEncoders;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.TokenBuffer;

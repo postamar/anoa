@@ -3,6 +3,8 @@ package com.adgear.anoa.library.write;
 import com.adgear.anoa.read.AvroStreams;
 import com.adgear.anoa.test.AnoaTestSample;
 import com.adgear.anoa.test.ad_exchange.LogEventAvro;
+import com.adgear.anoa.write.AvroConsumers;
+import com.adgear.anoa.write.WriteConsumer;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 import org.apache.avro.generic.GenericRecord;

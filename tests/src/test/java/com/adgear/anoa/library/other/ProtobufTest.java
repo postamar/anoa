@@ -1,7 +1,7 @@
 package com.adgear.anoa.library.other;
 
 import com.adgear.anoa.AnoaHandler;
-import com.adgear.anoa.library.write.ProtobufEncoders;
+import com.adgear.anoa.write.ProtobufEncoders;
 import com.adgear.anoa.read.ProtobufDecoders;
 import com.adgear.anoa.read.ProtobufStreams;
 import com.adgear.anoa.test.AnoaTestSample;

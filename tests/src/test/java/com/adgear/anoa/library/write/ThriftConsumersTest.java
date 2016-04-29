@@ -3,6 +3,8 @@ package com.adgear.anoa.library.write;
 import com.adgear.anoa.read.ThriftStreams;
 import com.adgear.anoa.test.AnoaTestSample;
 import com.adgear.anoa.test.ad_exchange.LogEventThrift;
+import com.adgear.anoa.write.ThriftConsumers;
+import com.adgear.anoa.write.WriteConsumer;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 import org.junit.Test;

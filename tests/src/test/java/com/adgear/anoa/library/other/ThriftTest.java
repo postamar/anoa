@@ -1,7 +1,7 @@
 package com.adgear.anoa.library.other;
 
 import com.adgear.anoa.AnoaHandler;
-import com.adgear.anoa.library.write.ThriftEncoders;
+import com.adgear.anoa.write.ThriftEncoders;
 import com.adgear.anoa.read.ThriftDecoders;
 import com.adgear.anoa.read.ThriftStreams;
 import com.adgear.anoa.test.AnoaTestSample;
