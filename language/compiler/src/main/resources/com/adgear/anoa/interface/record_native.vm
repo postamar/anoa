@@ -1,0 +1,169 @@
+
+#if ($this.isDeprecated($schema))
+  @Deprecated
+#end
+  static class NativeImpl implements ${this.anoaInterfaceFullName()}<NativeImpl> {
+
+    transient private java.lang.String json;
+#foreach ($field in ${this.fields()})
+    private ${this.nativeFieldType($field)} ${this.nativeFieldName($field)};
+    transient private java.lang.Boolean ${this.isDefaultFieldName($field)};
+#if ($this.hasExportField($field))
+    transient private ${this.exportFieldType($field)} ${this.exportFieldName($field)};
+#end
+#end
+
+    private NativeImpl() {
+#foreach ($field in ${this.fields()})
+      ${this.nativeFieldName($field)} = ${this.nativeDefaultValue($field)};
+      ${this.isDefaultFieldName($field)} = java.lang.Boolean.TRUE;
+#end
+      json = "{}";
+    }
+
+    private NativeImpl(NativeImpl other) {
+#foreach ($field in ${this.fields()})
+      ${this.setMethod($field)}(other.${this.getMethod($field)}());
+#end
+      json = other.json;
+    }
+
+    @Override public NativeImpl get() {
+      return this;
+    }
+
+    @Override public Builder<NativeImpl> newBuilder() {
+      return newNativeImplBuilder(this);
+    }
+
+    private java.lang.String buildJson() {
+      java.lang.StringBuilder sb = new StringBuilder();
+#foreach ($field in ${this.fields()})
+      if (!${this.isDefaultMethod($field)}()) {
+        sb.append((0 == sb.length()) ? "{\"$field.name()\": " : ", \"$field.name()\": ")
+          .append(${this.nativeToString($field)});
+      }
+#end
+      return (0 == sb.length()) ? "{}" : sb.append('}').toString();
+    }
+
+    @Override public String toString() {
+      if (null == json) {
+        json = buildJson();
+      }
+      return json;
+    }
+
+    @Override public int hashCode() {
+      return toString().hashCode();
+    }
+
+    @Override public boolean equals(Object other) {
+      if (other == this) return true;
+      if (other == null || !(other instanceof NativeImpl)) return false;
+      return toString().equals(other.toString());
+    }
+#foreach ($field in ${this.fields()})
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public ${this.exportType($field)} ${this.getMethod($field)}() {
+#if ($this.hasExportField($field))
+      if (null == ${this.exportFieldName($field)}) {
+        ${this.exportFieldName($field)} = ${this.exportValue($field)};
+      }
+      return ${this.exportFieldName($field)};
+#else
+      return ${this.nativeFieldName($field)};
+#end
+    }
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public boolean ${this.isDefaultMethod($field)}() {
+      if (null == ${this.isDefaultFieldName($field)}) {
+        ${this.isDefaultFieldName($field)} = ${this.defaultTest($field)};
+      }
+      return ${this.isDefaultFieldName($field)};
+    }
+
+    private void ${this.setMethod($field)}(${this.importType($field)} value) {
+      this.${this.nativeFieldName($field)} = ${this.importValue($field)};
+      this.${this.isDefaultFieldName($field)} = null;
+      this.json = null;
+#if ($this.hasExportField($field))
+      this.${this.exportFieldName($field)} = null;
+#end
+    }
+#end
+
+    static class NativeImplBuilder implements Builder<NativeImpl> {
+
+      private NativeImpl wrapped = new NativeImpl();
+
+      @Override public ${this.anoaInterfaceFullName()}<NativeImpl> build() {
+        return new NativeImpl(wrapped);
+      }
+#foreach ($field in ${this.fields($)})
+
+#if ($this.isDeprecated($field))
+      @Deprecated
+#end
+      @Override public Builder<NativeImpl> ${this.setMethod($field)}(${this.importType($field)} value) {
+        if (${this.builderDefaultTest($field)}) {
+          return ${this.clearMethod($field)}();
+        }
+        wrapped.${this.setMethod($field)}(value);
+        return this;
+      }
+
+#if ($this.isDeprecated($field))
+      @Deprecated
+#end
+      @Override public Builder<NativeImpl> ${this.clearMethod($field)}() {
+        wrapped.${this.nativeFieldName($field)} = _DEFAULT.get().${this.nativeFieldName($field)};
+        wrapped.${this.isDefaultFieldName($field)} = true;
+#if ($this.hasExportField($field))
+        wrapped.${this.exportFieldName($field)} = _DEFAULT.get().${this.exportFieldName($field)};
+#end
+        return this;
+      }
+#end
+    }
+
+    static private java.lang.ThreadLocal<NativeImpl> _DEFAULT = new java.lang.ThreadLocal<NativeImpl>() {
+      @Override protected NativeImpl initialValue() {
+        NativeImpl instance = new NativeImpl();
+        assert instance.isDefault();
+        return instance;
+      }
+    };
+
+    static public final long serialVersionUID = ${this.version()};
+  }
+
+  /** Returns a POJO builder instance with default values. */
+  static Builder<NativeImpl> newNativeImplBuilder() { return new NativeImpl.NativeImplBuilder(); }
+
+  /** Returns a POJO builder instance based on existing prototype ${this.anoaInterfaceName()}. */
+  static Builder<NativeImpl> newNativeImplBuilder(${this.anoaInterfaceFullName()}<?> other) {
+    return newNativeImplBuilder()
+#foreach ($field in ${this.fields()})
+#if ($velocityHasNext)
+      .${this.setMethod($field)}(other.${this.getMethod($field)}())
+#else
+      .${this.setMethod($field)}(other.${this.getMethod($field)}());
+#end
+#end
+  }
+
+  /** Returns a POJO based on an instance of ${this.anoaInterfaceName()}. */
+  static NativeImpl nativeImpl(${this.anoaInterfaceFullName()}<?> instance) {
+    if (instance instanceof NativeImpl) {
+      return (NativeImpl) instance;
+    } else {
+      return (NativeImpl) newNativeImplBuilder(instance).build();
+    }
+  }

@@ -7,7 +7,7 @@
   <properties>
     <project.version.avro>1.7.7</project.version.avro>
     <project.version.thrift>0.9.3</project.version.thrift>
-    <project.version.protobuf>3.0.0-beta-2</project.version.protobuf>
+    <project.version.protobuf>3.0.0-beta-3</project.version.protobuf>
     <project.version.jackson>2.7.3</project.version.jackson>
     <project.version.jool>0.9.8</project.version.jool>
   </properties>
@@ -20,20 +20,18 @@
 
   <modules>
     <module>language</module>
-    <module>test</module>
-    <module>core</module>
-    <module>tools</module>
+    <module>library</module>
+    <module>tests</module>
   </modules>
 
   <groupId>com.adgear</groupId>
   <artifactId>anoa</artifactId>
-  <version>3.0.0-alpha-6</version>
+  <version>3.0.0-beta-1</version>
   <packaging>pom</packaging>
 
   <name>Anoa</name>
   <description>
-    Anoa v2.x aims to be a safe, convenient and fast record de/serialization wrapper for the Avro,
-    Thrift and Jackson libraries, using the functional idioms of Java 8.
+      A Java library for robust manipulation and serialization of data structures based on common formats.
   </description>
 
   <inceptionYear>2013</inceptionYear>
@@ -123,107 +121,14 @@
           <target>1.8</target>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.10.2</version>
-        <configuration>
-          <additionalparam>-Xdoclint:none</additionalparam>
-          <show>public</show>
-          <locale>en</locale>
-          <links>
-            <link>http://avro.apache.org/docs/${project.version.avro}/api/java</link>
-            <link>http://fasterxml.github.io/jackson-core/javadoc/2.1.0</link>
-            <link>http://fasterxml.github.io/jackson-databind/javadoc/2.1.0</link>
-            <link>http://people.apache.org/~thejas/thrift-0.9/javadoc</link>
-            <link>http://docs.guava-libraries.googlecode.com/git-history/release/javadoc</link>
-            <link>http://www.jooq.org/products/jool/javadoc/0.9.5</link>
-            <link>http://types.cs.washington.edu/checker-framework/current/api</link>
-          </links>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro</artifactId>
-      <version>${project.version.avro}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro-thrift</artifactId>
-      <version>${project.version.avro}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.thrift</groupId>
-          <artifactId>libthrift</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro-protobuf</artifactId>
-      <version>${project.version.avro}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.google.protobuf</groupId>
-          <artifactId>protobuf-java</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.thrift</groupId>
-      <artifactId>libthrift</artifactId>
-      <version>${project.version.thrift}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-      <version>${project.version.protobuf}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.7.7</version>
-    </dependency>
-    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.12</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <version>1.1.3</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.1.3</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

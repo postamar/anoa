@@ -1,0 +1,71 @@
+
+#if ($this.isDeprecated($schema))
+  @Deprecated
+#end
+  static class Thrift implements ${this.anoaInterfaceFullName()}<${this.className()}> {
+
+#foreach ($symbol in ${schema.getEnumSymbols()})
+    static public Thrift ${this.mangle($symbol)} = new Thrift(${this.className()}.${this.mangle($symbol)});
+#end
+
+    private Thrift(${this.className()} wrapped) {
+      this.wrapped = wrapped;
+    }
+
+    final private ${this.className()} wrapped;
+
+    @Override public ${this.className()} get() { return wrapped; }
+
+    @Override public boolean equals(Object other) {
+      if (other == this) return true;
+      if (other == null || !(other instanceof ${this.anoaInterfaceFullName()})) return false;
+      return wrapped.getValue() == ((${this.anoaInterfaceFullName()}) other).getOrdinal();
+    }
+
+    @Override public int hashCode() { return wrapped.getValue(); }
+
+    @Override public String toString() { return wrapped.toString(); }
+
+    static public final long serialVersionUID = ${this.version()};
+  }
+
+  /** Returns enum instance for the given ${this.anoaInterfaceName()}. */
+  static Thrift thrift(${this.anoaInterfaceFullName()}<?> instance) {
+    return thrift(instance.getOrdinal());
+  }
+
+  /** Returns enum instance for the given Thrift enum. */
+  static Thrift thrift(${this.className()} instance) {
+    return thrift(instance.ordinal());
+  }
+
+  /** Returns enum instance for the given ordinal, defaults to first enum value. */
+  static Thrift thrift(int ordinal) {
+    switch (ordinal) {
+#set( $i = 0 )
+#foreach ($symbol in ${schema.getEnumSymbols()})
+      case $i: return Thrift.${this.mangle($symbol)};
+#set( $i = $i + 1 )
+#end
+    }
+    return Thrift.${this.mangle($schema.getEnumSymbols().get(0))};
+  }
+
+  /** Returns enum instance for the given label, defaults to first enum value. */
+  static Thrift thrift(java.lang.CharSequence str) {
+    if (str != null) {
+      switch (str.toString().toUpperCase()) {
+#set( $i = 0 )
+#foreach ($symbol in ${schema.getEnumSymbols()})
+        case "${this.mangle($symbol)}": return Thrift.${this.mangle($symbol)};
+#set( $i = $i + 1 )
+#end
+      }
+    }
+    return Thrift.${this.mangle($schema.getEnumSymbols().get(0))};
+  }
+
+  /** Returns Thrift class for this enum. */
+  static java.lang.Class<${this.className()}> getThriftClass() {
+    return ${this.className()}.class;
+  }

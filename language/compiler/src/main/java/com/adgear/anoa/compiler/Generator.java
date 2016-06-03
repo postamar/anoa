@@ -1,5 +1,7 @@
 package com.adgear.anoa.compiler;
 
+import com.adgear.anoa.compiler.javagen.JavaCodeGenerationException;
+
 import java.io.File;
 
 public interface Generator {

@@ -1,0 +1,180 @@
+
+#if ($this.isDeprecated($schema))
+  @Deprecated
+#end
+  static class Protobuf implements ${this.anoaInterfaceFullName()}<${this.className()}> {
+
+    private byte[] binaryEncoding;
+    transient private ${this.className()} wrapped;
+#foreach ($field in ${this.fields()})
+    transient private java.lang.Boolean ${this.isDefaultFieldName($field)};
+#if ($this.hasExportField($field))
+    transient private ${this.exportFieldType($field)} ${this.exportFieldName($field)};
+#end
+#end
+
+    private Protobuf(${this.className()} wrapped, byte[] binaryEncoding) {
+      this.wrapped = wrapped;
+      this.binaryEncoding = binaryEncoding;
+    }
+
+    /** Constructs a new Protobuf instance based on a message's binary encoding. Only use this if you know what you're doing. */
+    public Protobuf(byte[] binaryEncoding) { this(null, binaryEncoding); }
+
+    @Override public ${this.className()} get() {
+      if (wrapped == null) {
+        try {
+          wrapped = ${this.className()}.parseFrom(binaryEncoding);
+        } catch (java.io.IOException e) {
+          throw new java.io.UncheckedIOException(e);
+        }
+      }
+      return wrapped;
+    }
+
+    @Override public Builder<${this.className()}> newBuilder() {
+      return newProtobufBuilder(get());
+    }
+#foreach ($field in ${this.fields()})
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public ${this.exportType($field)} ${this.getMethod($field)}() {
+#if ($this.hasExportField($field))
+      if (${this.exportFieldName($field)} == null) {
+        ${this.exportFieldName($field)} = ${this.exportValue($field)};
+      }
+      return ${this.exportFieldName($field)};
+#else
+      return ${this.exportValue($field)};
+#end
+    }
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public boolean ${this.isDefaultMethod($field)}() {
+      if (${this.isDefaultFieldName($field)} == null) {
+        ${this.isDefaultFieldName($field)} = ${this.defaultTest($field)};
+      }
+      return ${this.isDefaultFieldName($field)};
+    }
+#end
+
+    @Override public boolean equals(Object other) {
+      if (other == this) return true;
+      if (other == null && !(other instanceof Protobuf)) return false;
+      return get().equals(((Protobuf) other).get());
+    }
+
+    @Override public int hashCode() { return get().hashCode(); }
+
+    @Override public String toString() { return get().toString(); }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      if (binaryEncoding == null) {
+        binaryEncoding = wrapped.toByteArray();
+      }
+      out.defaultWriteObject();
+    }
+
+    /** Decodes a Protobuf message. */
+    static public ${this.anoaInterfaceFullName()}<${this.className()}> from(byte[] binaryEncoding) throws java.io.IOException {
+      return new Protobuf(${this.className()}.parseFrom(binaryEncoding), binaryEncoding);
+    }
+
+    static private java.lang.ThreadLocal<Protobuf> _DEFAULT = new java.lang.ThreadLocal<Protobuf>() {
+      @Override protected Protobuf initialValue() { return new Protobuf(${this.className()}.getDefaultInstance() , null); }
+    };
+
+    static public final long serialVersionUID = ${this.version()};
+  }
+
+  static class ProtobufBuilder implements Builder<${this.className()}> {
+
+    final private ${this.className()}.Builder builder;
+
+    /** Only use this if you know what you are doing. */
+    public ProtobufBuilder(${this.className()}.Builder builder) { this.builder = builder; }
+
+    @Override public ${this.anoaInterfaceFullName()}<${this.className()}> build() {
+      return new Protobuf(builder.build(), null);
+    }
+#foreach ($field in ${this.fields()})
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public Builder<${this.className()}> ${this.setMethod($field)}(${this.importType($field)} value) {
+      if (!(${this.builderDefaultTest($field)})) {
+        builder.${this.importValue($field)};
+      }
+      return this;
+    }
+
+#if ($this.isDeprecated($field))
+    @Deprecated
+#end
+    @Override public Builder<${this.className()}> ${this.clearMethod($field)}() {
+      builder.${this.builderClearMethod($field)};
+      return this;
+    }
+#end
+  }
+
+  /** Returns new Protobuf builder instance with default values. */
+  static Builder<${this.className()}> newProtobufBuilder() {
+    return new ProtobufBuilder(${this.className()}.newBuilder());
+  }
+
+  /** Returns new Protobuf builder instance based on existing prototype. */
+  static Builder<${this.className()}> newProtobufBuilder(${this.className()} other) {
+    return new ProtobufBuilder(${this.className()}.newBuilder(other));
+  }
+
+  /** Returns new Protobuf builder instance based on existing prototype ${this.anoaInterfaceName()}. */
+  static Builder<${this.className()}> newProtobufBuilder(${this.anoaInterfaceFullName()}<?> other) {
+    return newProtobufBuilder()
+#foreach ($field in ${this.fields()})
+#if ($velocityHasNext)
+      .${this.setMethod($field)}(other.${this.getMethod($field)}())
+#else
+      .${this.setMethod($field)}(other.${this.getMethod($field)}());
+#end
+#end
+  }
+
+  /** Returns a wrapped Protobuf message based on an instance of ${this.anoaInterfaceName()}. */
+  static Protobuf protobuf(${this.anoaInterfaceFullName()}<?> instance) {
+    if (instance instanceof Protobuf) {
+      return (Protobuf) instance;
+    }
+    return (Protobuf) newProtobufBuilder(instance).build();
+  }
+
+  /** Wraps an existing Protobuf message. */
+  static Protobuf protobuf(${this.className()} wrapped) {
+    assert wrapped != null;
+    return new Protobuf(wrapped, null);
+  }
+
+  /** Returns Protobuf class for this struct. */
+  static java.lang.Class<${this.className()}> getProtobufClass() {
+    return ${this.className()}.class;
+  }
+
+  /** Returns Protobuf protocol class for this struct. */
+  static java.lang.Class<${this.protobufProtocolClassName()}> getProtobufProtocolClass() {
+    return ${this.protobufProtocolClassName()}.class;
+  }
+
+  /** Returns Protobuf descriptor for this struct. */
+  static com.google.protobuf.Descriptors.Descriptor getProtobufDescriptor() {
+    return ${this.className()}.getDescriptor();
+  }
+
+  /** Returns Protobuf protocol descriptor for this struct. */
+  static com.google.protobuf.Descriptors.FileDescriptor getProtobufProtocolDescriptor() {
+    return ${this.protobufProtocolClassName()}.getDescriptor();
+  }

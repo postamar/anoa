@@ -1,5 +1,7 @@
 package com.adgear.anoa.compiler;
 
+import com.adgear.anoa.compiler.javagen.JavaCodeGenerationException;
+
 import org.apache.avro.Schema;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.BooleanNode;
@@ -91,17 +93,6 @@ final class ThriftGenerator extends GeneratorBase {
     }
   }
 
-  static int getThriftPrecision(Schema schema) {
-    final long lb = Optional.ofNullable(schema.getJsonProp(AnoaParserBase.LOWER_BOUND_PROP_KEY))
-        .map(JsonNode::asLong)
-        .orElse(Long.MIN_VALUE);
-    final long ub = Optional.ofNullable(schema.getJsonProp(AnoaParserBase.UPPER_BOUND_PROP_KEY))
-        .map(JsonNode::asLong)
-        .orElse(Long.MAX_VALUE);
-    final long b = Math.max(Math.abs(lb), Math.abs(ub));
-    return (b < 0x80000000L) ? ((b < 0x8000L) ? ((b < 0x80L) ? 8 : 16) : 32) : 64;
-  }
-
   private String wrappedType(Schema schema) {
     switch (schema.getType()) {
       case BOOLEAN:
@@ -114,7 +105,7 @@ final class ThriftGenerator extends GeneratorBase {
       case LONG:
         return "i64";
       case INT:
-        switch (getThriftPrecision(schema)) {
+        switch (CompilationUnit.getThriftPrecision(schema)) {
           case 8:
             return "byte";
           case 16:
