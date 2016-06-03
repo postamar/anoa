@@ -17,9 +17,8 @@ public class ProtobufConsumersTest {
 
   @Test
   public void testBinary() {
-    ATS.assertProtobufObjects(ProtobufStreams.binary(
+    ATS.assertProtobufObjects(ProtobufStreams.binaryStrict(
         ATS.protobufClass,
-        true,
         ATS.allAsInputStream(os -> {
           try (WriteConsumer<AdExchangeProtobuf.LogEvent> writeConsumer = ProtobufConsumers
               .binary(os)) {
@@ -32,10 +31,10 @@ public class ProtobufConsumersTest {
   public void testJackson() throws IOException {
     TokenBuffer tb = new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false);
     try (WriteConsumer<AdExchangeProtobuf.LogEvent> wc =
-             ProtobufConsumers.jackson(ATS.protobufClass, tb, true)) {
+             ProtobufConsumers.jacksonStrict(ATS.protobufClass, tb)) {
       ATS.protobuf().forEach(wc);
     }
     ATS.assertProtobufObjects(
-        ProtobufStreams.jackson(ATS.protobufClass, true, tb.asParser()));
+        ProtobufStreams.jacksonStrict(ATS.protobufClass, tb.asParser()));
   }
 }

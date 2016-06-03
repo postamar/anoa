@@ -27,7 +27,7 @@ import java.util.stream.Stream;
  * @param <M> Metadata type
  * @see Anoa
  */
-public class AnoaHandler<M> {
+final public class AnoaHandler<M> {
 
   /**
    * An AnoaHandler which discards everything. Resulting {@code Anoa} containers have no value and

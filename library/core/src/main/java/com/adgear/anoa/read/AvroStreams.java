@@ -28,9 +28,9 @@ import java.util.stream.Stream;
  * Utility class for deserializing Avro {@link org.apache.avro.generic.GenericRecord} or {@link
  * org.apache.avro.specific.SpecificRecord} instances as a {@link java.util.stream.Stream}.
  */
-public class AvroStreams {
+final public class AvroStreams {
 
-  protected AvroStreams() {
+  private AvroStreams() {
   }
 
   /**
@@ -421,48 +421,76 @@ public class AvroStreams {
 
   /**
    * @param schema        Avro record schema
-   * @param strict        enable strict type checking
    * @param jacksonParser JsonParser instance from which to read
    */
   static public Stream<GenericRecord> jackson(
       Schema schema,
-      boolean strict,
       JsonParser jacksonParser) {
-    return new AvroReader.GenericReader(schema).stream(strict, jacksonParser);
+    return new AvroReader.GenericReader(schema).stream(jacksonParser);
+  }
+
+
+  /**
+   * @param schema        Avro record schema
+   * @param jacksonParser JsonParser instance from which to read
+   */
+  static public Stream<GenericRecord> jacksonStrict(
+      Schema schema,
+      JsonParser jacksonParser) {
+    return new AvroReader.GenericReader(schema).streamStrict(jacksonParser);
   }
 
   /**
    * @param anoaHandler   {@code AnoaHandler} instance to use for exception handling
    * @param schema        Avro record schema
-   * @param strict        enable strict type checking
    * @param jacksonParser JsonParser instance from which to read
    * @param <M>           Metadata type
    */
   static public <M> Stream<Anoa<GenericRecord, M>> jackson(
       AnoaHandler<M> anoaHandler,
       Schema schema,
-      boolean strict,
       JsonParser jacksonParser) {
-    return new AvroReader.GenericReader(schema).stream(anoaHandler, strict, jacksonParser);
+    return new AvroReader.GenericReader(schema).stream(anoaHandler, jacksonParser);
+  }
+
+  /**
+   * @param anoaHandler   {@code AnoaHandler} instance to use for exception handling
+   * @param schema        Avro record schema
+   * @param jacksonParser JsonParser instance from which to read
+   * @param <M>           Metadata type
+   */
+  static public <M> Stream<Anoa<GenericRecord, M>> jacksonStrict(
+      AnoaHandler<M> anoaHandler,
+      Schema schema,
+      JsonParser jacksonParser) {
+    return new AvroReader.GenericReader(schema).streamStrict(anoaHandler, jacksonParser);
   }
 
   /**
    * @param recordClass   Avro SpecificRecord class object
-   * @param strict        enable strict type checking
    * @param jacksonParser JsonParser instance from which to read
    * @param <R>           Avro SpecificData record type
    */
   static public <R extends SpecificRecord> Stream<R> jackson(
       Class<R> recordClass,
-      boolean strict,
       JsonParser jacksonParser) {
-    return new AvroReader.SpecificReader<>(recordClass).stream(strict, jacksonParser);
+    return new AvroReader.SpecificReader<>(recordClass).stream(jacksonParser);
+  }
+
+  /**
+   * @param recordClass   Avro SpecificRecord class object
+   * @param jacksonParser JsonParser instance from which to read
+   * @param <R>           Avro SpecificData record type
+   */
+  static public <R extends SpecificRecord> Stream<R> jacksonStrict(
+      Class<R> recordClass,
+      JsonParser jacksonParser) {
+    return new AvroReader.SpecificReader<>(recordClass).streamStrict(jacksonParser);
   }
 
   /**
    * @param anoaHandler   {@code AnoaHandler} instance to use for exception handling
    * @param recordClass   Avro SpecificRecord class object
-   * @param strict        enable strict type checking
    * @param jacksonParser JsonParser instance from which to read
    * @param <R>           Avro SpecificData record type
    * @param <M>           Metadata type
@@ -470,8 +498,21 @@ public class AvroStreams {
   static public <R extends SpecificRecord, M> Stream<Anoa<R, M>> jackson(
       AnoaHandler<M> anoaHandler,
       Class<R> recordClass,
-      boolean strict,
       JsonParser jacksonParser) {
-    return new AvroReader.SpecificReader<>(recordClass).stream(anoaHandler, strict, jacksonParser);
+    return new AvroReader.SpecificReader<>(recordClass).stream(anoaHandler, jacksonParser);
+  }
+
+  /**
+   * @param anoaHandler   {@code AnoaHandler} instance to use for exception handling
+   * @param recordClass   Avro SpecificRecord class object
+   * @param jacksonParser JsonParser instance from which to read
+   * @param <R>           Avro SpecificData record type
+   * @param <M>           Metadata type
+   */
+  static public <R extends SpecificRecord, M> Stream<Anoa<R, M>> jacksonStrict(
+      AnoaHandler<M> anoaHandler,
+      Class<R> recordClass,
+      JsonParser jacksonParser) {
+    return new AvroReader.SpecificReader<>(recordClass).stream(anoaHandler, jacksonParser);
   }
 }

@@ -28,7 +28,7 @@ public class ThriftTest {
     AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
     try (InputStream inputStream = ATS.jsonInputStream(-1)) {
       try (JsonParser jp = new JsonFactory(new ObjectMapper()).createParser(inputStream)) {
-        long total = ThriftStreams.jackson(anoaHandler, ATS.thriftClass, true, jp)
+        long total = ThriftStreams.jacksonStrict(anoaHandler, ATS.thriftClass, jp)
             .map(ThriftEncoders.binary(anoaHandler))
             .map(ThriftDecoders.binary(anoaHandler, ATS.thriftSupplier))
             .map(anoaHandler.consumer(collected::add))

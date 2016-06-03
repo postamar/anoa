@@ -18,10 +18,13 @@ import java.io.UncheckedIOException;
 /**
  * Utility class for generating {@code WriteConsumer} instances to write Thrift records.
  */
-public class ThriftConsumers {
+final public class ThriftConsumers {
+
+  private ThriftConsumers() {
+  }
 
   /**
-   * Write as compact binary blobs
+   * Write as compact binary blobs.
    *
    * @param outputStream stream to write into
    * @param <T>          Thrift record type
@@ -32,7 +35,7 @@ public class ThriftConsumers {
   }
 
   /**
-   * Write as compact binary blobs
+   * Write as compact binary blobs.
    *
    * @param fileName name of file to write into
    * @param <T>      Thrift record type
@@ -47,7 +50,7 @@ public class ThriftConsumers {
   }
 
   /**
-   * Write as compact binary blobs
+   * Write as compact binary blobs.
    *
    * @param tTransport the {@link org.apache.thrift.transport.TTransport} instance to write into
    * @param <T>        Thrift record type
@@ -58,7 +61,7 @@ public class ThriftConsumers {
   }
 
   /**
-   * Write as standard binary blobs
+   * Write as standard binary blobs.
    *
    * @param outputStream stream to write into
    * @param <T>          Thrift record type
@@ -69,7 +72,7 @@ public class ThriftConsumers {
   }
 
   /**
-   * Write as standard binary blobs
+   * Write as standard binary blobs.
    *
    * @param fileName name of file to write into
    * @param <T>      Thrift record type
@@ -84,7 +87,7 @@ public class ThriftConsumers {
   }
 
   /**
-   * Write as standard binary blobs
+   * Write as standard binary blobs.
    *
    * @param tTransport the {@link org.apache.thrift.transport.TTransport} instance to write into
    * @param <T>        Thrift record type
@@ -95,7 +98,7 @@ public class ThriftConsumers {
   }
 
   /**
-   * Write as JSON serializations
+   * Write as JSON serializations.
    *
    * @param outputStream stream to write into
    * @param <T>          Thrift record type
@@ -106,7 +109,7 @@ public class ThriftConsumers {
   }
 
   /**
-   * Write as Thrift JSON serializations
+   * Write as Thrift JSON serializations.
    *
    * @param fileName name of file to write into
    * @param <T>      Thrift record type
@@ -121,7 +124,7 @@ public class ThriftConsumers {
   }
 
   /**
-   * Write as Thrift JSON serializations
+   * Write as Thrift JSON serializations.
    *
    * @param tTransport the {@link org.apache.thrift.transport.TTransport} instance to write into
    * @param <T>        Thrift record type
@@ -132,17 +135,28 @@ public class ThriftConsumers {
   }
 
   /**
-   * Write as 'natural' JSON serializations using provided generator
+   * Write as 'natural' compact JSON serializations using provided generator.
    *
    * @param recordClass      Thrift record class object
    * @param jacksonGenerator JsonGenerator instance to write into
-   * @param strict           If set, chooses correctness over compactness
    * @param <T>              Thrift record type
    */
   static public <T extends TBase> WriteConsumer<T> jackson(
       Class<T> recordClass,
-      JsonGenerator jacksonGenerator,
-      boolean strict) {
-    return new ThriftWriter<>(recordClass).writeConsumer(jacksonGenerator, strict);
+      JsonGenerator jacksonGenerator) {
+    return new ThriftWriter<>(recordClass).writeConsumer(jacksonGenerator);
+  }
+
+  /**
+   * Write as 'natural' 'strict' JSON serializations using provided generator
+   *
+   * @param recordClass      Thrift record class object
+   * @param jacksonGenerator JsonGenerator instance to write into
+   * @param <T>              Thrift record type
+   */
+  static public <T extends TBase> WriteConsumer<T> jacksonStrict(
+      Class<T> recordClass,
+      JsonGenerator jacksonGenerator) {
+    return new ThriftWriter<>(recordClass).writeConsumerStrict(jacksonGenerator);
   }
 }

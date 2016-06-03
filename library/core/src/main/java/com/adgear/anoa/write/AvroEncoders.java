@@ -23,9 +23,9 @@ import java.util.function.Supplier;
  * Utility class for generating functions for serializing Avro records. Unless specified otherwise,
  * the functions should not be deemed thread-safe.
  */
-public class AvroEncoders {
+final public class AvroEncoders {
 
-  protected AvroEncoders() {
+  private AvroEncoders() {
   }
 
   /**
@@ -181,70 +181,124 @@ public class AvroEncoders {
   /**
    * @param recordClass Class object of Avro records to be serialized
    * @param supplier    called for each new record serialization
-   * @param strict      If set, chooses correctness over compactness
    * @param <R>         Avro record type
    * @param <G>         JsonGenerator type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
-   * into it.
+   * into it, in compact form.
    */
   static public <R extends SpecificRecord, G extends JsonGenerator> Function<R, G> jackson(
       Class<R> recordClass,
-      Supplier<G> supplier,
-      boolean strict) {
-    return new AvroWriter<>(recordClass).encoder(supplier, strict);
+      Supplier<G> supplier) {
+    return new AvroWriter<>(recordClass).encoder(supplier);
+  }
+
+  /**
+   * @param recordClass Class object of Avro records to be serialized
+   * @param supplier    called for each new record serialization
+   * @param <R>         Avro record type
+   * @param <G>         JsonGenerator type
+   * @return A function which calls the supplier for a JsonGenerator object and writes the record
+   * into it, in strict form.
+   */
+  static public <R extends SpecificRecord, G extends JsonGenerator> Function<R, G> jacksonStrict(
+      Class<R> recordClass,
+      Supplier<G> supplier) {
+    return new AvroWriter<>(recordClass).encoderStrict(supplier);
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Class object of Avro records to be serialized
    * @param supplier    called for each new record serialization
-   * @param strict      If set, chooses correctness over compactness
    * @param <R>         Avro record Type
    * @param <G>         JsonGenerator type
    * @param <M>         Metadata type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
-   * into it.
+   * into it, in compact form.
    */
   static public <R extends SpecificRecord, G extends JsonGenerator, M>
   Function<Anoa<R, M>, Anoa<G, M>> jackson(
       AnoaHandler<M> anoaHandler,
       Class<R> recordClass,
-      Supplier<G> supplier,
-      boolean strict) {
-    return new AvroWriter<>(recordClass).encoder(anoaHandler, supplier, strict);
+      Supplier<G> supplier) {
+    return new AvroWriter<>(recordClass).encoder(anoaHandler, supplier);
+  }
+
+  /**
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
+   * @param recordClass Class object of Avro records to be serialized
+   * @param supplier    called for each new record serialization
+   * @param <R>         Avro record Type
+   * @param <G>         JsonGenerator type
+   * @param <M>         Metadata type
+   * @return A function which calls the supplier for a JsonGenerator object and writes the record
+   * into it, in strict form.
+   */
+  static public <R extends SpecificRecord, G extends JsonGenerator, M>
+  Function<Anoa<R, M>, Anoa<G, M>> jacksonStrict(
+      AnoaHandler<M> anoaHandler,
+      Class<R> recordClass,
+      Supplier<G> supplier) {
+    return new AvroWriter<>(recordClass).encoderStrict(anoaHandler, supplier);
   }
 
   /**
    * @param schema   Avro record schema
    * @param supplier called for each new record serialization
-   * @param strict   If set, chooses correctness over compactness
    * @param <G>      JsonGenerator type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
-   * into it.
+   * into it, in compact form.
    */
   static public <G extends JsonGenerator> Function<GenericRecord, G> jackson(
       Schema schema,
-      Supplier<G> supplier,
-      boolean strict) {
-    return new AvroWriter<GenericRecord>(schema).encoder(supplier, strict);
+      Supplier<G> supplier) {
+    return new AvroWriter<GenericRecord>(schema).encoder(supplier);
+  }
+
+  /**
+   * @param schema   Avro record schema
+   * @param supplier called for each new record serialization
+   * @param <G>      JsonGenerator type
+   * @return A function which calls the supplier for a JsonGenerator object and writes the record
+   * into it, in strict form.
+   */
+  static public <G extends JsonGenerator> Function<GenericRecord, G> jacksonStrict(
+      Schema schema,
+      Supplier<G> supplier) {
+    return new AvroWriter<GenericRecord>(schema).encoderStrict(supplier);
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param schema      Avro record schema
    * @param supplier    called for each new record serialization
-   * @param strict      If set, chooses correctness over compactness
+   * @param <G>         JsonGenerator type
+   * @param <M>         Metadata type
+   * @return A function which calls the supplier for a JsonGenerator object and writes the record
+   * into it, in compact form.
+   */
+  static public <G extends JsonGenerator, M>
+  Function<Anoa<GenericRecord, M>, Anoa<G, M>> jackson(
+      AnoaHandler<M> anoaHandler,
+      Schema schema,
+      Supplier<G> supplier) {
+    return new AvroWriter<GenericRecord>(schema).encoder(anoaHandler, supplier);
+  }
+
+  /**
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
+   * @param schema      Avro record schema
+   * @param supplier    called for each new record serialization
    * @param <G>         JsonGenerator type
    * @param <M>         Metadata type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
    * into it.
    */
   static public <G extends JsonGenerator, M>
-  Function<Anoa<GenericRecord, M>, Anoa<G, M>> jackson(
+  Function<Anoa<GenericRecord, M>, Anoa<G, M>> jacksonStrict(
       AnoaHandler<M> anoaHandler,
       Schema schema,
-      Supplier<G> supplier,
-      boolean strict) {
-    return new AvroWriter<GenericRecord>(schema).encoder(anoaHandler, supplier, strict);
+      Supplier<G> supplier) {
+    return new AvroWriter<GenericRecord>(schema).encoderStrict(anoaHandler, supplier);
   }
 }

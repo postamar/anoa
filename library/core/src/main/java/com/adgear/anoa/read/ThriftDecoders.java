@@ -19,9 +19,9 @@ import java.util.function.Supplier;
  * Utility class for generating functions for deserializing Thrift records. Unless specified
  * otherwise, the functions should not be deemed thread-safe.
  */
-public class ThriftDecoders {
+final public class ThriftDecoders {
 
-  protected ThriftDecoders() {
+  private ThriftDecoders() {
   }
 
   /**
@@ -127,22 +127,32 @@ public class ThriftDecoders {
 
   /**
    * @param recordClass Thrift record class object
-   * @param strict      enable strict type checking
    * @param <P>         Jackson JsonParser type
    * @param <T>         Thrift record type
    * @return A function which reads a Thrift record from a JsonParser, in its 'natural' encoding.
    */
   static public <P extends JsonParser, T extends TBase>
   Function<P, T> jackson(
-      Class<T> recordClass,
-      boolean strict) {
-    return new ThriftReader<>(recordClass).decoder(strict);
+      Class<T> recordClass) {
+    return new ThriftReader<>(recordClass).decoder();
+  }
+
+  /**
+   * @param recordClass Thrift record class object
+   * @param <P>         Jackson JsonParser type
+   * @param <T>         Thrift record type
+   * @return A function which reads a Thrift record from a JsonParser, in its 'natural' encoding,
+   * with stricter type checking.
+   */
+  static public <P extends JsonParser, T extends TBase>
+  Function<P, T> jacksonStrict(
+      Class<T> recordClass) {
+    return new ThriftReader<>(recordClass).decoderStrict();
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Thrift record class object
-   * @param strict      enable strict type checking
    * @param <P>         Jackson JsonParser type
    * @param <T>         Thrift record type
    * @param <M>         Metadata type
@@ -151,8 +161,23 @@ public class ThriftDecoders {
   static public <P extends JsonParser, T extends TBase, M>
   Function<Anoa<P, M>, Anoa<T, M>> jackson(
       AnoaHandler<M> anoaHandler,
-      Class<T> recordClass,
-      boolean strict) {
-    return new ThriftReader<>(recordClass).decoder(anoaHandler, strict);
+      Class<T> recordClass) {
+    return new ThriftReader<>(recordClass).decoder(anoaHandler);
+  }
+
+  /**
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
+   * @param recordClass Thrift record class object
+   * @param <P>         Jackson JsonParser type
+   * @param <T>         Thrift record type
+   * @param <M>         Metadata type
+   * @return A function which reads a Thrift record from a JsonParser, in its 'natural' encoding,
+   * with stricter type checking.
+   */
+  static public <P extends JsonParser, T extends TBase, M>
+  Function<Anoa<P, M>, Anoa<T, M>> jacksonStrict(
+      AnoaHandler<M> anoaHandler,
+      Class<T> recordClass) {
+    return new ThriftReader<>(recordClass).decoderStrict(anoaHandler);
   }
 }

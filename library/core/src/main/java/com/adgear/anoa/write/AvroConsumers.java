@@ -20,9 +20,9 @@ import java.io.UncheckedIOException;
 /**
  * Utility class for generating {@code WriteConsumer} instances to write Avro records.
  */
-public class AvroConsumers {
+final public class AvroConsumers {
 
-  protected AvroConsumers() {
+  private AvroConsumers() {
   }
 
   /**
@@ -180,32 +180,54 @@ public class AvroConsumers {
   }
 
   /**
-   * Write as 'natural' JSON serialization using provided generator
+   * Write as 'natural' compact JSON serialization using provided generator.
    *
    * @param schema           Avro schema to accept
    * @param jacksonGenerator JsonGenerator instance to write into
-   * @param strict           If set, chooses correctness over compactness
    */
   static public WriteConsumer<GenericRecord> jackson(
       Schema schema,
-      JsonGenerator jacksonGenerator,
-      boolean strict) {
-    return new AvroWriter<GenericRecord>(schema).writeConsumer(jacksonGenerator, strict);
+      JsonGenerator jacksonGenerator) {
+    return new AvroWriter<GenericRecord>(schema).writeConsumer(jacksonGenerator);
   }
 
   /**
-   * Write as 'natural' JSON serialization using provided generator
+   * Write as 'natural' strict JSON serialization using provided generator.
+   *
+   * @param schema           Avro schema to accept
+   * @param jacksonGenerator JsonGenerator instance to write into
+   */
+  static public WriteConsumer<GenericRecord> jacksonStrict(
+      Schema schema,
+      JsonGenerator jacksonGenerator) {
+    return new AvroWriter<GenericRecord>(schema).writeConsumerStrict(jacksonGenerator);
+  }
+
+  /**
+   * Write as 'natural' compact JSON serialization using provided generator
    *
    * @param recordClass      Avro SpecificRecord class to accept
    * @param jacksonGenerator JsonGenerator instance to write into
-   * @param strict           If set, chooses correctness over compactness
    * @param <R>              Avro record type
    */
   static public <R extends SpecificRecord>
   WriteConsumer<R> jackson(
       Class<R> recordClass,
-      JsonGenerator jacksonGenerator,
-      boolean strict) {
-    return new AvroWriter<>(recordClass).writeConsumer(jacksonGenerator, strict);
+      JsonGenerator jacksonGenerator) {
+    return new AvroWriter<>(recordClass).writeConsumer(jacksonGenerator);
+  }
+
+  /**
+   * Write as 'natural' strict JSON serialization using provided generator
+   *
+   * @param recordClass      Avro SpecificRecord class to accept
+   * @param jacksonGenerator JsonGenerator instance to write into
+   * @param <R>              Avro record type
+   */
+  static public <R extends SpecificRecord>
+  WriteConsumer<R> jacksonStrict(
+      Class<R> recordClass,
+      JsonGenerator jacksonGenerator) {
+    return new AvroWriter<>(recordClass).writeConsumerStrict(jacksonGenerator);
   }
 }

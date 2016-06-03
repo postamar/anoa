@@ -27,9 +27,9 @@ public class ProtobufTest {
     AnoaHandler<Throwable> anoaHandler = AnoaHandler.NO_OP_HANDLER;
     try (InputStream inputStream = ATS.jsonInputStream(-1)) {
       try (JsonParser jp = new JsonFactory(new ObjectMapper()).createParser(inputStream)) {
-        long total = ProtobufStreams.jackson(anoaHandler, ATS.protobufClass, true, jp)
+        long total = ProtobufStreams.jacksonStrict(anoaHandler, ATS.protobufClass, jp)
             .map(ProtobufEncoders.binary(anoaHandler))
-            .map(ProtobufDecoders.binary(anoaHandler, ATS.protobufClass, true))
+            .map(ProtobufDecoders.binaryStrict(anoaHandler, ATS.protobufClass))
             .map(anoaHandler.consumer(collected::add))
             .count();
         Assert.assertEquals(ATS.n + 1, total);

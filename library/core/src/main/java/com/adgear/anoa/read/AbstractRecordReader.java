@@ -33,51 +33,65 @@ abstract class AbstractRecordReader<R, F extends FieldWrapper>
             name -> fieldLookUp.put(name, Optional.of(fw))));
   }
 
-  final <P extends JsonParser> Function<P, R> decoder(boolean strict) {
-    if (Boolean.TRUE.equals(strict)) {
-      return (P jp) -> {
-        try {
-          return readRecordStrict(jp);
-        } catch (IOException e) {
-          throw new UncheckedIOException(e);
-        }
-      };
-    } else {
-      return (P jp) -> {
-        try {
-          return readRecord(jp);
-        } catch (IOException e) {
-          throw new UncheckedIOException(e);
-        }
-      };
-    }
+  final <P extends JsonParser> Function<P, R> decoder() {
+   return (P jp) -> {
+     try {
+       return readRecord(jp);
+     } catch (IOException e) {
+       throw new UncheckedIOException(e);
+     }
+   };
+  }
+
+  final <P extends JsonParser> Function<P, R> decoderStrict() {
+    return (P jp) -> {
+      try {
+        return readRecordStrict(jp);
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
+      }
+    };
   }
 
   final <P extends JsonParser, M> Function<Anoa<P, M>, Anoa<R, M>> decoder(
-      AnoaHandler<M> anoaHandler,
-      boolean strict) {
-    if (Boolean.TRUE.equals(strict)) {
-      return anoaHandler.functionChecked(this::readRecordStrict);
-    } else {
-      return anoaHandler.functionChecked(this::readRecord);
-    }
+      AnoaHandler<M> anoaHandler) {
+    return anoaHandler.functionChecked(this::readRecord);
+  }
+
+  final <P extends JsonParser, M> Function<Anoa<P, M>, Anoa<R, M>> decoderStrict(
+      AnoaHandler<M> anoaHandler) {
+    return anoaHandler.functionChecked(this::readRecordStrict);
   }
 
   final Stream<R> stream(
-      boolean strict,
       JsonParser jacksonParser) {
     return LookAheadIteratorFactory.jackson(jacksonParser).asStream()
         .map(TreeNode::traverse)
-        .map(decoder(strict));
+        .map(decoder());
+  }
+
+
+  final Stream<R> streamStrict(
+      JsonParser jacksonParser) {
+    return LookAheadIteratorFactory.jackson(jacksonParser).asStream()
+        .map(TreeNode::traverse)
+        .map(decoderStrict());
   }
 
   final <M> Stream<Anoa<R, M>> stream(
       AnoaHandler<M> anoaHandler,
-      boolean strict,
       JsonParser jacksonParser) {
     return LookAheadIteratorFactory.jackson(anoaHandler, jacksonParser).asStream()
         .map(anoaHandler.function(TreeNode::traverse))
-        .map(decoder(anoaHandler, strict));
+        .map(decoder(anoaHandler));
+  }
+
+  final <M> Stream<Anoa<R, M>> streamStrict(
+      AnoaHandler<M> anoaHandler,
+      JsonParser jacksonParser) {
+    return LookAheadIteratorFactory.jackson(anoaHandler, jacksonParser).asStream()
+        .map(anoaHandler.function(TreeNode::traverse))
+        .map(decoderStrict(anoaHandler));
   }
 
   private R readRecord(JsonParser jacksonParser) throws IOException {

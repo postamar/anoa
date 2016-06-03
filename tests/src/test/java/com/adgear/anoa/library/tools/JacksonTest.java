@@ -71,8 +71,8 @@ public class JacksonTest {
     csvParser.setSchema(CsvSchema.builder().setUseHeader(true).build());
 
     try (CsvGenerator tsvGenerator = new CsvConsumers(schema).generator(outputStream)) {
-      AvroStreams.jackson(SimpleAvro.class, false, csvParser)
-          .map(AvroEncoders.jackson(SimpleAvro.class, () -> tsvGenerator, true))
+      AvroStreams.jackson(SimpleAvro.class, csvParser)
+          .map(AvroEncoders.jacksonStrict(SimpleAvro.class, () -> tsvGenerator))
           .forEach(Unchecked.consumer(CsvGenerator::flush));
     }
 
@@ -89,14 +89,14 @@ public class JacksonTest {
         .setBaz(789.1)
         .build();
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    Function<JsonParser, SimpleAvro> readFn = AvroDecoders.jackson(SimpleAvro.class, true);
+    Function<JsonParser, SimpleAvro> readFn = AvroDecoders.jacksonStrict(SimpleAvro.class);
 
     {
       JsonConsumers jsonConsumers = new JsonConsumers();
       JsonStreams jsonStreams = new JsonStreams();
       try (WriteConsumer<ObjectNode> writeConsumer = jsonConsumers.to(baos)) {
         writeConsumer.accept(
-            AvroEncoders.jackson(SimpleAvro.class, jsonConsumers::generator, true)
+            AvroEncoders.jacksonStrict(SimpleAvro.class, jsonConsumers::generator)
                 .apply(simple)
                 .asParser(jsonStreams.objectCodec)
                 .readValueAsTree());
@@ -108,7 +108,7 @@ public class JacksonTest {
 
     {
       try (CBORGenerator cborGenerator = new CborConsumers().generator(baos)) {
-        AvroConsumers.jackson(SimpleAvro.class, cborGenerator, true).accept(simple);
+        AvroConsumers.jacksonStrict(SimpleAvro.class, cborGenerator).accept(simple);
       }
       System.out.println(baos);
       Assert.assertEquals(simple, readFn.apply(new CborStreams().parser(baos.toByteArray())));
@@ -117,7 +117,7 @@ public class JacksonTest {
 
     {
       try (SmileGenerator smileGenerator = new SmileConsumers().generator(baos)) {
-        AvroConsumers.jackson(SimpleAvro.class, smileGenerator, true).accept(simple);
+        AvroConsumers.jacksonStrict(SimpleAvro.class, smileGenerator).accept(simple);
       }
       System.out.println(baos);
       Assert.assertEquals(simple, readFn.apply(new SmileStreams().parser(baos.toByteArray())));

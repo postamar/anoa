@@ -47,7 +47,7 @@ public class ThriftStreamsTest {
   @Test
   public void testJackson() {
     ATS.assertThriftObjects(
-        ThriftStreams.jackson(ATS.thriftClass, true, ATS.jsonParser(-1)));
+        ThriftStreams.jacksonStrict(ATS.thriftClass, ATS.jsonParser(-1)));
   }
 
   @Test(expected = RuntimeException.class)
@@ -71,7 +71,7 @@ public class ThriftStreamsTest {
 
   @Test(expected = RuntimeException.class)
   public void testJacksonFail() throws Exception {
-    ThriftStreams.jackson(ATS.thriftClass, true, ATS.jsonParser(1234))
+    ThriftStreams.jacksonStrict(ATS.thriftClass, ATS.jsonParser(1234))
         .forEach(Assert::assertNotNull);
   }
 
@@ -127,10 +127,9 @@ public class ThriftStreamsTest {
   @Test
   public void testAnoaJackson() {
     List<Anoa<LogEventThrift, String>> anoas =
-        ThriftStreams.jackson(anoaHandler,
-                              ATS.thriftClass,
-                              true,
-                              ATS.jsonParser(12345))
+        ThriftStreams.jacksonStrict(anoaHandler,
+                                    ATS.thriftClass,
+                                    ATS.jsonParser(12345))
             .collect(Collectors.toList());
     anoas.stream()
         .flatMap(Anoa::meta)

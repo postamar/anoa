@@ -290,9 +290,16 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> imple
             throw new IllegalArgumentException("Unsupported output format " + outFormat);
         }
         try (JsonGenerator generator = jacksonConsumers.generator(out)) {
-          try (WriteConsumer<GenericRecord> consumer =
-                   AvroConsumers.jackson(avroSchema, generator, outFormat.writeStrict)) {
-            stream.sequential().forEach(consumer);
+          if (outFormat.writeStrict) {
+            try (WriteConsumer<GenericRecord> consumer =
+                     AvroConsumers.jacksonStrict(avroSchema, generator)) {
+              stream.sequential().forEach(consumer);
+            }
+          } else {
+            try (WriteConsumer<GenericRecord> consumer =
+                     AvroConsumers.jackson(avroSchema, generator)) {
+              stream.sequential().forEach(consumer);
+            }
           }
         } catch (IOException e) {
           throw new UncheckedIOException(e);
@@ -342,9 +349,16 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> imple
             throw new IllegalArgumentException("Unsupported output format " + outFormat);
         }
         try (JsonGenerator generator = jacksonConsumers.generator(out)) {
-          try (WriteConsumer<M> consumer =
-                   ProtobufConsumers.jackson(protobufClass, generator, outFormat.writeStrict)) {
-            stream.sequential().forEach(consumer);
+          if (outFormat.writeStrict) {
+            try (WriteConsumer<M> consumer =
+                     ProtobufConsumers.jacksonStrict(protobufClass, generator)) {
+              stream.sequential().forEach(consumer);
+            }
+          } else {
+            try (WriteConsumer<M> consumer =
+                     ProtobufConsumers.jackson(protobufClass, generator)) {
+              stream.sequential().forEach(consumer);
+            }
           }
         } catch (IOException e) {
           throw new UncheckedIOException(e);
@@ -405,9 +419,16 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> imple
             throw new IllegalArgumentException("Unsupported output format " + outFormat);
         }
         try (JsonGenerator generator = jacksonConsumers.generator(out)) {
-          try (WriteConsumer<T> consumer =
-                   ThriftConsumers.jackson(thriftClass, generator, outFormat.writeStrict)) {
-            stream.sequential().forEach(consumer);
+          if (outFormat.writeStrict) {
+            try (WriteConsumer<T> consumer =
+                     ThriftConsumers.jacksonStrict(thriftClass, generator)) {
+              stream.sequential().forEach(consumer);
+            }
+          } else {
+            try (WriteConsumer<T> consumer =
+                     ThriftConsumers.jackson(thriftClass, generator)) {
+              stream.sequential().forEach(consumer);
+            }
           }
         } catch (IOException e) {
           throw new UncheckedIOException(e);
@@ -420,16 +441,13 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> imple
 
   public void runJackson(Stream<ObjectNode> stream) {
     if (avroSchema != null) {
-      runAvro(stream.map(TreeNode::traverse)
-                  .map(AvroDecoders.jackson(avroSchema, false)));
+      runAvro(stream.map(TreeNode::traverse).map(AvroDecoders.jackson(avroSchema)));
       return;
     } else if (thriftClass != null) {
-      runThrift(stream.map(TreeNode::traverse)
-                    .map(ThriftDecoders.jackson(thriftClass, false)));
+      runThrift(stream.map(TreeNode::traverse).map(ThriftDecoders.jackson(thriftClass)));
       return;
     } else if (protobufClass != null) {
-      runProtobuf(stream.map(TreeNode::traverse)
-                      .map(ProtobufDecoders.jackson(protobufClass, false)));
+      runProtobuf(stream.map(TreeNode::traverse).map(ProtobufDecoders.jackson(protobufClass)));
     }
     final Supplier<JacksonConsumers<ObjectNode, ?, ?, ?, ?>> supplier;
     switch (outFormat) {
@@ -489,7 +507,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> imple
         runThrift(ThriftStreams.json(Unchecked.supplier(thriftClass::newInstance), in));
         return;
       case PROTOBUF:
-        runProtobuf(ProtobufStreams.binary(protobufClass, false, in));
+        runProtobuf(ProtobufStreams.binary(protobufClass, in));
         return;
       case JDBC:
         try (Statement statement = jdbcConnection.createStatement()) {
@@ -503,7 +521,7 @@ public class DataTool<T extends TBase<?, TFieldIdEnum>, M extends Message> imple
           }
           runAvro(new JdbcStreams().resultSet(resultSet)
                       .map(ObjectNode::traverse)
-                      .map(AvroDecoders.jackson(avroSchema, false)));
+                      .map(AvroDecoders.jackson(avroSchema)));
         } catch (SQLException e) {
           throw new RuntimeException(e);
         }

@@ -65,16 +65,16 @@ public class AvroConsumersTest {
   @Test
   public void testJackson() throws IOException {
     TokenBuffer b = new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false);
-    try (WriteConsumer<LogEventAvro> wc = AvroConsumers.jackson(ATS.avroClass, b, true)) {
+    try (WriteConsumer<LogEventAvro> wc = AvroConsumers.jacksonStrict(ATS.avroClass, b)) {
       ATS.avroSpecific().forEach(wc);
     }
-    ATS.assertAvroSpecifics(AvroStreams.jackson(ATS.avroClass, true, b.asParser()));
+    ATS.assertAvroSpecifics(AvroStreams.jacksonStrict(ATS.avroClass, b.asParser()));
 
     b = new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false);
-    try (WriteConsumer<GenericRecord> wc = AvroConsumers.jackson(ATS.avroSchema, b, true)) {
+    try (WriteConsumer<GenericRecord> wc = AvroConsumers.jacksonStrict(ATS.avroSchema, b)) {
       ATS.avroGeneric().forEach(wc);
     }
-    ATS.assertAvroGenerics(AvroStreams.jackson(ATS.avroSchema, true, b.asParser()));
+    ATS.assertAvroGenerics(AvroStreams.jacksonStrict(ATS.avroSchema, b.asParser()));
 
   }
 }

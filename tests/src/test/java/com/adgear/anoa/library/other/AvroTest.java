@@ -40,11 +40,10 @@ public class AvroTest {
 
       long total = treeNodeStream
           .map(f.function(TreeNode::traverse))
-          .map(AvroDecoders.jackson(f, ATS.avroClass, true))
+          .map(AvroDecoders.jacksonStrict(f, ATS.avroClass))
           .map(AvroEncoders.jackson(f,
                                     ATS.avroClass,
-                                    () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
-                                    false))
+                                    () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false)))
           .map(f.function(TokenBuffer::asParser))
           .map(f.functionChecked(JsonParser::readValueAsTree))
           .filter(Anoa::isPresent)
@@ -60,7 +59,7 @@ public class AvroTest {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try (WriteConsumer<LogEventAvro> consumer =
              AvroConsumers.batch(ATS.avroClass, baos)) {
-      long total = AvroStreams.jackson(AnoaHandler.NO_OP_HANDLER, ATS.avroClass, true, jp)
+      long total = AvroStreams.jacksonStrict(AnoaHandler.NO_OP_HANDLER, ATS.avroClass, jp)
           .map(AnoaHandler.NO_OP_HANDLER.writeConsumer(consumer))
           .filter(Anoa::isPresent)
           .count();

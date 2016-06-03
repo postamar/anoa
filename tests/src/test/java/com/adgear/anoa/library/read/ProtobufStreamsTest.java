@@ -29,35 +29,34 @@ public class ProtobufStreamsTest {
   @Test
   public void testBinary() {
     ATS.assertProtobufObjects(
-        ProtobufStreams.binary(ATS.protobufClass, true, ATS.protoBinaryInputStream(-1)));
+        ProtobufStreams.binaryStrict(ATS.protobufClass, ATS.protoBinaryInputStream(-1)));
   }
 
   @Test
   public void testJackson() {
     ATS.assertProtobufObjects(
-        ProtobufStreams.jackson(ATS.protobufClass, true, ATS.jsonParser(-1)));
+        ProtobufStreams.jacksonStrict(ATS.protobufClass, ATS.jsonParser(-1)));
   }
 
   @Test(expected = RuntimeException.class)
   public void testBinaryFail() throws Exception {
-    ProtobufStreams.binary(ATS.protobufClass, true, ATS.thriftBinaryInputStream(3))
+    ProtobufStreams.binaryStrict(ATS.protobufClass, ATS.thriftBinaryInputStream(3))
         .peek(System.err::println)
         .forEach(Assert::assertNotNull);
   }
 
   @Test(expected = RuntimeException.class)
   public void testJacksonFail() throws Exception {
-    ProtobufStreams.jackson(ATS.protobufClass, true, ATS.jsonParser(1234))
+    ProtobufStreams.jacksonStrict(ATS.protobufClass, ATS.jsonParser(1234))
         .forEach(Assert::assertNotNull);
   }
 
   @Test
   public void testAnoaBinary() {
     List<Anoa<AdExchangeProtobuf.LogEvent, String>> anoas =
-        ProtobufStreams.binary(anoaHandler,
-                               ATS.protobufClass,
-                               true,
-                               ATS.protoBinaryInputStream(12345))
+        ProtobufStreams.binaryStrict(anoaHandler,
+                                     ATS.protobufClass,
+                                     ATS.protoBinaryInputStream(12345))
             .collect(Collectors.toList());
     anoas.stream()
         .flatMap(Anoa::meta)
@@ -71,10 +70,9 @@ public class ProtobufStreamsTest {
   @Test
   public void testAnoaJackson() {
     List<Anoa<AdExchangeProtobuf.LogEvent, String>> anoas =
-        ProtobufStreams.jackson(anoaHandler,
-                              ATS.protobufClass,
-                              true,
-                              ATS.jsonParser(12345))
+        ProtobufStreams.jacksonStrict(anoaHandler,
+                                      ATS.protobufClass,
+                                      ATS.jsonParser(12345))
             .collect(Collectors.toList());
     anoas.stream()
         .flatMap(Anoa::meta)

@@ -20,9 +20,9 @@ import java.util.function.Supplier;
  * Utility class for generating functions for serializing Thrift records. Unless specified
  * otherwise, the functions should not be deemed thread-safe.
  */
-public class ThriftEncoders {
+final public class ThriftEncoders {
 
-  protected ThriftEncoders() {
+  private ThriftEncoders() {
   }
 
   /**
@@ -112,36 +112,64 @@ public class ThriftEncoders {
   /**
    * @param recordClass Thrift record class object
    * @param supplier    called for each new record serialization
-   * @param strict      If set, chooses correctness over compactness
    * @param <T>         Thrift record type
    * @param <G>         JsonGenerator type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
-   * into it.
+   * into it, in compact form.
    */
   static public <T extends TBase, G extends JsonGenerator> Function<T, G> jackson(
       Class<T> recordClass,
-      Supplier<G> supplier,
-      boolean strict) {
-    return new ThriftWriter<>(recordClass).encoder(supplier, strict);
+      Supplier<G> supplier) {
+    return new ThriftWriter<>(recordClass).encoder(supplier);
+  }
+
+  /**
+   * @param recordClass Thrift record class object
+   * @param supplier    called for each new record serialization
+   * @param <T>         Thrift record type
+   * @param <G>         JsonGenerator type
+   * @return A function which calls the supplier for a JsonGenerator object and writes the record
+   * into it, in strict form.
+   */
+  static public <T extends TBase, G extends JsonGenerator> Function<T, G> jacksonStrict(
+      Class<T> recordClass,
+      Supplier<G> supplier) {
+    return new ThriftWriter<>(recordClass).encoderStrict(supplier);
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Thrift record class object
    * @param supplier    called for each new record serialization
-   * @param strict      If set, chooses correctness over compactness
    * @param <T>         Thrift record type
    * @param <G>         JsonGenerator type
    * @param <M>         Metadata type
    * @return A function which calls the supplier for a JsonGenerator object and writes the record
-   * into it.
+   * into it, in compact form.
    */
   static public <T extends TBase, G extends JsonGenerator, M>
   Function<Anoa<T, M>, Anoa<G, M>> jackson(
       AnoaHandler<M> anoaHandler,
       Class<T> recordClass,
-      Supplier<G> supplier,
-      boolean strict) {
-    return new ThriftWriter<>(recordClass).encoder(anoaHandler, supplier, strict);
+      Supplier<G> supplier) {
+    return new ThriftWriter<>(recordClass).encoder(anoaHandler, supplier);
+  }
+
+  /**
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
+   * @param recordClass Thrift record class object
+   * @param supplier    called for each new record serialization
+   * @param <T>         Thrift record type
+   * @param <G>         JsonGenerator type
+   * @param <M>         Metadata type
+   * @return A function which calls the supplier for a JsonGenerator object and writes the record
+   * into it, in strict form.
+   */
+  static public <T extends TBase, G extends JsonGenerator, M>
+  Function<Anoa<T, M>, Anoa<G, M>> jacksonStrict(
+      AnoaHandler<M> anoaHandler,
+      Class<T> recordClass,
+      Supplier<G> supplier) {
+    return new ThriftWriter<>(recordClass).encoderStrict(anoaHandler, supplier);
   }
 }

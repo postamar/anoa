@@ -36,9 +36,9 @@ public class AvroStreamsTest {
   @Test
   public void testJackson() {
     ATS.assertAvroGenerics(
-        AvroStreams.jackson(ATS.avroSchema, true, ATS.jsonParser(-1)));
+        AvroStreams.jacksonStrict(ATS.avroSchema, ATS.jsonParser(-1)));
     ATS.assertAvroSpecifics(
-        AvroStreams.jackson(ATS.avroClass, true, ATS.jsonParser(-1)));
+        AvroStreams.jacksonStrict(ATS.avroClass, ATS.jsonParser(-1)));
   }
 
   @Test
@@ -74,10 +74,10 @@ public class AvroStreamsTest {
   @Test
   public void testAnoaJackson() {
     ATS.assertAvroGenerics(
-        AvroStreams.jackson(anoaHandler, ATS.avroSchema, true, ATS.jsonParser(-1))
+        AvroStreams.jacksonStrict(anoaHandler, ATS.avroSchema, ATS.jsonParser(-1))
             .flatMap(Anoa::asStream));
     ATS.assertAvroSpecifics(
-        AvroStreams.jackson(anoaHandler, ATS.avroClass, true, ATS.jsonParser(-1))
+        AvroStreams.jacksonStrict(anoaHandler, ATS.avroClass, ATS.jsonParser(-1))
             .flatMap(Anoa::asStream));
   }
 

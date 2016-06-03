@@ -31,29 +31,27 @@ public class ProtobufEncodersTest {
     ATS.assertProtobufObjects(
         ATS.protobuf()
             .map(ProtobufEncoders.binary())
-            .map(ProtobufDecoders.binary(ATS.protobufClass, true)));
+            .map(ProtobufDecoders.binaryStrict(ATS.protobufClass)));
   }
 
   @Test
   public void testJackson() {
     ATS.assertProtobufObjects(
         ATS.protobuf()
-            .map(ProtobufEncoders.jackson(
+            .map(ProtobufEncoders.jacksonStrict(
                 ATS.protobufClass,
-                () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
-                true))
+                () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false)))
             .map(TokenBuffer::asParser)
-            .map(ProtobufDecoders.jackson(ATS.protobufClass, true)));
+            .map(ProtobufDecoders.jacksonStrict(ATS.protobufClass)));
   }
 
   @Test
   public void testJacksonStrictness() throws IOException {
-    AdExchangeProtobuf.LogEvent proto = ProtobufDecoders.jackson(ATS.protobufClass, false)
+    AdExchangeProtobuf.LogEvent proto = ProtobufDecoders.jackson(ATS.protobufClass)
         .apply(ATS.jsonNullsObjectParser());
     JsonNode node = ProtobufEncoders.jackson(
         ATS.protobufClass,
-        () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
-        false)
+        () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false))
         .apply(proto).asParser().readValueAsTree();
     Assert.assertTrue(node.isObject());
     Assert.assertEquals(0, node.size());
@@ -62,8 +60,7 @@ public class ProtobufEncodersTest {
         ATS.avroSpecific()
             .map(AvroEncoders.jackson(
                 ATS.avroClass,
-                () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
-                false))
+                () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false)))
             .map(Unchecked.function(tb -> (ObjectNode) tb.asParser().readValueAsTree()))
             .map(java.lang.Object::toString)
             .collect(Collectors.toList());
@@ -71,8 +68,7 @@ public class ProtobufEncodersTest {
         ATS.protobuf()
             .map(ProtobufEncoders.jackson(
                 ATS.protobufClass,
-                () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
-                false))
+                () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false)))
             .map(Unchecked.function(tb -> (ObjectNode) tb.asParser().readValueAsTree()))
             .map(java.lang.Object::toString)
             .collect(Collectors.toList());
@@ -86,7 +82,7 @@ public class ProtobufEncodersTest {
         ATS.protobuf()
             .map(anoaHandler::<AdExchangeProtobuf.LogEvent>of)
             .map(ProtobufEncoders.binary(anoaHandler))
-            .map(ProtobufDecoders.binary(anoaHandler, ATS.protobufClass, true))
+            .map(ProtobufDecoders.binaryStrict(anoaHandler, ATS.protobufClass))
             .flatMap(Anoa::asStream));
   }
 
@@ -95,13 +91,12 @@ public class ProtobufEncodersTest {
     ATS.assertProtobufObjects(
         ATS.protobuf()
             .map(anoaHandler::<AdExchangeProtobuf.LogEvent>of)
-            .map(ProtobufEncoders.jackson(
+            .map(ProtobufEncoders.jacksonStrict(
                 anoaHandler,
                 ATS.protobufClass,
-                () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false),
-                true))
+                () -> new TokenBuffer(AnoaTestSample.OBJECT_MAPPER, false)))
             .map(anoaHandler.function(TokenBuffer::asParser))
-            .map(ProtobufDecoders.jackson(anoaHandler, ATS.protobufClass, true))
+            .map(ProtobufDecoders.jacksonStrict(anoaHandler, ATS.protobufClass))
             .flatMap(Anoa::asStream));
   }
 }

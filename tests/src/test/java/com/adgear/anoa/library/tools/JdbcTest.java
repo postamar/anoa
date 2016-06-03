@@ -71,7 +71,7 @@ public class JdbcTest {
         try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {
           List<SimpleThrift> simples = new JdbcStreams().resultSet(f, resultSet)
               .map(f.function(TreeNode::traverse))
-              .map(f.function(ThriftDecoders.jackson(SimpleThrift.class, false)))
+              .map(f.function(ThriftDecoders.jackson(SimpleThrift.class)))
               .peek(System.out::println)
               .filter(Anoa::isPresent)
               .map(Anoa::get)
@@ -111,7 +111,7 @@ public class JdbcTest {
           try (WriteConsumer<GenericRecord> consumer = AvroConsumers.batch(induced, baos)) {
             new JdbcStreams().resultSet(resultSet)
                 .map(ObjectNode::traverse)
-                .map(AvroDecoders.jackson(induced, false))
+                .map(AvroDecoders.jackson(induced))
                 .forEach(consumer);
           }
           Assert.assertEquals(2, AvroStreams.batch(
@@ -141,7 +141,7 @@ public class JdbcTest {
     System.out.println(new String(bytes));
     Assert.assertEquals(2, CsvStreams.csvWithHeader().from(bytes)
         .map(TreeNode::traverse)
-        .map(AvroDecoders.jackson(SimpleAvro.class, false))
+        .map(AvroDecoders.jackson(SimpleAvro.class))
         .filter(x -> x != null)
         .count());
   }

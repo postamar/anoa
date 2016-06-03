@@ -17,7 +17,7 @@ import java.util.Map;
 /**
  * Utility class for properly-typed reflection methods.
  */
-public class AnoaReflectionUtils {
+final public class AnoaReflectionUtils {
 
   static private Comparator<Map.Entry<? extends TFieldIdEnum, FieldMetaData>> comparator
       = new Comparator<Map.Entry<? extends TFieldIdEnum, FieldMetaData>>() {

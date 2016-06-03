@@ -39,12 +39,12 @@ public class AvroDecodersTest {
     ATS.assertAvroGenerics(
         ATS.jsonObjects()
             .map(TreeNode::traverse)
-            .map(AvroDecoders.jackson(ATS.avroSchema, true)));
+            .map(AvroDecoders.jacksonStrict(ATS.avroSchema)));
 
     ATS.assertAvroSpecifics(
         ATS.jsonObjects()
             .map(TreeNode::traverse)
-            .map(AvroDecoders.jackson(ATS.avroClass, true)));
+            .map(AvroDecoders.jacksonStrict(ATS.avroClass)));
   }
 
   @Test
@@ -83,22 +83,22 @@ public class AvroDecodersTest {
         ATS.jsonObjects()
             .map(anoaHandler::<TreeNode>of)
             .map(anoaHandler.function(TreeNode::traverse))
-            .map(AvroDecoders.jackson(anoaHandler, ATS.avroSchema, false))
+            .map(AvroDecoders.jackson(anoaHandler, ATS.avroSchema))
             .map(Anoa::get));
 
     ATS.assertAvroSpecifics(
         ATS.jsonObjects()
             .map(anoaHandler::<TreeNode>of)
             .map(anoaHandler.function(TreeNode::traverse))
-            .map(AvroDecoders.jackson(anoaHandler, ATS.avroClass, false))
+            .map(AvroDecoders.jackson(anoaHandler, ATS.avroClass))
             .map(Anoa::get));
   }
 
   @Test
   public void testJacksonStrictness() {
-    LogEvent<?> strict = LogEvent.avro(AvroDecoders.jackson(ATS.avroClass, true)
+    LogEvent<?> strict = LogEvent.avro(AvroDecoders.jacksonStrict(ATS.avroClass)
                                            .apply(ATS.jsonNullsObjectParser()));
-    LogEvent<?> loose = LogEvent.avro(AvroDecoders.jackson(ATS.avroClass, false)
+    LogEvent<?> loose = LogEvent.avro(AvroDecoders.jackson(ATS.avroClass)
                                           .apply(ATS.jsonNullsObjectParser()));
     Assert.assertNotNull(strict.getRequest());
     Assert.assertNotNull(strict.getResponse());

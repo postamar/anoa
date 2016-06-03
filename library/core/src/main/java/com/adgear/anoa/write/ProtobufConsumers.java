@@ -10,13 +10,13 @@ import java.io.OutputStream;
 /**
  * Utility class for generating {@code WriteConsumer} instances to write Protobuf records.
  */
-public class ProtobufConsumers {
+final public class ProtobufConsumers {
 
-  protected ProtobufConsumers() {
+  private ProtobufConsumers() {
   }
 
   /**
-   * Write as delimited binary blobs, as per {@code MessageLite#writeDelimitedTo(OutputStream)}
+   * Write as delimited binary blobs, as per {@code MessageLite#writeDelimitedTo(OutputStream)}.
    *
    * @param outputStream stream to write into
    * @param <R>          Protobuf record type
@@ -27,17 +27,29 @@ public class ProtobufConsumers {
   }
 
   /**
-   * Write as 'natural' JSON serializations using provided generator
+   * Write as 'natural' JSON serializations using provided generator, in compact form.
    *
    * @param recordClass      Protobuf record class object
    * @param jacksonGenerator JsonGenerator instance to write into
-   * @param strict           If set, chooses correctness over compactness
    * @param <R>              Protobuf record type
    */
   static public <R extends Message> WriteConsumer<R> jackson(
       Class<R> recordClass,
-      JsonGenerator jacksonGenerator,
-      boolean strict) {
-    return new ProtobufWriter<>(recordClass).writeConsumer(jacksonGenerator, strict);
+      JsonGenerator jacksonGenerator) {
+    return new ProtobufWriter<>(recordClass).writeConsumer(jacksonGenerator);
+  }
+
+
+  /**
+   * Write as 'natural' JSON serializations using provided generator, in strict form.
+   *
+   * @param recordClass      Protobuf record class object
+   * @param jacksonGenerator JsonGenerator instance to write into
+   * @param <R>              Protobuf record type
+   */
+  static public <R extends Message> WriteConsumer<R> jacksonStrict(
+      Class<R> recordClass,
+      JsonGenerator jacksonGenerator) {
+    return new ProtobufWriter<>(recordClass).writeConsumerStrict(jacksonGenerator);
   }
 }

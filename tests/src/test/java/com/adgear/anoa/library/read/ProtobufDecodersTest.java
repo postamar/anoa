@@ -24,7 +24,7 @@ public class ProtobufDecodersTest {
   @Test
   public void testBinary() {
     ATS.assertProtobufObjects(
-        ATS.protobufBinary().map(ProtobufDecoders.binary(ATS.protobufClass, true)));
+        ATS.protobufBinary().map(ProtobufDecoders.binaryStrict(ATS.protobufClass)));
   }
 
   @Test
@@ -32,14 +32,14 @@ public class ProtobufDecodersTest {
     ATS.assertProtobufObjects(
         ATS.jsonObjects()
             .map(TreeNode::traverse)
-            .map(ProtobufDecoders.jackson(ATS.protobufClass, true)));
+            .map(ProtobufDecoders.jacksonStrict(ATS.protobufClass)));
   }
 
   @Test
   public void testJacksonStrictness() throws IOException {
-    AdExchangeProtobuf.LogEvent strict = ProtobufDecoders.jackson(ATS.protobufClass, true)
+    AdExchangeProtobuf.LogEvent strict = ProtobufDecoders.jacksonStrict(ATS.protobufClass)
         .apply(ATS.jsonNullsObjectParser());
-    AdExchangeProtobuf.LogEvent loose = ProtobufDecoders.jackson(ATS.protobufClass, false)
+    AdExchangeProtobuf.LogEvent loose = ProtobufDecoders.jackson(ATS.protobufClass)
         .apply(ATS.jsonNullsObjectParser());
 
     Assert.assertTrue(strict.hasRequest());
@@ -75,7 +75,7 @@ public class ProtobufDecodersTest {
     ATS.assertProtobufObjects(
         ATS.protobufBinary()
             .map(anoaHandler::<byte[]>of)
-            .map(ProtobufDecoders.binary(anoaHandler, ATS.protobufClass, true))
+            .map(ProtobufDecoders.binaryStrict(anoaHandler, ATS.protobufClass))
             .map(Anoa::get));
   }
 
@@ -85,7 +85,7 @@ public class ProtobufDecodersTest {
         ATS.jsonObjects()
             .map(anoaHandler::<TreeNode>of)
             .map(anoaHandler.function(TreeNode::traverse))
-            .map(ProtobufDecoders.jackson(anoaHandler, ATS.protobufClass, true))
+            .map(ProtobufDecoders.jacksonStrict(anoaHandler, ATS.protobufClass))
             .map(Anoa::get));
   }
 }

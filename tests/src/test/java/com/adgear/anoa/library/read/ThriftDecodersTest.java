@@ -45,7 +45,7 @@ public class ThriftDecodersTest {
     int i = 0;
     for (LogEventThrift actual : ATS.jsonObjects()
         .map(TreeNode::traverse)
-        .map(ThriftDecoders.jackson(ATS.thriftClass, true)).collect(Collectors.toList())) {
+        .map(ThriftDecoders.jacksonStrict(ATS.thriftClass)).collect(Collectors.toList())) {
 
       LogEventThrift expected = ATS.thrift().skip(i++).findFirst().get();
       if (!expected.equals(actual)) {
@@ -57,15 +57,15 @@ public class ThriftDecodersTest {
     ATS.assertThriftObjects(
         ATS.jsonObjects()
             .map(TreeNode::traverse)
-            .map(ThriftDecoders.jackson(ATS.thriftClass, true)));
+            .map(ThriftDecoders.jacksonStrict(ATS.thriftClass)));
   }
 
   @Test
   public void testJacksonStrictness() {
-    LogEventThrift strict = ThriftDecoders.jackson(ATS.thriftClass, true)
+    LogEventThrift strict = ThriftDecoders.jacksonStrict(ATS.thriftClass)
         .apply(ATS.jsonNullsObjectParser());
 
-    LogEventThrift loose = ThriftDecoders.jackson(ATS.thriftClass, false)
+    LogEventThrift loose = ThriftDecoders.jackson(ATS.thriftClass)
         .apply(ATS.jsonNullsObjectParser());
 
     Assert.assertTrue(strict.isSetRequest());
@@ -127,7 +127,7 @@ public class ThriftDecodersTest {
         ATS.jsonObjects()
             .map(anoaHandler::<TreeNode>of)
             .map(anoaHandler.function(TreeNode::traverse))
-            .map(ThriftDecoders.jackson(anoaHandler, ATS.thriftClass, true))
+            .map(ThriftDecoders.jacksonStrict(anoaHandler, ATS.thriftClass))
             .map(Anoa::get));
   }
 

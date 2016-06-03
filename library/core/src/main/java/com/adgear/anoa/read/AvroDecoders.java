@@ -23,9 +23,9 @@ import java.util.function.Supplier;
  * Utility class for generating functions for deserializing Avro records. Unless specified
  * otherwise, the functions should not be deemed thread-safe.
  */
-public class AvroDecoders {
+final public class AvroDecoders {
 
-  protected AvroDecoders() {
+  private AvroDecoders() {
   }
 
   /**
@@ -407,49 +407,80 @@ public class AvroDecoders {
 
   /**
    * @param schema Avro record schema
-   * @param strict enable strict type checking
    * @param <P>    Jackson JsonParser type
-   * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding
+   * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding.
    */
   static public <P extends JsonParser> Function<P, GenericRecord> jackson(
-      Schema schema,
-      boolean strict) {
-    return new AvroReader.GenericReader(schema).decoder(strict);
+      Schema schema) {
+    return new AvroReader.GenericReader(schema).decoder();
+  }
+
+  /**
+   * @param schema Avro record schema
+   * @param <P>    Jackson JsonParser type
+   * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding,
+   * with strictest possible type checking.
+   */
+  static public <P extends JsonParser> Function<P, GenericRecord> jacksonStrict(
+      Schema schema) {
+    return new AvroReader.GenericReader(schema).decoderStrict();
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param schema      Avro record Schema
-   * @param strict      enable strict type checking
    * @param <P>         Jackson JsonParser type
    * @param <M>         Metadata type
-   * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding
+   * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding.
    */
   static public <P extends JsonParser, M>
   Function<Anoa<P, M>, Anoa<GenericRecord, M>> jackson(
       AnoaHandler<M> anoaHandler,
-      Schema schema,
-      boolean strict) {
-    return new AvroReader.GenericReader(schema).decoder(anoaHandler, strict);
+      Schema schema) {
+    return new AvroReader.GenericReader(schema).decoder(anoaHandler);
+  }
+
+  /**
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
+   * @param schema      Avro record Schema
+   * @param <P>         Jackson JsonParser type
+   * @param <M>         Metadata type
+   * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding,
+   * with strictest possible type checking.
+   */
+  static public <P extends JsonParser, M>
+  Function<Anoa<P, M>, Anoa<GenericRecord, M>> jacksonStrict(
+      AnoaHandler<M> anoaHandler,
+      Schema schema) {
+    return new AvroReader.GenericReader(schema).decoderStrict(anoaHandler);
   }
 
   /**
    * @param recordClass Avro SpecificRecord class object
-   * @param strict      enable strict type checking
    * @param <P>         Jackson JsonParser type
    * @param <R>         Avro SpecificRecord record type
    * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding
    */
   static public <P extends JsonParser, R extends SpecificRecord> Function<P, R> jackson(
-      Class<R> recordClass,
-      boolean strict) {
-    return new AvroReader.SpecificReader<>(recordClass).decoder(strict);
+      Class<R> recordClass) {
+    return new AvroReader.SpecificReader<>(recordClass).decoder();
+  }
+
+  /**
+   * @param recordClass Avro SpecificRecord class object
+   * @param <P>         Jackson JsonParser type
+   * @param <R>         Avro SpecificRecord record type
+   * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding,
+   * with strictest possible type checking.
+   */
+  static public <P extends JsonParser, R extends SpecificRecord> Function<P, R> jacksonStrict(
+      Class<R> recordClass) {
+    return new AvroReader.SpecificReader<>(recordClass).decoderStrict();
   }
 
   /**
    * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
    * @param recordClass Avro SpecificRecord class object
-   * @param strict      enable strict type checking
    * @param <P>         Jackson JsonParser type
    * @param <R>         Avro SpecificRecord record type
    * @param <M>         Metadata type
@@ -458,9 +489,24 @@ public class AvroDecoders {
   static public <P extends JsonParser, R extends SpecificRecord, M>
   Function<Anoa<P, M>, Anoa<R, M>> jackson(
       AnoaHandler<M> anoaHandler,
-      Class<R> recordClass,
-      boolean strict) {
-    return new AvroReader.SpecificReader<>(recordClass).decoder(anoaHandler, strict);
+      Class<R> recordClass) {
+    return new AvroReader.SpecificReader<>(recordClass).decoder(anoaHandler);
+  }
+
+  /**
+   * @param anoaHandler {@code AnoaHandler} instance to use for exception handling
+   * @param recordClass Avro SpecificRecord class object
+   * @param <P>         Jackson JsonParser type
+   * @param <R>         Avro SpecificRecord record type
+   * @param <M>         Metadata type
+   * @return A function which reads an Avro record from a JsonParser, in its 'natural' encoding,
+   * with strictest possible type checking.
+   */
+  static public <P extends JsonParser, R extends SpecificRecord, M>
+  Function<Anoa<P, M>, Anoa<R, M>> jacksonStrict(
+      AnoaHandler<M> anoaHandler,
+      Class<R> recordClass) {
+    return new AvroReader.SpecificReader<>(recordClass).decoderStrict(anoaHandler);
   }
 
   static protected class BinaryDecoderWrapper {
