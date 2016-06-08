@@ -1,7 +1,6 @@
 package com.adgear.anoa.compiler;
 
 import com.adgear.anoa.compiler.javagen.AvroJavaGenerator;
-import com.adgear.anoa.compiler.javagen.JavaCodeGenerationException;
 
 import org.apache.avro.compiler.specific.SpecificCompiler;
 
@@ -33,14 +32,14 @@ final class AvroGenerator extends GeneratorBase {
 
   @Override
   public void generateJava(File schemaRootDir, File javaRootDir)
-      throws JavaCodeGenerationException {
+      throws CodeGenerationException {
     SpecificCompiler compiler = new AvroJavaGenerator(protocol);
     File source = new File(schemaRootDir, getSchemaFile().toString());
     log("Generating java code for Anoa schema in '" + getSchemaFile() + "'...");
     try {
       compiler.compileToDestination(source, javaRootDir);
     } catch (IOException e) {
-      throw new JavaCodeGenerationException("Anoa code generation failed for '" + source + "'.", e);
+      throw new CodeGenerationException("Anoa code generation failed for '" + source + "'.", e);
     }
     log("Successfully generated java code for Anoa schema in '" + getSchemaFile() + "'.");
   }

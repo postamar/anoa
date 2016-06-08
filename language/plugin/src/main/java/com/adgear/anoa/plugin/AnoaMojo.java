@@ -1,9 +1,10 @@
 package com.adgear.anoa.plugin;
 
+import com.adgear.anoa.compiler.CommandLineUtils;
 import com.adgear.anoa.compiler.CompilationUnit;
 import com.adgear.anoa.compiler.ParseException;
 import com.adgear.anoa.compiler.SchemaGenerationException;
-import com.adgear.anoa.compiler.javagen.JavaCodeGenerationException;
+import com.adgear.anoa.compiler.CodeGenerationException;
 
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
@@ -24,6 +25,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Mojo(name = "run", defaultPhase = LifecyclePhase.GENERATE_SOURCES, threadSafe = true)
 public class AnoaMojo extends AbstractMojo {
@@ -47,14 +49,20 @@ public class AnoaMojo extends AbstractMojo {
       defaultValue = "${project.build.directory}/generated-test-sources")
   private File testOutputDirectory;
 
-  @Parameter(property = "generateAvro", defaultValue = "false")
-  private boolean generateAvro;
+  @Parameter(property = "generateAvroJava", defaultValue = "false")
+  private boolean generateAvroJava;
 
-  @Parameter(property = "generateProtobuf", defaultValue = "false")
-  private boolean generateProtobuf;
+  @Parameter(property = "generateThriftJava", defaultValue = "false")
+  private boolean generateThriftJava;
 
-  @Parameter(property = "generateThrift", defaultValue = "false")
-  private boolean generateThrift;
+  @Parameter(property = "generateProtobufJava", defaultValue = "false")
+  private boolean generateProtobufJava;
+
+  @Parameter(property = "generateProtobufFileDescriptorSet", defaultValue = "false")
+  private boolean generateProtobufFileDescriptorSet;
+
+  @Parameter(property = "protobufFileDescriptorSetFileName", defaultValue = "fdset.protobuf")
+  private String protobufFileDescriptorSetFileName;
 
   @Parameter(property = "protocCommand", defaultValue = "protoc")
   private String protocCommand;
@@ -101,30 +109,48 @@ public class AnoaMojo extends AbstractMojo {
       compile(parsed, anoaSourceDir, schemaDir, javaDir);
     } catch (SchemaGenerationException e) {
       throw new MojoExecutionException("Error generating schema.", e);
-    } catch (JavaCodeGenerationException e) {
+    } catch (CodeGenerationException e) {
       throw new MojoExecutionException("Error generating java source.", e);
     }
   }
 
   private void compile(Iterable<CompilationUnit> parsed, File anoaDir, File schemaDir, File javaDir)
-      throws SchemaGenerationException, JavaCodeGenerationException {
+      throws SchemaGenerationException, CodeGenerationException {
+    List<File> protoFiles = new ArrayList<>();
     for (CompilationUnit cu : parsed) {
       cu.avroGenerator().generateSchema(schemaDir);
-      cu.protobufGenerator().generateSchema(schemaDir);
+      File proto = cu.protobufGenerator().generateSchema(schemaDir);
+      if (generateProtobufFileDescriptorSet) {
+        protoFiles.add(proto);
+      }
       cu.thriftGenerator().generateSchema(schemaDir);
     }
+    if (generateProtobufFileDescriptorSet) {
+      buildProtobufFileDescriptorSet(schemaDir, protoFiles);
+    }
     for (CompilationUnit cu : parsed) {
-      cu.interfaceGenerator(generateAvro, generateProtobuf, generateThrift)
+      cu.interfaceGenerator(generateAvroJava, generateProtobufJava, generateThriftJava)
           .generateJava(anoaDir, javaDir);
-      if (generateAvro) {
+      if (generateAvroJava) {
         cu.avroGenerator().generateJava(schemaDir, javaDir);
       }
-      if (generateProtobuf) {
+      if (generateProtobufJava) {
         cu.protobufGenerator(protocCommand).generateJava(schemaDir, javaDir);
       }
-      if (generateThrift) {
+      if (generateThriftJava) {
         cu.thriftGenerator(thriftCommand).generateJava(schemaDir, javaDir);
       }
+    }
+  }
+
+  private void buildProtobufFileDescriptorSet(File schemaDir, List<File> protoFiles)
+      throws CodeGenerationException {
+    if (!protoFiles.isEmpty()) {
+      String out = "--descriptor_set_out=" + protobufFileDescriptorSetFileName;
+      Stream<String> files = protoFiles.stream()
+          .map(f -> schemaDir.toPath().relativize(f.toPath()).toString());
+      Stream<String> args = Stream.concat(Stream.of(out), files);
+      CommandLineUtils.runCommand(protocCommand, args, schemaDir, getLog()::info);
     }
   }
 

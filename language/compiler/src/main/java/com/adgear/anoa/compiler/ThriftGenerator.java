@@ -1,7 +1,5 @@
 package com.adgear.anoa.compiler;
 
-import com.adgear.anoa.compiler.javagen.JavaCodeGenerationException;
-
 import org.apache.avro.Schema;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.BooleanNode;
@@ -145,7 +143,7 @@ final class ThriftGenerator extends GeneratorBase {
 
   @Override
   public void generateJava(File schemaRootDir, File javaRootDir)
-      throws JavaCodeGenerationException {
+      throws CodeGenerationException {
     Path out = schemaRootDir.toPath().relativize(javaRootDir.toPath());
     runCommand(thriftCommand,
                Stream.of("--out", out.toString(), "--gen", "java"),
@@ -153,7 +151,7 @@ final class ThriftGenerator extends GeneratorBase {
     patchNamespace(javaRootDir);
   }
 
-  private void patchNamespace(File javaSourceDir) throws JavaCodeGenerationException {
+  private void patchNamespace(File javaSourceDir) throws CodeGenerationException {
     File packageDir = new File(javaSourceDir, getSchemaFile().getParent());
     assert packageDir.exists();
     assert packageDir.isDirectory();
@@ -185,7 +183,7 @@ final class ThriftGenerator extends GeneratorBase {
   }
 
   private void patchJavaSource(File javaSource, Map<Pattern, String> map)
-      throws JavaCodeGenerationException {
+      throws CodeGenerationException {
     log("Repairing broken thrift compiler output in '" + javaSource + "'...");
     assert javaSource.canRead();
     assert javaSource.canWrite();
@@ -209,7 +207,7 @@ final class ThriftGenerator extends GeneratorBase {
         writer.newLine();
       }
     } catch (IOException e) {
-      throw new JavaCodeGenerationException(
+      throw new CodeGenerationException(
           "Error patching broken thift compiler output in'" + javaSource + "'.", e);
     }
     log("Successfully repaired broken thrift compiler output in '" + javaSource + "'.");
