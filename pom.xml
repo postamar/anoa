@@ -7,7 +7,7 @@
   <properties>
     <project.version.avro>1.7.7</project.version.avro>
     <project.version.thrift>0.9.3</project.version.thrift>
-    <project.version.protobuf>3.0.0-beta-3</project.version.protobuf>
+    <project.version.protobuf>3.0.0</project.version.protobuf>
     <project.version.jackson>2.7.3</project.version.jackson>
     <project.version.jool>0.9.8</project.version.jool>
   </properties>
