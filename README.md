@@ -325,7 +325,7 @@ See the [anoa-tools javadoc](http://www.javadoc.io/doc/com.adgear/anoa-tools) fo
 Anoa is currently built with:
 
     Apache Avro 1.7.7
-    Google Protobuf 3.0.0-beta-2
+    Google Protobuf 3.0.0
     Apache Thrift 0.9.3
     FasterXML Jackson 2.7.3
 
