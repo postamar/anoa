@@ -1,7 +1,5 @@
 package com.adgear.anoa.compiler;
 
-import com.adgear.anoa.compiler.javagen.JavaCodeGenerationException;
-
 import org.apache.avro.Schema;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.BooleanNode;
@@ -167,7 +165,7 @@ final class ProtobufGenerator extends GeneratorBase {
 
   @Override
   public void generateJava(File schemaRootDir, File javaRootDir)
-      throws JavaCodeGenerationException {
+      throws CodeGenerationException {
     runCommand(protocCommand,
                Stream.of("--java_out=" + schemaRootDir.toPath().relativize(javaRootDir.toPath())),
                schemaRootDir);

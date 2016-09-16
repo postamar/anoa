@@ -1,7 +1,5 @@
 package com.adgear.anoa.compiler;
 
-import com.adgear.anoa.compiler.javagen.JavaCodeGenerationException;
-
 import org.apache.avro.Protocol;
 
 import java.io.File;
@@ -9,7 +7,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Scanner;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -41,13 +38,14 @@ abstract class GeneratorBase implements Generator {
   }
 
   @Override
-  public void generateSchema(File schemaRootDir) throws SchemaGenerationException {
+  public File generateSchema(File schemaRootDir) throws SchemaGenerationException {
     File outputFile = new File(schemaRootDir, getSchemaFile().toString());
     try {
       outputFile.getParentFile().mkdirs();
       try (FileWriter writer = new FileWriter(outputFile)) {
         writer.write(generateSchema());
       }
+      return outputFile;
     } catch (IOException e) {
       throw new SchemaGenerationException("Error writing schema to '" + outputFile + "'." , e);
     }
@@ -66,28 +64,9 @@ abstract class GeneratorBase implements Generator {
   }
 
   protected void runCommand(String cmd, Stream<String> opts, File cwd)
-      throws JavaCodeGenerationException {
+      throws CodeGenerationException {
     File source = new File(cwd, getSchemaFile().toString());
     String src = cwd.toPath().relativize(source.toPath()).toString();
-    Stream<String> cmdStream = Stream.concat(Stream.concat(Stream.of(cmd), opts), Stream.of(src));
-    String[] cmdArray = cmdStream.toArray(String[]::new);
-    log(Stream.of(cmdArray).collect(Collectors.joining(" ", "Executing '", "'...")));
-    final Process process;
-    try {
-      process = Runtime.getRuntime().exec(cmdArray, null, cwd);
-      if (process.waitFor() != 0) {
-        Scanner scanner = new Scanner(process.getErrorStream());
-        while (scanner.hasNextLine()) {
-          log(">> " + scanner.nextLine());
-        }
-        throw new JavaCodeGenerationException(
-            cmd + " failed, exit code " + process.exitValue() + " for " + source);
-      }
-    } catch (InterruptedException e) {
-      throw new JavaCodeGenerationException(cmd + " interrupted for " + source, e);
-    } catch (IOException e) {
-      throw new JavaCodeGenerationException(cmd + " failed for " + source, e);
-    }
-    log(Stream.of(cmdArray).collect(Collectors.joining(" ", "Successfully executed '", "'.")));
+    CommandLineUtils.runCommand(cmd, Stream.concat(opts, Stream.of(src)), cwd, logger);
   }
 }

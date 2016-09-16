@@ -7,7 +7,7 @@
   <parent>
     <artifactId>anoa</artifactId>
     <groupId>com.adgear</groupId>
-    <version>3.0.0-beta-1</version>
+    <version>3.0.0</version>
   </parent>
 
   <artifactId>anoa-tests</artifactId>
@@ -22,9 +22,10 @@
           <execution>
             <phase>generate-sources</phase>
             <configuration>
-              <generateAvro>true</generateAvro>
-              <generateProtobuf>true</generateProtobuf>
-              <generateThrift>true</generateThrift>
+              <generateProtobufFileDescriptorSet>true</generateProtobufFileDescriptorSet>
+              <generateAvroJava>true</generateAvroJava>
+              <generateProtobufJava>true</generateProtobufJava>
+              <generateThriftJava>true</generateThriftJava>
             </configuration>
             <goals>
               <goal>run</goal>

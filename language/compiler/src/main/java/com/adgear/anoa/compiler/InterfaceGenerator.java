@@ -1,7 +1,6 @@
 package com.adgear.anoa.compiler;
 
 import com.adgear.anoa.compiler.javagen.InterfaceJavaGenerator;
-import com.adgear.anoa.compiler.javagen.JavaCodeGenerationException;
 
 import org.apache.avro.compiler.specific.SpecificCompiler;
 
@@ -40,20 +39,20 @@ class InterfaceGenerator extends GeneratorBase {
   }
 
   @Override
-  public void generateSchema(File schemaRootDir) throws SchemaGenerationException {
+  public File generateSchema(File schemaRootDir) throws SchemaGenerationException {
     throw new SchemaGenerationException("Unsupported method");
   }
 
   @Override
   public void generateJava(File schemaRootDir, File javaRootDir)
-      throws JavaCodeGenerationException {
+      throws CodeGenerationException {
     SpecificCompiler javaGenerator = new InterfaceJavaGenerator(protocol, withAvro, withProtobuf, withThrift);
     File source = new File(schemaRootDir, getSchemaFile().toString());
     log("Generating java code for Anoa schema in '" + getSchemaFile() + "'...");
     try {
       javaGenerator.compileToDestination(source, javaRootDir);
     } catch (IOException e) {
-      throw new JavaCodeGenerationException("Anoa code generation failed for '" + source + "'.", e);
+      throw new CodeGenerationException("Anoa code generation failed for '" + source + "'.", e);
     }
     log("Successfully generated java code for Anoa schema in '" + getSchemaFile() + "'.");
   }
