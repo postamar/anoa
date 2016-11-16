@@ -112,15 +112,16 @@ abstract class AbstractRecordReader<R, F extends FieldWrapper>
       final RecordWrapper<R, F> recordWrapper = newWrappedInstance();
       doMap(jacksonParser, (fieldName, p) -> {
         final Optional<F> maybeFieldWrapper = fieldLookUp.get(fieldName);
-        if (maybeFieldWrapper == null) {
-          fieldLookUp.put(fieldName, Optional.<F>empty());
-        } else if (maybeFieldWrapper.isPresent()) {
+        if (maybeFieldWrapper != null && maybeFieldWrapper.isPresent()) {
           final F fieldWrapper = maybeFieldWrapper.get();
           Object value = fieldWrapper.getReader().read(p);
           if (!fieldWrapper.equalsDefaultValue(value)) {
             recordWrapper.put(fieldWrapper, value);
           }
         } else {
+          if (maybeFieldWrapper == null) {
+            fieldLookUp.put(fieldName, Optional.empty());
+          }
           gobbleValue(p);
         }
       });
@@ -141,12 +142,13 @@ abstract class AbstractRecordReader<R, F extends FieldWrapper>
         final RecordWrapper<R, F> recordWrapper = newWrappedInstance();
         doMap(jacksonParser, (fieldName, p) -> {
           final Optional<F> maybeFieldWrapper = fieldLookUp.get(fieldName);
-          if (maybeFieldWrapper == null) {
-            fieldLookUp.put(fieldName, Optional.<F>empty());
-          } else if (maybeFieldWrapper.isPresent()) {
+          if (maybeFieldWrapper != null && maybeFieldWrapper.isPresent()) {
             final F fieldWrapper = maybeFieldWrapper.get();
             recordWrapper.put(fieldWrapper, fieldWrapper.getReader().readStrict(p));
           } else {
+            if (maybeFieldWrapper == null) {
+              fieldLookUp.put(fieldName, Optional.<F>empty());
+            }
             gobbleValue(p);
           }
         });
