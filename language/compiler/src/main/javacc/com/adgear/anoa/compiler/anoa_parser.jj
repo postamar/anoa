@@ -556,7 +556,7 @@ void FieldAlias(Field auxField, String fieldName, List<Field> structFields) :
 { Token t; }
 {
   ( <COMMA> ) ?
-  t = Identifier()
+  ( t = <IDENTIFIER> | t = <FIELD_ALIAS_IDENTIFIER> )
   { this.addFieldAlias(auxField, t, fieldName, structFields); }
 }
 
