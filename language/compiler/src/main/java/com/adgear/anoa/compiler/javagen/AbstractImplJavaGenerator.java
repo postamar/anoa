@@ -8,9 +8,9 @@ abstract class AbstractImplJavaGenerator {
 
   static String BYTES_SUPPLIER =
       "byte[] b = new byte[bb.remaining()]; "
-      + "bb.asReadOnlyBuffer().get(b); "
-      + "return (java.util.function.Supplier<byte[]>)(b::clone);";
-
+          + "bb.asReadOnlyBuffer().get(b); "
+          + "return new java.util.function.Supplier<byte[]>() { "
+          + "public byte[] get() { return java.util.Arrays.copyOf(b, b.length); } };";
 
   final InterfaceJavaGenerator ijg;
   final Schema schema;
