@@ -96,7 +96,8 @@ class ThriftImplJavaGenerator extends AbstractImplJavaGenerator {
         value = "(long) " + value;
         break;
       case BYTES:
-        value = "java.nio.ByteBuffer.wrap(" + value + ".get().clone())";
+        value = "java.nio.ByteBuffer.wrap(" +
+            "java.util.Arrays.copyOf(" + VALUE + ".get(), " + VALUE + ".get().length))";
         break;
       case ENUM:
       case RECORD:
