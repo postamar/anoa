@@ -41,8 +41,7 @@ class AvroImplJavaGenerator extends AbstractImplJavaGenerator {
     final String unmod = "java.util.Collections.unmodifiable";
     switch (field.schema().getType()) {
       case BYTES:
-        return "java.util.Optional.of(" + value + ")"
-               + ".map(bb -> {" + BYTES_SUPPLIER + "}).get()";
+        return "java.util.Optional.of(" + value + ").map(bb -> {" + BYTES_SUPPLIER + "}).get()";
       case STRING:
         return "java.util.Optional.of(" + value + ").map(java.lang.Object::toString).orElse(\"\")";
       case ENUM:
@@ -87,7 +86,8 @@ class AvroImplJavaGenerator extends AbstractImplJavaGenerator {
   String importValue(Schema.Field field) {
     switch (field.schema().getType()) {
       case BYTES:
-        return "java.nio.ByteBuffer.wrap(" + VALUE + ".get().clone())";
+        return "java.nio.ByteBuffer.wrap(" +
+            "java.util.Arrays.copyOf(" + VALUE + ".get(), " + VALUE + ".get().length))";
       case STRING:
         return "new org.apache.avro.util.Utf8(" + VALUE + ")";
       case ENUM:
@@ -114,7 +114,7 @@ class AvroImplJavaGenerator extends AbstractImplJavaGenerator {
   private String exportArrayMapper(Schema s) {
     switch (s.getType()) {
       case BYTES:
-        return ".map(bb -> {" + BYTES_SUPPLIER + "})";
+        return ".map(bb -> { " + BYTES_SUPPLIER + " })";
       case STRING:
         return ".map(java.lang.Object::toString)";
       case ENUM:
@@ -128,7 +128,7 @@ class AvroImplJavaGenerator extends AbstractImplJavaGenerator {
   private String exportMapValueFunction(Schema s) {
     switch (s.getType()) {
       case BYTES:
-        return  "e -> { java.nio.ByteBuffer bb = e.getValue(); " + BYTES_SUPPLIER + " }";
+        return "e -> { java.nio.ByteBuffer bb = e.getValue(); " + BYTES_SUPPLIER + " }";
       case STRING:
         return "e -> e.getValue().toString()";
       case ENUM:
@@ -142,7 +142,9 @@ class AvroImplJavaGenerator extends AbstractImplJavaGenerator {
   private String importArrayMapper(Schema s) {
     switch (s.getType()) {
       case BYTES:
-        return ".map(v -> java.nio.ByteBuffer.wrap(v.get().clone()))";
+        return ".map(java.util.function.Supplier::get)" +
+            ".map(a -> java.util.Arrays.copyOf(a, a.length))" +
+            ".map(java.nio.ByteBuffer::wrap)";
       case STRING:
         return ".map(org.apache.avro.util.Utf8::new)";
       case ENUM:
@@ -156,7 +158,8 @@ class AvroImplJavaGenerator extends AbstractImplJavaGenerator {
   private String importMapValueFunction(Schema s) {
     switch (s.getType()) {
       case BYTES:
-        return "e -> java.nio.ByteBuffer.wrap(e.getValue().get().clone())";
+        return "e -> { byte[] a = e.getValue().get(); " +
+            "return java.nio.ByteBuffer.wrap(java.util.Arrays.copyOf(a, a.length)); }";
       case STRING:
         return "e -> new org.apache.avro.util.Utf8(e.getValue())";
       case ENUM:

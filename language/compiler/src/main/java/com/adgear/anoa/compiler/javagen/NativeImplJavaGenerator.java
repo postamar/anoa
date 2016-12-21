@@ -97,18 +97,22 @@ class NativeImplJavaGenerator extends AbstractImplJavaGenerator {
     }
   }
 
+  static private String bytesSupplier(String arrayName) {
+    return "new java.util.function.Supplier<byte[]>() { public byte[] get() { " +
+        "return java.util.Arrays.copyOf(" + arrayName + ", " + arrayName+ ".length); } }";
+  }
 
   @Override
   String exportValue(Schema.Field field) {
     switch (field.schema().getType()) {
       case BYTES:
-        return "(java.util.function.Supplier<byte[]>) " + nativeFieldName(field) + "::clone";
+        return bytesSupplier(nativeFieldName(field));
       case ARRAY:
         if (field.schema().getElementType().getType() == Schema.Type.BYTES) {
           return  "java.util.Collections.unmodifiable"
                   + (CompilationUnit.isSet(field.schema()) ? "SortedSet(" : "List(")
                   + nativeFieldName(field) + ".stream()"
-                  + ".map(v -> (java.util.function.Supplier<byte[]>) v::clone)"
+                  + ".map(v -> " + bytesSupplier("v") + ")"
                   + ".collect(java.util.stream.Collectors.toCollection(() -> new java.util."
                   + (CompilationUnit.isSet(field.schema())
                      ? "TreeSet<>()"
@@ -121,12 +125,12 @@ class NativeImplJavaGenerator extends AbstractImplJavaGenerator {
         }
       case MAP:
         if (field.schema().getValueType().getType() == Schema.Type.BYTES) {
-          return  "java.util.Collections.unmodifiableSortedMap(" + nativeFieldName(field)
-                  + ".entrySet().stream().collect(java.util.stream.Collectors.toMap("
-                  + "e -> e.getKey(), "
-                  + "e -> (java.util.function.Supplier<byte[]>) e.getValue()::clone, "
-                  + "(u,v) -> {throw new java.lang.IllegalStateException(\"Duplicate key \" + u);},"
-                  + "() -> new java.util.TreeMap<>())))";
+          return "java.util.Collections.unmodifiableSortedMap(" + nativeFieldName(field)
+              + ".entrySet().stream().collect(java.util.stream.Collectors.toMap("
+              + "e -> e.getKey(), "
+              + "e -> { byte[] a = e.getValue(); return " + bytesSupplier("a") + "; }, "
+              + "(u,v) -> {throw new java.lang.IllegalStateException(\"Duplicate key \" + u);},"
+              + "() -> new java.util.TreeMap<>())))";
         } else {
           return  "java.util.Collections.unmodifiableSortedMap(" + nativeFieldName(field) + ")";
         }
@@ -171,7 +175,7 @@ class NativeImplJavaGenerator extends AbstractImplJavaGenerator {
     String value = VALUE;
     switch (field.schema().getType()) {
       case BYTES:
-        value += ".get().clone()";
+        value = "java.util.Arrays.copyOf(" + VALUE + ".get(), " + VALUE + ".get().length)";
         break;
       case ENUM:
       case RECORD:
@@ -198,7 +202,8 @@ class NativeImplJavaGenerator extends AbstractImplJavaGenerator {
   private String importArrayMapper(Schema s) {
     switch (s.getType()) {
       case BYTES:
-        return ".map(v -> v.get().clone())";
+        return ".map(java.util.function.Supplier::get)" +
+            ".map(a -> java.util.Arrays.copyOf(a, a.length))";
       case ENUM:
       case RECORD:
         return  ".map(" + name(s) + "::nativeImpl)";
@@ -209,7 +214,8 @@ class NativeImplJavaGenerator extends AbstractImplJavaGenerator {
   private String importMapValueFunction(Schema s) {
     switch (s.getType()) {
       case BYTES:
-        return "e -> e.getValue().get().clone()";
+        return "e -> { byte[] a = e.getValue().get(); " +
+            "return java.util.Arrays.copyOf(a, a.length); }";
       case ENUM:
       case RECORD:
         return "e -> " + name(s) + ".nativeImpl(e.getValue())";

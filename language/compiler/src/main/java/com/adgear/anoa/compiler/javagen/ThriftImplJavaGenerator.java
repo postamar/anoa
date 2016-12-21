@@ -45,7 +45,9 @@ class ThriftImplJavaGenerator extends AbstractImplJavaGenerator {
     value = "java.util.Optional.ofNullable(" + value + ")";
     switch (field.schema().getType()) {
       case BYTES:
-        return value + ".orElseGet(() -> new byte[0])::clone";
+        return "java.util.Optional.of(" + value + ".orElse(new byte[0]))"
+            + ".map(b -> new java.util.function.Supplier<byte[]>() { "
+            + "public byte[] get() { return java.util.Arrays.copyOf(b, b.length); } }).get()";
       case STRING:
         return value + ".orElse(\"\")";
       case ENUM:
@@ -166,7 +168,9 @@ class ThriftImplJavaGenerator extends AbstractImplJavaGenerator {
         }
         break;
       case BYTES:
-        return ".map(v -> java.nio.ByteBuffer.wrap(v.get().clone()))";
+        return ".map(java.util.function.Supplier::get)"
+            + ".map(a -> java.util.Arrays.copyOf(a, a.length))"
+            + ".map(java.nio.ByteBuffer::wrap)";
       case ENUM:
       case RECORD:
         return  ".map(" + name(s) + "::thrift).map(java.util.function.Supplier::get)";
@@ -192,7 +196,9 @@ class ThriftImplJavaGenerator extends AbstractImplJavaGenerator {
         }
         break;
       case BYTES:
-        return "e -> java.nio.ByteBuffer.wrap(e.getValue().get().clone())";
+        return "e -> {" +
+            "byte[] a = e.getValue().get(); " +
+            "return java.nio.ByteBuffer.wrap(java.util.Arrays.copyOf(a, a.length)); }";
       case ENUM:
       case RECORD:
         return "e -> " + name(s) + ".thrift(e.getValue()).get()";
