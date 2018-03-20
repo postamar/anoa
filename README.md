@@ -83,7 +83,7 @@ current namespace.
     Name                 ::=  Identifier
     Alias                ::=  ','? ( Identifier | QualifiedIdentifier )
     QualifiedIdentifier  ::=  ( Identifier '.' )+ Identifier
-    Identifier           ::=  ['a'-'z'] ( '_' ['a'-'z'] | ['a'-'z''0'-'9'] )*
+    Identifier           ::=  ['a'-'z'] ( ['_''a'-'z''0'-'9'] )*
 
 #### Enumerations
 
