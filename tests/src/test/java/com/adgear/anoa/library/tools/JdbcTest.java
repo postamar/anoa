@@ -46,7 +46,7 @@ public class JdbcTest {
     Class.forName("org.h2.Driver");
     try (Connection conn = openDBConnection()) {
       try (Statement stmt = conn.createStatement()) {
-        stmt.execute("CREATE TABLE simple (foo INTEGER, bar VARBINARY(255), baz DOUBLE)");
+        stmt.execute("CREATE TABLE simple (from_3p INTEGER, bar VARBINARY(255), baz DOUBLE, flag_3p BOOLEAN)");
       }
     }
   }
@@ -56,8 +56,8 @@ public class JdbcTest {
     try (Connection conn = openDBConnection()) {
       try (Statement stmt = conn.createStatement()) {
         stmt.execute("TRUNCATE TABLE simple");
-        stmt.executeUpdate("INSERT INTO simple VALUES ('101', 'FEEB', '789.1')");
-        stmt.executeUpdate("INSERT INTO simple VALUES ('-102', 'F00B', '543.2')");
+        stmt.executeUpdate("INSERT INTO simple VALUES ('101', 'FEEB', '789.1', TRUE)");
+        stmt.executeUpdate("INSERT INTO simple VALUES ('-102', 'F00B', '543.2', FALSE)");
       }
     }
   }
@@ -78,10 +78,10 @@ public class JdbcTest {
               .collect(Collectors.toList());
 
           Assert.assertEquals(2, simples.size());
-          Assert.assertEquals(101, simples.get(0).getFoo());
+          Assert.assertEquals(101, simples.get(0).getFrom_3p());
           Assert.assertArrayEquals(Hex.decodeHex("FEEB".toCharArray()), simples.get(0).getBar());
           Assert.assertEquals(789.1, simples.get(0).getBaz(), 0.0000001);
-          Assert.assertEquals(-102, simples.get(1).getFoo());
+          Assert.assertEquals(-102, simples.get(1).getFrom_3p());
           Assert.assertArrayEquals(Hex.decodeHex("F00B".toCharArray()), simples.get(1).getBar());
           Assert.assertEquals(543.2, simples.get(1).getBaz(), 0.0000001);
         }
