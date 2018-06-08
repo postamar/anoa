@@ -13,6 +13,7 @@ import com.adgear.anoa.read.JdbcStreams;
 import com.adgear.anoa.read.ThriftDecoders;
 import com.adgear.anoa.test.simple.SimpleAvro;
 import com.adgear.anoa.test.simple.SimpleThrift;
+import com.adgear.anoa.test.simple.SimpleProtobuf;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -62,6 +63,31 @@ public class JdbcTest {
     }
   }
 
+  @Test
+  public void testToProtobuf() throws Exception {
+    AnoaHandler<Throwable> f = AnoaHandler.NO_OP_HANDLER;
+    try (Connection connection = openDBConnection()) {
+      try (Statement statement = connection.createStatement()) {
+        try (ResultSet resultSet = statement.executeQuery("SELECT * FROM simple")) {
+          List<SimpleProtobuf.Simple> simples = new JdbcStreams().resultSet(f, resultSet)
+                  .map(f.function(TreeNode::traverse))
+                  .map(f.function(ProtobufDecoders.jackson(SimpleProtobuf.Simple.class)))
+                  .peek(System.out::println)
+                  .filter(Anoa::isPresent)
+                  .map(Anoa::get)
+                  .collect(Collectors.toList());
+
+          Assert.assertEquals(2, simples.size());
+          Assert.assertEquals(101, simples.get(0).getFrom3P());
+          Assert.assertArrayEquals(Hex.decodeHex("FEEB".toCharArray()), simples.get(0).getBar().toByteArray());
+          Assert.assertEquals(789.1, simples.get(0).getBaz(), 0.0000001);
+          Assert.assertEquals(-102, simples.get(1).getFrom3P());
+          Assert.assertArrayEquals(Hex.decodeHex("F00B".toCharArray()), simples.get(1).getBar().toByteArray());
+          Assert.assertEquals(543.2, simples.get(1).getBaz(), 0.0000001);
+        }
+      }
+    }
+  }
 
   @Test
   public void testToThrift() throws Exception {
