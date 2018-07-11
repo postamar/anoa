@@ -6,4 +6,5 @@ test_struct {
   5: float64(0x1.0P-1074) double_field;
   6: bytes(0x00 0x0f 0xf0 0xff) bytes_field;
   7: string("\tpoop\n") string_field char_sequence;
+  8: integer[0,1000](0xFF) from_3p;
 }

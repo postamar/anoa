@@ -1,11 +1,14 @@
 simple {
 
   /** field #1 */
-  1: integer[,] foo;
+  1: integer[,] from_3p;
 
   /** field #2 */
   2: bytes bar;
 
   /** field #3 */
   3: rational[,,] baz blab;
+
+  /** field #4 */
+  4: boolean flag_3p;
 }

@@ -5,6 +5,9 @@ import com.adgear.anoa.compiler.CompilationUnit;
 
 import org.apache.avro.Schema;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 class ProtobufImplJavaGenerator extends AbstractImplJavaGenerator {
 
   ProtobufImplJavaGenerator(InterfaceJavaGenerator ijg) {
@@ -52,9 +55,24 @@ class ProtobufImplJavaGenerator extends AbstractImplJavaGenerator {
     return false;
   }
 
+  private String fixMethodName(String name) {
+    Matcher m = Pattern.compile("\\d[a-z]").matcher(name);
+
+    StringBuilder sb = new StringBuilder();
+    int last = 0;
+    while (m.find()) {
+      sb.append(name.substring(last, m.start()));
+      sb.append(m.group(0).toUpperCase());
+      last = m.end();
+    }
+    sb.append(name.substring(last));
+
+    return sb.toString();
+  }
+
   @Override
   String exportValue(Schema.Field field) {
-    String base = "get()." + ijg.getMethod(field).replace("$", "");
+    String base = "get()." + fixMethodName(ijg.getMethod(field)).replace("$", "");
     String value = base + ((field.schema().getType() == Schema.Type.ARRAY) ? "List()" : "()");
     if (!hasExportField(field)) {
       if (field.schema().getType() == Schema.Type.ARRAY
@@ -98,7 +116,7 @@ class ProtobufImplJavaGenerator extends AbstractImplJavaGenerator {
 
   @Override
   String importValue(Schema.Field field) {
-    String setter = ijg.setMethod(field).replace("$", "");
+    String setter = fixMethodName(ijg.setMethod(field)).replace("$", "");
     String value = VALUE;
     switch (field.schema().getType()) {
       case LONG:
@@ -138,7 +156,7 @@ class ProtobufImplJavaGenerator extends AbstractImplJavaGenerator {
     if (field.schema().getType() == Schema.Type.MAP) {
       return "putAll" + ijg.setMethod(field).substring(3) + "(java.util.Collections.emptyMap())";
     } else {
-      return ijg.clearMethod(field).replace("$", "") + "()";
+      return fixMethodName(ijg.clearMethod(field)).replace("$", "") + "()";
     }
   }
 

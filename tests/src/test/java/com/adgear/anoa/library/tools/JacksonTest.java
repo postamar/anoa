@@ -58,7 +58,7 @@ public class JacksonTest {
   @Test
   public void testCsv() throws Exception {
     CsvSchema schema = CsvSchema.builder()
-        .addColumn("foo").addColumn("bar").addColumn("baz")
+        .addColumn("from_3p").addColumn("bar").addColumn("baz").addColumn("flag_3p")
         .setColumnSeparator('\t')
         .disableQuoteChar()
         .setUseHeader(true)
@@ -84,7 +84,7 @@ public class JacksonTest {
   @Test
   public void testSimple() throws Exception {
     final SimpleAvro simple = SimpleAvro.newBuilder()
-        .setFoo(101)
+        .setFrom3p(101)
         .setBar(ByteBuffer.wrap(Hex.decodeHex("FEEB".toCharArray())))
         .setBaz(789.1)
         .build();
